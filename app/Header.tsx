@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
+import owlMascot from "./catatin.png";
+import Image from "next/image";
 
 export default function Header() {
   const [hidden, setHidden] = useState(false);
@@ -21,26 +23,20 @@ export default function Header() {
 
   return (
     <header
-      className={`fixed top-0 w-full bg-[#80F2FF]/70 backdrop-blur-md border-b border-gray-200 z-50 transition-transform duration-500 ${
+      className={`fixed top-0 w-full py-4 bg-[#ffffff]/70 backdrop-blur-md border-b border-gray-200 z-50 transition-transform duration-500 ${
         hidden ? "-translate-y-full" : "translate-y-0"
       }`}
     >
-      <div className="container mx-auto px-3 py-0 flex items-center justify-between">
+      <div className="container mx-auto px-10 flex items-center justify-between">
         {/* Logo */}
         <div className="flex items-center gap-3">
-           <img
-            src="/catatin.png"
-            alt="Catatin.ai"
-            className="w-22 h-22 drop-shadow-lg animate-pulse"
-          />
-          <div>
-            <h1 className="text-xl font-bold bg-gradient-to-r from-[#0566BD] to-[#A8E063] bg-clip-text text-transparent">
-  catatin.ai
-</h1>
-
-            <p className="text-xs text-muted-foreground">cara simpel nyatet tanpa repot</p>
+            <Image
+              src={owlMascot}
+              alt="Catatin.ai"
+              className="w-28 h-10 animate-float drop-shadow-xl"
+            />
           </div>
-        </div>
+
 
         {/* Nav */}
         <nav className="hidden md:flex items-center gap-6">

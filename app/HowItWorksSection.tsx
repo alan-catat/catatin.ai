@@ -59,7 +59,7 @@ const HowItWorksSection = () => {
                 </div>
 
                 <div className="flex-grow">
-                  <h3 className="text-2xl font-bold mb-3 text-foreground group-hover:text-primary transition-colors">
+                  <h3 className="text-2xl font-bold mb-3 text-black group-hover:text-primary transition-colors">
                     {step.title}
                   </h3>
                   <p className="text-muted-foreground mb-4 leading-relaxed">
@@ -74,13 +74,6 @@ const HowItWorksSection = () => {
               )}
             </div>
           ))}
-        </div>
-
-        <div className="text-center mt-16">
-          <div className="inline-flex items-center gap-2 bg-success/10 border border-success/30 rounded-full px-6 py-3 text-success font-medium">
-            <CheckCircle className="w-5 h-5" />
-            Setup dalam 2 menit - Langsung bisa digunakan!
-          </div>
         </div>
       </div>
     </section>

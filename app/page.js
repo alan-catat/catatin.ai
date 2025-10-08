@@ -15,19 +15,20 @@ export default function Home() {
 
 
       {/* HERO */}
-      <section className="max-w-7xl mx-auto px-6 py-50 flex flex-col md:flex-row items-center gap-12">
+      <section className="max-w-7xl mx-auto px-6 pt-30 pb-10 flex flex-col md:flex-row items-center gap-12">
         <div className="flex-1 text-center md:text-left">
-          <motion.img
+          <div className="flex justify-center mb-4">
+            <motion.img
           src="/buku.png"
           alt="Phone mockup"
-          className="w-[120px] z-10"
+          className="text-center w-[120px] z-10"
           animate={{ y: [0, -15, 0] }}
           transition={{
             repeat: Infinity,
             duration: 3,
             ease: "easeInOut",
           }}
-        />
+        /></div>
           <h2 className="text-5xl sm:text-6xl font-extrabold tracking-tight mb-6">
             Cara simpel nyatet tanpa repot. 
             <span className="align-middle ml-3">✨</span>

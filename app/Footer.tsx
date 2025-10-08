@@ -3,28 +3,10 @@ import Link from "next/link";
 
 const Footer = () => {
   return (
-    <footer id="signup" className="bg-[#80F2FF] py-5  ">
+    <footer className="bg-[#80F2FF] py-5">
       <div className="container mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-          {/* Brand */}
-          <div className="col-span-1 md:col-span-2">
-            <div className="flex items-center gap-7">
-              <img src="/catatin.png" alt="Catatin.ai" className="w-28 h-28 animate-ping-slow" />
-            <p className="text-black/70 mb-1 max-w-md">
-              Revolusi cara Anda mengelola keuangan dengan kekuatan AI. 
-              Otomatis, pintar, dan mudah digunakan.
-            </p></div>
-            <a
-  href="https://wa.me/6281118891092"
-  target="_blank"
-  rel="noopener noreferrer"
-  className="relative z-10 inline-flex items-center gap-2 bg-primary-light text-black rounded-full px-4 py-2 shadow-sm hover:bg-black-100 hover:scale-105 active:scale-95 cursor-pointer transition"
->
-  <MessageCircle className="w-4 h-4" />
-  <span className="text-sm">Hubungi kami</span>
-</a>
-
-          </div>
+        
 
           {/* Quick Links */}
           <div className="py-6">
