@@ -47,7 +47,7 @@ export default function Header() {
         {/* CTA */}
         <a
           href="#signup"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-600 text-white font-medium shadow-sm hover:bg-black-100 hover:scale-105 active:scale-95 cursor-pointer transition"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#05668D] text-white font-medium shadow-sm hover:bg-black-100 hover:scale-105 active:scale-95 cursor-pointer transition"
         >
           Coba Gratis
         </a>

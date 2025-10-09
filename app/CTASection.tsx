@@ -13,22 +13,22 @@ const CTASection = () => {
       {/* Content */}
       <div className="container mx-auto px-5 text-center relative z-10">
         <div className="max-w-4xl mx-auto">
-          <div className="mb-10 flex justify-center">
-            <Image
-              src={owlMascot}
-              alt="Catatin.ai"
-              className="w-32 h-auto animate-bounce-slow drop-shadow-2xl"
-            />
-          </div>
 
-          <h2 className="text-4xl md:text-6xl font-bold text-white mb-6">
-            Mau Nyatet
-            <span className="block text-white">Gak Pake Ribet?</span>
-          </h2>
+          <h2 className="text-4xl md:text-6xl font-bold text-white mb-6 text-center">
+  Kirim Aja, <br />
+  Biar{" "}
+  <Image
+    src={owlMascot}
+    alt="Catatin.ai"
+    className="inline-block align-middle w-62 h-auto animate-bounce-slow drop-shadow-2xl"
+  />{" "}
+  Yang Urus.
+</h2>
 
           <p className="text-xl md:text-2xl text-white/90 mb-10 max-w-2xl mx-auto">
-            Bergabunglah dengan kami sekarang dan rasakan kemudahan
-            mengelola keuangan dengan AI
+            <span className="text-3xl font-bold bg-gradient-to-r from-[#0566BD] to-[#A8E063] bg-clip-text text-transparent">
+              catatin.ai
+            </span> bantu kamu nyatet hal penting tanpa repot — struk, pesan, catatan, semuanya beres otomatis.
           </p>
 
           {/* CTA Buttons */}

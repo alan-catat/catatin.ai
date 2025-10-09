@@ -46,7 +46,7 @@ export default function Home() {
           <div className="flex justify-center md:justify-start gap-4">
             <a
               href="#signup"
-              className="px-6 py-3 rounded-full bg-blue-600 text-white font-medium shadow hover:bg-blue-700"
+              className="px-6 py-3 rounded-full bg-[#05668D] text-white font-medium shadow hover:bg-blue-700"
             >
               Hubungi kami
             </a>
