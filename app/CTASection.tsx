@@ -18,17 +18,17 @@ const CTASection = () => {
       <div className="container mx-auto px-5 text-center relative z-10">
         <div className="max-w-4xl mx-auto">
           {/* Mascot */}
-          <div className="mb-5 flex justify-center">
+          <div className="mb-10 flex justify-center">
             <Image
               src={owlMascot}
               alt="Catatin.ai"
-              className="w-40 h-14 animate-float drop-shadow-xl"
+              className="w-70 h-15 animate-float drop-shadow-xl"
             />
           </div>
 
           <h2 className="text-4xl md:text-6xl font-bold text-white mb-6">
-            Mau nyatet
-            <span className="block text-white">gak pake ribet?</span>
+            Mau Nyatet
+            <span className="block text-white">Gak Pake Ribet?</span>
           </h2>
 
           <p className="text-xl md:text-2xl text-white/90 mb-10 max-w-2xl mx-auto">

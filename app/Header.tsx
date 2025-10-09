@@ -33,7 +33,7 @@ export default function Header() {
             <Image
               src={owlMascot}
               alt="Catatin.ai"
-              className="w-28 h-10 animate-float drop-shadow-xl"
+              className="w-35 h-8 animate-float drop-shadow-xl"
             />
           </div>
 

@@ -41,7 +41,7 @@ const FeaturesSection = () => {
   ];
 
   return (
-    <section id="features" className="py-20 min-h-screen bg-[#80F2FF] text-slate-800 antialiased">
+    <section id="features" className="pt-20 pb-0 min-h-screen bg-[#80F2FF] text-slate-800 antialiased">
       <div className="container mx-auto px-6">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-black bg-clip-text">
@@ -52,11 +52,11 @@ const FeaturesSection = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
           {features.map((feature, index) => (
             <div
               key={index}
-              className="group p-10 rounded-2xl bg-white border-l-8 border-l-success hover:shadow-card transition-all duration-300 hover:-translate-y-2 animate-fade-in"
+              className="group p-8 rounded-2xl bg-white border-l-8 border-l-success hover:shadow-card transition-all duration-300 hover:-translate-y-2 animate-fade-in"
               style={{ animationDelay: `${index * 0.1}s` }}
             >
               <div className="flex  gap-8 mb-6">
