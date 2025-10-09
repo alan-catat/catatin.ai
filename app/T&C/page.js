@@ -5,7 +5,7 @@ import Footer from "./Footer";
 
 export default function TermsAndConditions() {
   return (
-    <main className="min-h-screen bg-gradient-to-t from-white via-[#B2F7FF] to-[#80F2FF] text-slate-800 antialiased">
+    <main className="min-h-screen bg-white text-slate-800 antialiased py-20">
       <Header />
 
       <section className="max-w-3xl mx-auto px-6 py-12 leading-relaxed">

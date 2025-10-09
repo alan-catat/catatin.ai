@@ -20,7 +20,7 @@ const CTASection = () => {
   <Image
     src={owlMascot}
     alt="Catatin.ai"
-    className="inline-block align-middle w-62 h-auto animate-bounce-slow drop-shadow-2xl"
+    className="inline-block align-middle w-35 md:w-62 h-auto animate-bounce-slow drop-shadow-2xl"
   />{" "}
   Yang Urus.
 </h2>
@@ -59,6 +59,7 @@ const CTASection = () => {
           </div>
         </div>
       </div>
+      
     </section>
   );
 };

@@ -5,7 +5,7 @@ const FeaturesSection = () => {
     {
       icon: ArrowBigRight,
       title: "AI Agent",
-      description: "AI membuat semua pekerjaan jadi lebih cepat.",
+      description: "AI membuat semua pencatatan jadi lebih cepat.",
       color: "text-success"
     },
     {
