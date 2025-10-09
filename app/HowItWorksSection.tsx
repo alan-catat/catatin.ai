@@ -29,11 +29,11 @@ const HowItWorksSection = () => {
   ];
 
   return (
-    <section id="how" className="py-20 min-h-screen bg-gradient-to-r from-white via-[#B2F7FF] to-[#80F2FF] text-slate-800 antialiased">
+    <section id="how" className="py-16 bg-gradient-to-r from-white via-[#B2F7FF] to-[#80F2FF] text-slate-800 antialiased">
       <div className="container mx-auto px-6">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold mb-6 text-black">
-            Catat Praktis 
+            Catat Praktis ,
             <span className="bg-black bg-clip-text"> Laporan otomatis</span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
@@ -41,14 +41,14 @@ const HowItWorksSection = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center max-w-4xl mx-auto">
           {steps.map((step, index) => (
             <div
               key={index}
               className="group animate-fade-in"
               style={{ animationDelay: `${index * 0.2}s` }}
             >
-              <div className="flex items-start gap-4 p-8 rounded-4xl bg-white border-l-8 border-l-success hover:shadow-card transition-all duration-300">
+              <div className="flex items-start gap-4 p-6 rounded-4xl bg-white border-l-8 border-l-success hover:shadow-card transition-all duration-300">
                 <div className="flex-shrink-0">
                   <div className="relative">
                   

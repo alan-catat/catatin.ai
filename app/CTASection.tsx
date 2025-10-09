@@ -1,28 +1,23 @@
-import { Button } from "./button"; // relative path
-import { ArrowRight, Star, MessageCircle, Bot } from "lucide-react";
+import { Button } from "./button";
+import { ArrowRight, MessageCircle, Bot } from "lucide-react";
 import Image from "next/image";
 import owlMascot from "./catatin.png";
 
 const CTASection = () => {
   return (
-    <section id="signup" className="py-10 bg-[#2E2E2E]">
-      {/* Background decorations */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-5 right-20 w-40 h-40 bg-blue rounded-full animate-float"></div>
-        <div
-          className="absolute bottom-5 left-20 w-32 h-32 bg-blue rounded-full animate-float"
-          style={{ animationDelay: "1.5s" }}
-        ></div>
-      </div>
+    <section
+      id="signup"
+      className="relative py-24 text-center text-white overflow-hidden bg-[#2e2e2e] font-nunito"
+    >
 
+      {/* Content */}
       <div className="container mx-auto px-5 text-center relative z-10">
         <div className="max-w-4xl mx-auto">
-          {/* Mascot */}
           <div className="mb-10 flex justify-center">
             <Image
               src={owlMascot}
               alt="Catatin.ai"
-              className="w-70 h-15 animate-float drop-shadow-xl"
+              className="w-32 h-auto animate-bounce-slow drop-shadow-2xl"
             />
           </div>
 
@@ -36,39 +31,34 @@ const CTASection = () => {
             mengelola keuangan dengan AI
           </p>
 
-          
-
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-  <Button asChild className="text-xl font-semibold bg-success">
-    <a
-      href="https://wa.me/6281118891092"
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      <MessageCircle className="w-5 h-5" />
-      WhatsApp
-      <ArrowRight className="w-5 h-5" />
-    </a>
-  </Button>
+            <Button asChild className="text-xl font-semibold bg-success gap-2">
+              <a
+                href="https://wa.me/6281118891092"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <MessageCircle className="w-5 h-5" />
+                WhatsApp
+                <ArrowRight className="w-5 h-5" />
+              </a>
+            </Button>
 
-  <Button asChild className="text-xl font-semibold bg-primary">
-    <a
-      href="https://t.me/catatin"
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      <Bot className="w-5 h-5" />
-      Telegram
-      <ArrowRight className="w-5 h-5" />
-    </a>
-  </Button>
-</div>
-
-
-          
+            <Button asChild className="text-xl font-semibold bg-primary gap-2">
+              <a
+                href="https://t.me/catatin"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Bot className="w-5 h-5" />
+                Telegram
+                <ArrowRight className="w-5 h-5" />
+              </a>
+            </Button>
           </div>
         </div>
+      </div>
     </section>
   );
 };

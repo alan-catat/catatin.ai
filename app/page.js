@@ -6,18 +6,18 @@ import CTASection from "./CTASection";
 import FeaturesSection from "./FeaturesSection";
 import HowItWorksSection from "./HowItWorksSection";
 import { motion } from "framer-motion";
+import React, { useState, useEffect } from "react";
 
 export default function Home() {
-
+  
   return (
     <main className="min-h-screen bg-gradient-to-l from-white via-[#B2F7FF] to-[#80F2FF] text-slate-800 antialiased">
       <Header />
-
-
+      
       {/* HERO */}
       <section className="max-w-7xl mx-auto px-6 pt-30 pb-10 flex flex-col md:flex-row items-center gap-12">
         <div className="flex-1 text-center md:text-left">
-          <div className="flex justify-center mb-4">
+          <div className="flex justify-center md:justify-start mb-4">
             <motion.img
           src="/buku.png"
           alt="Phone mockup"
@@ -30,7 +30,7 @@ export default function Home() {
           }}
         /></div>
           <h2 className="text-5xl sm:text-6xl font-extrabold tracking-tight mb-6">
-            Cara simpel nyatet tanpa repot. 
+            Cara simpel Nyatet tanpa repot. 
             <span className="align-middle ml-3">✨</span>
           </h2>
           <p className="text-xl text-slate-600 max-w-2xl mb-10">
@@ -65,7 +65,6 @@ export default function Home() {
             <video
               className="w-full h-full"
               autoPlay
-              loop
               muted
               playsInline
               controls
