@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "deploy": "git add . && git commit -m \"update\" && git push"
   },
   "dependencies": {
     "@lottiefiles/react-lottie-player": "^3.6.0",

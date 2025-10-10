@@ -3,9 +3,9 @@ import Link from "next/link";
 
 const Footer = () => {
   return (
-    <footer className="bg-[#80F2FF] py-8">
+    <footer className="px-0 md:px-75 md:pr-117 bg-[#80F2FF] py-8">
       <div className="container mx-auto px-6">
-        <div className="grid grid-cols-1 md:grid-cols-7 gap-6 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-4">
         
 
           {/* Quick Links */}
@@ -13,12 +13,12 @@ const Footer = () => {
             <h4 className="font-semibold mb-2">Menu</h4>
             <ul className="flex gap-8 space-y-1 text-black/70">
               <li>
-                <Link href="#features" className="hover:text-black transition-colors">
+                <Link href="/#features" className="hover:text-black transition-colors">
                   Fitur
                 </Link>
               </li>
               <li>
-                <Link href="#how" className="hover:text-black transition-colors">
+                <Link href="/#how" className="hover:text-black transition-colors">
                   Cara Kerja
                 </Link>
               </li>

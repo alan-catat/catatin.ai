@@ -7,7 +7,7 @@ const CTASection = () => {
   return (
     <section
       id="signup"
-      className="relative py-24 text-center text-white overflow-hidden bg-[#2e2e2e] font-nunito"
+      className="relative px-10 md:px-37 md:pr-77 py-24 text-center text-white overflow-hidden bg-[#2e2e2e] font-nunito"
     >
 
       {/* Content */}
@@ -47,7 +47,7 @@ const CTASection = () => {
 
             <Button asChild className="text-xl font-semibold bg-primary gap-2">
               <a
-                href="https://t.me/catatin"
+                href="https://t.me/catatinaics"
                 target="_blank"
                 rel="noopener noreferrer"
               >

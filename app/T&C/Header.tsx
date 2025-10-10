@@ -24,11 +24,11 @@ export default function Header() {
 
   return (
     <header
-      className={`fixed top-0 w-full py-4 bg-[#ffffff]/70 backdrop-blur-md border-b border-gray-200 z-50 transition-transform duration-500 ${
+      className={`fixed top-1 w-full py-4 bg-[#ffffff]/70 backdrop-blur-md border-b border-gray-200 z-50 transition-transform duration-500 ${
         hidden ? "-translate-y-full" : "translate-y-0"
       }`}
     >
-      <div className="container mx-auto px-10 flex items-center justify-between">
+      <div className="container mx-auto px-10 md:px-37 md:pr-77 flex items-center justify-between">
         {/* Logo */}
         <div className="flex items-center gap-3">
             <Image
@@ -47,7 +47,7 @@ export default function Header() {
 
         {/* CTA */}
         <Link
-          href="/#signup"
+          href="?#signup"
           className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#05668D] text-white font-medium shadow-sm hover:bg-black-100 hover:scale-105 active:scale-95 cursor-pointer transition"
         >
           Coba Gratis

@@ -3,9 +3,9 @@ import Link from "next/link";
 
 const Footer = () => {
   return (
-    <footer className="bg-[#80F2FF] py-8">
+    <footer className="px-0 md:px-75 md:pr-117 bg-[#80F2FF] py-8">
       <div className="container mx-auto px-6">
-        <div className="grid grid-cols-1 md:grid-cols-7 gap-6 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-4">
         
 
           {/* Quick Links */}

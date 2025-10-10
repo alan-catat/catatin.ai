@@ -8,7 +8,7 @@ export default function TermsAndConditions() {
     <main className="min-h-screen bg-white text-slate-800 antialiased py-20">
       <Header />
 
-      <section className="max-w-3xl mx-auto px-6 py-12 leading-relaxed">
+      <section className="px-5 md:pr-45 max-w-7xl mx-auto py-12 leading-relaxed">
         <h1 className="text-3xl font-bold mb-2 text-center">Syarat dan Ketentuan – Catatin.ai</h1>
         <p className="text-center mb-8 text-sm text-gray-600">
           Terakhir diperbarui: 28 Agustus 2025
