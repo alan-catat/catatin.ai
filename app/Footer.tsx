@@ -3,8 +3,8 @@ import Link from "next/link";
 
 const Footer = () => {
   return (
-    <footer className="px-0 md:px-75 md:pr-117 bg-[#80F2FF] py-8">
-      <div className="container mx-auto px-6">
+    <footer className="px-0 md:px-85 md:pr-41 bg-[#80F2FF] py-8">
+      <div className="container mx-auto px-1">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-4">
         
 
@@ -41,16 +41,15 @@ const Footer = () => {
               </li>
             </ul>
           </div>
-        </div>
-
-        {/* Bottom */}
-        <div className="border-t border-black/10 py-5">
+          
           <div className="flex flex-col md:flex-row justify-center md:justify-end items-center">
-            <div className="text-black/60 text-sm mb-4 md:mb-0">
-              © 2025 PT Monivo Global Teknologi. All rights reserved.
+          <div className="text-black/60 text-m mb-4 md:mb-0 font-bold"><br />
+              © 2025 PT Monivo Global Teknologi.
             </div>
-          </div>
+            </div>
         </div>
+        
+
       </div>
     </footer>
   );

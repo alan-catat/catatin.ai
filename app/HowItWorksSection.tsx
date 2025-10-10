@@ -29,7 +29,7 @@ const HowItWorksSection = () => {
   ];
 
   return (
-    <section id="how" className="mx-auto px-4 md:px-10 md:px-37 md:pr-77 py-16 bg-gradient-to-r from-white via-[#B2F7FF] to-[#80F2FF] text-slate-800 antialiased">
+    <section id="how" className="mx-auto px-4 md:px-37 md:pr-77 py-16 bg-gradient-to-r from-white via-[#B2F7FF] to-[#80F2FF] text-slate-800 antialiased">
       <div className="container mx-auto px-6">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold mb-6 text-black">
@@ -41,7 +41,7 @@ const HowItWorksSection = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-center max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-7 items-center max-w-6xl mx-auto px-10">
           {steps.map((step, index) => (
             <div
               key={index}
