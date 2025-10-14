@@ -1,17 +1,17 @@
-import { MessageCircle, Bot, Heart } from "lucide-react";
+
 import Link from "next/link";
 
 const Footer = () => {
   return (
-    <footer className="px-0 md:px-85 md:pr-41 bg-[#80F2FF] py-8">
-      <div className="container mx-auto px-1">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-4">
-        
+    <footer className="bg-[#80F2FF] py-10 text-slate-800">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 text-center md:text-left">
+          
 
           {/* Quick Links */}
           <div className="py-1 pb-0">
             <h4 className="font-semibold mb-2">Menu</h4>
-            <ul className="flex gap-8 space-y-1 text-black/70">
+            <ul className="flex-center md:flex gap-8 space-y-1 text-black/70">
               <li>
                 <a href="#features" className="hover:text-black transition-colors">
                   Fitur
@@ -28,7 +28,7 @@ const Footer = () => {
           {/* Support */}
           <div className="py-1 pb-0">
             <h4 className="font-semibold mb-2">Bantuan</h4>
-            <ul className="flex gap-8 space-y-1 text-black/70">
+            <ul className="flex-center md:flex gap-8 space-y-1 text-black/70">
               <li>
                 <Link href="/T&C" className="hover:text-black transition-colors">
                   S&K

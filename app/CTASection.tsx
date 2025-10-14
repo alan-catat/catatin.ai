@@ -7,7 +7,7 @@ const CTASection = () => {
   return (
     <section
       id="signup"
-      className="relative px-6 md:px-37 md:pr-77 py-20 text-center text-white overflow-hidden bg-[#2e2e2e] font-nunito"
+      className="relative px-6 md:px-37 md:pr-37 py-20 text-center text-white overflow-hidden bg-[#2e2e2e] font-nunito"
     >
 
       {/* Content */}
