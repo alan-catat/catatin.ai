@@ -7,8 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    
-  "deploy": "npm run build && git add . && git commit -m \"🚀 Deploy\" && git push"
+    "deploy": "npm run build && git add . && git commit -m \"🚀 Deploy\" && git push"
   },
   "dependencies": {
     "@chakra-ui/react": "^3.28.0",
@@ -46,6 +45,7 @@
     "next-auth": "^4.24.11",
     "next-i18next": "^15.4.2",
     "next-intl": "^4.3.12",
+    "nodemailer": "^6.10.1",
     "react": "^19.2.0",
     "react-apexcharts": "^1.7.0",
     "react-datepicker": "^8.7.0",
