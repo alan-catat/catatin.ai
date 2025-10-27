@@ -1,44 +1,61 @@
-// app/page.tsx
-"use client";
+'use client'
 
-import { useState } from "react";
+import { useEffect, useState } from "react"
+import UserInfoCard from "@/components/user-profile/UserInfoCard"
+import UserMetaCard from "@/components/user-profile/UserMetaCard"
+import UserSocialCard from "@/components/user-profile/UserSocialMedia"
 
-export default function Page() {
-  const [input, setInput] = useState("");
-  const [output, setOutput] = useState("");
+export default function Profile() {
+  const [profiles, setProfiles] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const handleSubmit = async () => {
-    const res = await fetch("https://n8n.srv1074739.hstgr.cloud/webhook-test/webchat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt: input }),
-    });
-    const data = await res.json();
-    setOutput(data.message);
-  };
+  useEffect(() => {
+    const fetchProfiles = async () => {
+      try {
+        // 📡 Dummy data sementara — nanti ganti ke API n8n kamu
+        const dummyUser = {
+          user_id: "temp-user-id",
+          full_name: "Pengguna Baru",
+          email: "user@example.com",
+          groups: { name: "Tanpa Group" },
+          channels: ["Telegram", "WhatsApp"],
+        }
+
+        // ✅ Simulasi loading
+        setTimeout(() => {
+          setProfiles([dummyUser])
+          setLoading(false)
+        }, 800)
+      } catch (error) {
+        console.error("Error loading profile:", error)
+        setLoading(false)
+      }
+    }
+
+    fetchProfiles()
+  }, [])
+
+  if (loading) return <div>Memuat...</div>
 
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen p-6">
-      <h1 className="text-xl font-bold mb-4">AI Agent Demo</h1>
-      <textarea
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        placeholder="Tulis pertanyaanmu di sini..."
-        className="border rounded-lg p-2 w-80 h-24"
-      />
-      <button
-        onClick={handleSubmit}
-        className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg"
-      >
-        Kirim
-      </button>
-
-      {output && (
-        <div className="mt-6 bg-gray-100 p-4 rounded-lg w-80">
-          <strong>Jawaban AI:</strong>
-          <p>{output}</p>
+    <div>
+      {profiles.map((profile, index) => (
+        <div
+          key={index}
+          className="mt-6 first:mt-0 rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] lg:p-6"
+        >
+          <h3 className="mb-5 text-lg font-semibold text-gray-800 dark:text-white/90 lg:mb-7">
+            Profile
+          </h3>
+          <div className="space-y-10">
+            <div className="space-y-6 border-b border-gray-200 pb-6 last:border-none last:pb-0 dark:border-gray-800">
+              <UserMetaCard profile={profile} />
+              <UserSocialCard profile={profile} />
+              <UserInfoCard profile={profile} />
+            </div>
+          </div>
         </div>
-      )}
-    </main>
-  );
+      ))}
+    </div>
+  )
 }
