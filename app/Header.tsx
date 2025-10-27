@@ -49,7 +49,7 @@ export default function Header() {
 
         {/* CTA */}
         <a
-          href="#signup"
+          href="https://user.catatin.ai"
           className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#05668D] text-white font-medium shadow-sm hover:bg-[#04506c] hover:scale-105 active:scale-95 transition"
         >
           Coba Gratis
