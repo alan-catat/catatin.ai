@@ -1,5 +1,6 @@
 import {
     GridIcon, UserCircleIcon, ListIcon, PageIcon, PlugInIcon, CalenderIcon,
+    ChatIcon,
   } from "@/icons";
   
   export type NavItem = {
@@ -29,6 +30,7 @@ import {
     ],
     user: [
       { name: "Overview", path: "/dashboard-user", icon: <GridIcon /> },
+      { name: "WebChat", path: "/dashboard-user/webchat", icon: <ChatIcon /> },
       { name: "Profile Management", path: "/dashboard-user/profile", icon: <UserCircleIcon /> },
       { name: "Subscription & Billing", path: "/dashboard-user/subscriptions", icon: <PlugInIcon /> },
       { name: "Reports", path: "/dashboard-user/reports", icon: <CalenderIcon /> },
