@@ -60,6 +60,13 @@ let data;
     }
   } else if (data.success) {
     // JSON valid dan sukses
+    const userData = {
+    firstName,
+    lastName,
+    email,
+    createdAt: new Date().toISOString(),
+  };
+  localStorage.setItem("user", JSON.stringify(userData));
     router.push("/check-email");
   } else {
     // JSON valid tapi gagal
