@@ -14,6 +14,7 @@ export const ENVIRONMENT_SYSTEM = {
   appName: "catatin.ai",
   appLogo: "/catatin.png",
   appDarkLogo: "/catatin.png",
+  appVideo: "/cerah.mp4"
 };
 
 

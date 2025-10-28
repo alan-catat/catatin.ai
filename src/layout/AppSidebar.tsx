@@ -135,7 +135,7 @@ const AppSidebar: React.FC<Props> = ({ role, appLogo }) => {
             </>
           ) : (
             <img
-              src="/next.svg"
+              src="/catatin.png"
               alt="Logo Icon"
               className="h-8"
             />
