@@ -9,7 +9,7 @@ export default function DashboardPage() {
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (!storedUser) {
-      router.replace("/auth/sign-in");
+      router.replace("/dashboard-user");
       return;
     }
     setUser(JSON.parse(storedUser));
