@@ -1,41 +1,49 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from "react"
-import UserInfoCard from "@/components/user-profile/UserInfoCard"
-import UserMetaCard from "@/components/user-profile/UserMetaCard"
-import UserSocialCard from "@/components/user-profile/UserSocialMedia"
+import { useEffect, useState } from "react";
+import UserInfoCard from "@/components/user-profile/UserInfoCard";
+import UserMetaCard from "@/components/user-profile/UserMetaCard";
+import UserSocialCard from "@/components/user-profile/UserSocialMedia";
 
 export default function Profile() {
-  const [profiles, setProfiles] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  const [profiles, setProfiles] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchProfiles = async () => {
       try {
-        // 📡 Dummy data sementara — nanti ganti ke API n8n kamu
-        const dummyUser = {
-          user_id: "temp-user-id",
-          full_name: "Pengguna Baru",
-          email: "user@example.com",
-          groups: { name: "Tanpa Group" },
-          channels: ["Telegram", "WhatsApp"],
-        }
+        const res = await fetch(`${process.env.NEXT_PUBLIC_N8N_GETPROFILE_URL}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
 
-        // ✅ Simulasi loading
-        setTimeout(() => {
-          setProfiles([dummyUser])
-          setLoading(false)
-        }, 800)
+        if (!res.ok) throw new Error("Gagal ambil data dari n8n");
+
+        const data = await res.json();
+        console.log("Hasil dari n8n:", data);
+
+        const formatted = Array.isArray(data) ? data : [data];
+        setProfiles(formatted);
       } catch (error) {
-        console.error("Error loading profile:", error)
-        setLoading(false)
+        console.error("Error loading profile:", error);
+      } finally {
+        setLoading(false);
       }
-    }
+    };
 
-    fetchProfiles()
-  }, [])
+    fetchProfiles();
+  }, []);
 
-  if (loading) return <div>Memuat...</div>
+  if (loading) return <div>Memuat...</div>;
+
+  // fungsi untuk memperbarui satu profile di dalam array
+  const handleProfileUpdate = (index: number, updatedProfile: any) => {
+    setProfiles((prev) =>
+      prev.map((p, i) => (i === index ? { ...p, ...updatedProfile } : p))
+    );
+  };
 
   return (
     <div>
@@ -49,13 +57,16 @@ export default function Profile() {
           </h3>
           <div className="space-y-10">
             <div className="space-y-6 border-b border-gray-200 pb-6 last:border-none last:pb-0 dark:border-gray-800">
+              {/* Semua card pakai data dari profile yang sama */}
               <UserMetaCard profile={profile} />
               <UserSocialCard profile={profile} />
-              <UserInfoCard profile={profile} />
+              <UserInfoCard
+                profile={profile}
+              />
             </div>
           </div>
         </div>
       ))}
     </div>
-  )
+  );
 }

@@ -24,6 +24,16 @@ const nextConfig: NextConfig = {
         port: "",
         pathname: "/storage/v1/object/**",
       },
+      {
+        protocol: "https",
+        hostname: "drive.google.com", // ✅ untuk link uc?export=view
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com", // ✅ untuk link direct Google Photo
+        pathname: "/**",
+      },
     ],
   },
 };

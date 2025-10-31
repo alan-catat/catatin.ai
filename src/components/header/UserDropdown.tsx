@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { LogOut, User as UserIcon } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -10,60 +9,88 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-
-interface User {
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  avatar?: string | null;
-}
+import { LogOut, User as UserIcon } from "lucide-react";
 
 export default function UserDropdown() {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<{
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    avatar?: string | null;
+  } | null>(null);
 
-  // Ambil user dari localStorage
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    const savedUser = localStorage.getItem("user");
-    if (savedUser) {
+    const fetchUserFromN8N = async () => {
       try {
-        const parsedUser = JSON.parse(savedUser);
-        setUser(parsedUser);
+        const res = await fetch(process.env.NEXT_PUBLIC_N8N_GETPROFILE_URL!, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        });
+
+        if (!res.ok) throw new Error("Gagal ambil data user dari n8n");
+
+        const text = await res.text();
+        if (!text) return;
+        const data = JSON.parse(text);
+
+        const formattedUser = {
+          firstName: data.full_name?.split(" ")[0] ?? "",
+          lastName: data.full_name?.split(" ").slice(1).join(" ") ?? "",
+          email: data.email ?? "",
+          avatar: data.photo_url ?? "",
+        };
+
+        setUser(formattedUser);
       } catch (error) {
-        console.error("Error parsing user data:", error);
+        console.error("Error get user from n8n:", error);
+      } finally {
+        setLoading(false);
       }
-    }
+    };
+
+    fetchUserFromN8N();
   }, []);
 
-  // Ambil inisial dari firstname + lastname
   const getInitials = (firstname?: string, lastname?: string) => {
     const first = firstname?.charAt(0)?.toUpperCase() ?? "";
     const last = lastname?.charAt(0)?.toUpperCase() ?? "";
     return (first + last) || "U";
   };
 
-  // URL avatar otomatis (kalau belum ada)
+  const getDriveUrl = (url?: string) => {
+    if (!url) return "";
+    if (url.includes("drive.google.com")) {
+      const match = url.match(/[-\w]{25,}/);
+      if (match) return `https://drive.google.com/uc?export=view&id=${match[0]}`;
+    }
+    return url;
+  };
+
   const avatarUrl = user?.avatar
-    ? user.avatar
+    ? getDriveUrl(user.avatar)
     : `https://ui-avatars.com/api/?name=${encodeURIComponent(
-        `${user?.firstName ?? ""} ${user?.lastName ?? ""}`.trim() ||
-          "User"
+        `${user?.firstName ?? ""} ${user?.lastName ?? ""}`.trim() || "User"
       )}&background=random&color=fff&bold=true`;
 
- 
   const handleSignOut = () => {
-  // Hapus semua data user di localStorage
-  localStorage.removeItem("user");
-  localStorage.removeItem("token"); // kalau kamu simpan token n8n juga
+    // hanya redirect, tanpa hapus localstorage
+    window.location.href = "/auth/dashboard-user/signin";
+  };
 
-  // Redirect ke halaman login
-  window.location.href = "/auth/dashboard-user/signin"; // atau "/login", sesuaikan
-};
+  if (loading) {
+    return (
+      <div className="flex items-center gap-2 text-gray-500 text-sm">
+        Memuat user...
+      </div>
+    );
+  }
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button className="flex items-center space-x-3 focus:outline-none">
-          {/* Avatar */}
           <div className="relative h-11 w-11 rounded-full overflow-hidden bg-gray-300 flex items-center justify-center text-white font-semibold">
             {user?.avatar ? (
               <Image
@@ -72,13 +99,13 @@ export default function UserDropdown() {
                 width={44}
                 height={44}
                 className="object-cover rounded-full"
+                onError={() => console.warn("Gagal load avatar")}
               />
             ) : (
               <span>{getInitials(user?.firstName, user?.lastName)}</span>
             )}
           </div>
 
-          {/* Info singkat */}
           <div className="hidden sm:flex flex-col items-start text-left">
             <span className="text-sm font-semibold">
               {`${user?.firstName ?? ""} ${user?.lastName ?? ""}`.trim() ||

@@ -6,8 +6,9 @@ interface ModalProps {
   onClose: () => void;
   className?: string;
   children: React.ReactNode;
-  showCloseButton?: boolean; // New prop to control close button visibility
-  isFullscreen?: boolean; // Default to false for backwards compatibility
+  showCloseButton?: boolean;
+  isFullscreen?: boolean;
+  title?: string; // ✅ Tambahan baru — opsional
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -15,8 +16,9 @@ export const Modal: React.FC<ModalProps> = ({
   onClose,
   children,
   className,
-  showCloseButton = true, // Default to true for backwards compatibility
+  showCloseButton = true,
   isFullscreen = false,
+  title, // ✅ kita terima di sini
 }) => {
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -52,7 +54,7 @@ export const Modal: React.FC<ModalProps> = ({
 
   const contentClasses = isFullscreen
     ? "w-full h-full"
-    : "relative w-full rounded-3xl bg-white  dark:bg-gray-900";
+    : "relative w-full rounded-3xl bg-white dark:bg-gray-900";
 
   return (
     <div className="fixed inset-0 flex items-center justify-center overflow-y-auto modal z-99999">
@@ -64,7 +66,7 @@ export const Modal: React.FC<ModalProps> = ({
       )}
       <div
         ref={modalRef}
-        className={`${contentClasses}  ${className}`}
+        className={`${contentClasses} ${className}`}
         onClick={(e) => e.stopPropagation()}
       >
         {showCloseButton && (
@@ -88,7 +90,16 @@ export const Modal: React.FC<ModalProps> = ({
             </svg>
           </button>
         )}
-        <div>{children}</div>
+
+        {/* ✅ Tambahan baru: judul opsional */}
+        {title && (
+          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 px-6 pt-6 pb-4">
+            {title}
+          </h2>
+        )}
+
+        {/* Konten */}
+        <div className="px-6 pb-6">{children}</div>
       </div>
     </div>
   );
