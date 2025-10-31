@@ -1,132 +1,131 @@
-"use client"
+"use client";
 
-
-import React, { useState, useEffect } from "react"
-import { useModal } from "../../hooks/useModal"
-import { Modal } from "../ui/modal"
-import Button from "../ui/button/Button"
-import Input from "../form/input/InputField"
-import Label from "../form/Label"
-import { createClient } from "@/utils/supabase/client"
-import { useAlert } from "../ui/alert/Alert"
+import React, { useState, useEffect } from "react";
+import { useModal } from "../../hooks/useModal";
+import { Modal } from "../ui/modal";
+import Button from "../ui/button/Button";
+import Input from "../form/input/InputField";
+import Label from "../form/Label";
+import { useAlert } from "../ui/alert/Alert";
 
 export default function UserInfoCard({ profile }: { profile: any }) {
-  const { isOpen, openModal, closeModal } = useModal()
+  const { isOpen, openModal, closeModal } = useModal();
+  const { setAlertData } = useAlert();
+
   const [formData, setFormData] = useState({
     full_name: profile?.full_name || "",
     phone_number: profile?.phone_number || "",
     date_of_birth: profile?.date_of_birth || "",
     gender: profile?.gender || "",
-  })
-  const [userEmail, setUserEmail] = useState<string | null>(null)
-  const supabase = createClient()
-  const { setAlertData } = useAlert()
-  const fullName = profile?.full_name?.trim() || "";
+    email: profile?.email || "",
+  });
+
+  const fullName = formData.full_name.trim();
   const nameParts = fullName.split(" ");
   const firstName = nameParts[0] || "-";
   const lastName = nameParts.slice(1).join(" ") || "-";
 
-  useEffect(() => {
-    const fetchUserEmail = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      setUserEmail(user?.email ?? null)
-    }
-    fetchUserEmail()
-  }, [supabase])
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [photoUrl, setPhotoUrl] = useState<string>("/images/user/edit.png");
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value })
-  }
+  // Konversi link Google Drive agar bisa tampil di <Image/>
+  const convertDriveUrl = (url: string) => {
+    if (!url) return "/images/user/edit.png";
+    const match = url.match(/[-\w]{25,}/);
+    return match
+      ? `https://drive.google.com/uc?export=view&id=${match[0]}`
+      : url;
+  };
+
+  useEffect(() => {
+    if (profile?.email) setUserEmail(profile.email);
+    if (profile?.photo_url) setPhotoUrl(convertDriveUrl(profile.photo_url));
+  }, [profile]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   const handleSave = async () => {
-    // ambil input dari form
-    const firstName = (document.querySelector<HTMLInputElement>('input[name="firstName"]')?.value || "").trim();
-    const lastName = (document.querySelector<HTMLInputElement>('input[name="lastName"]')?.value || "").trim();
-    const countryCode = (document.querySelector<HTMLInputElement>('input[name="country_code"]')?.value || "").trim();
-    const phoneNumber = (document.querySelector<HTMLInputElement>('input[name="phone_number"]')?.value || "").trim();
-    const gender = (document.querySelector<HTMLSelectElement>('select[name="gender"]')?.value || "").trim();
-    const dateOfBirth = (document.querySelector<HTMLInputElement>('input[name="date_of_birth"]')?.value || "").trim();
+    try {
+      const firstName = (document.querySelector<HTMLInputElement>('input[name="firstName"]')?.value || "").trim();
+      const lastName = (document.querySelector<HTMLInputElement>('input[name="lastName"]')?.value || "").trim();
+      const countryCode = (document.querySelector<HTMLInputElement>('input[name="country_code"]')?.value || "").trim();
+      const phoneNumber = (document.querySelector<HTMLInputElement>('input[name="phone_number"]')?.value || "").trim();
+      const gender = (document.querySelector<HTMLSelectElement>('select[name="gender"]')?.value || "").trim();
+      const dateOfBirth = (document.querySelector<HTMLInputElement>('input[name="date_of_birth"]')?.value || "").trim();
+      const instagram = (document.querySelector<HTMLInputElement>('input[name="instagram"]')?.value || "").trim();
+      const facebook = (document.querySelector<HTMLInputElement>('input[name="facebook"]')?.value || "").trim();
+      const tiktok = (document.querySelector<HTMLInputElement>('input[name="tiktok"]')?.value || "").trim();
 
-    // ambil input sosmed
-    const instagram = (document.querySelector<HTMLInputElement>('input[name="instagram"]')?.value || "").trim();
-    const facebook = (document.querySelector<HTMLInputElement>('input[name="facebook"]')?.value || "").trim();
-    const tiktok = (document.querySelector<HTMLInputElement>('input[name="tiktok"]')?.value || "").trim();
-
-    // ambil file dari input
-    const fileInput = document.querySelector<HTMLInputElement>('input[name="profile_photo"]');
-    let photoUrl: string | null = profile?.photo_url || null;
-
-    if (fileInput?.files?.[0]) {
-      const file = fileInput.files[0];
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${profile.user_id}_${Date.now()}.${fileExt}`;
-      const filePath = `${profile.user_id}/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("avatars")
-        .upload(filePath, file, {
-          cacheControl: "3600",
-          upsert: true
-        });
-
-      if (uploadError) {
-        console.error("Upload error:", uploadError);
-        setAlertData({
-          variant: "error",
-          title: "Gagal Upload Foto",
-          message: uploadError.message
-        });
-        return;
+      let finalPhone = phoneNumber;
+      if (countryCode && !phoneNumber.startsWith(countryCode)) {
+        finalPhone = `${countryCode}${phoneNumber}`;
       }
 
-      photoUrl = filePath;
-    }
-    let finalPhone = phoneNumber;
-    if (countryCode && !phoneNumber.startsWith(countryCode)) {
-      finalPhone = `${countryCode}${phoneNumber}`;
-    }
-    // payload update
-    const payload = {
-      full_name: `${firstName} ${lastName}`.trim(),
-      phone_number: finalPhone || null,
-      gender: gender || null,
-      date_of_birth: dateOfBirth || null,
-      photo_url: photoUrl || profile?.photo_url || null,
-      instagram: instagram || null,
-      facebook: facebook || null,
-      tiktok: tiktok || null,
-      updated_at: new Date().toISOString()
-    };
+      const fileInput = document.querySelector<HTMLInputElement>('input[name="profile_photo"]');
+      const file = fileInput?.files?.[0];
+      let uploadedUrl = profile?.photo_url || null;
 
-    // update ke DB sesuai user_id dari profile, bukan dari getUser()
-    console.log(profile.user_id);
-    const { data, error } = await supabase
-      .from("user_profiles")
-      .update(payload)
-      .eq("user_id", profile.user_id)
-      .select();
+      // Upload ke Google Drive via n8n
+      if (file) {
+        const uploadFormData = new FormData();
+        uploadFormData.append("file", file);
+        uploadFormData.append("email", userEmail || profile?.email || "");
 
-    if (error) {
-      console.error("Supabase update error:", error);
+        const uploadRes = await fetch(`${process.env.NEXT_PUBLIC_N8N_UPLOADPHOTO_URL}`, {
+          method: "POST",
+          body: uploadFormData,
+        });
+
+        if (!uploadRes.ok) throw new Error("Upload gagal");
+        const uploadData = await uploadRes.json();
+        uploadedUrl = uploadData?.fileUrl || uploadedUrl;
+      }
+
+      // Kirim update ke n8n
+      const payload = {
+        email: userEmail || profile?.email || "",
+        first_name: firstName,
+        last_name: lastName,
+        phone_number: finalPhone || null,
+        gender: gender || null,
+        date_of_birth: dateOfBirth || null,
+        instagram: instagram || null,
+        facebook: facebook || null,
+        tiktok: tiktok || null,
+        photo_url: uploadedUrl,
+        updated_at: new Date().toISOString(),
+      };
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_N8N_UPDATEPROFILE_URL}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) throw new Error("Gagal update profil");
+
+      await res.text(); // aman walau kosong
+
+      setAlertData({
+        variant: "success",
+        title: "Berhasil",
+        message: "Profil berhasil diperbarui",
+      });
+
+      closeModal();
+      window.location.reload(); // refresh supaya sinkron dengan halaman lain
+    } catch (err: any) {
+      console.error("Update profile error:", err);
       setAlertData({
         variant: "error",
         title: "Gagal Update",
-        message: error.message
+        message: err.message || "Terjadi kesalahan",
       });
-      return;
     }
-
-    console.log("Update success:", data);
-    setAlertData({
-      variant: "success",
-      title: "Berhasil",
-      message: "Profil berhasil diperbarui"
-    });
-    closeModal();
-
-    // ✅ langsung refresh
-    window.location.reload();
   };
+
 
   return (
     <div className="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
@@ -138,63 +137,40 @@ export default function UserInfoCard({ profile }: { profile: any }) {
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-7 2xl:gap-x-32">
             <div>
-              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                First Name
-              </p>
-              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                {firstName || "-"}
-              </p>
+              <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">First Name</p>
+              <p className="text-sm font-medium text-gray-800 dark:text-white/90">{firstName}</p>
             </div>
 
             <div>
-              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                Last Name
-              </p>
-              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                {lastName || "-"}
-              </p>
+              <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">Last Name</p>
+              <p className="text-sm font-medium text-gray-800 dark:text-white/90">{lastName}</p>
             </div>
 
             <div>
-              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                Email address
-              </p>
-              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                {profile?.email || "-"}
-              </p>
+              <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">Email address</p>
+              <p className="text-sm font-medium text-gray-800 dark:text-white/90">{userEmail || "-"}</p>
             </div>
 
             <div>
-              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                Phone
-              </p>
-              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                {profile?.phone_number || "-"}
-              </p>
+              <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">Phone</p>
+              <p className="text-sm font-medium text-gray-800 dark:text-white/90">{formData.phone_number || "-"}</p>
             </div>
 
             <div>
-              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                Gender
-              </p>
+              <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">Gender</p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                {profile?.gender
-                  ? profile.gender === "L"
-                    ? "male"
-                    : profile.gender === "P"
-                      ? "female"
-                      : "-"
+                {formData.gender === "L"
+                  ? "male"
+                  : formData.gender === "P"
+                  ? "female"
                   : "-"}
               </p>
             </div>
 
-
             <div>
-              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                Date of Birth
-              </p>
+              <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">Date of Birth</p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                {profile?.date_of_birth || "-"}
+                {formData.date_of_birth || "-"}
               </p>
             </div>
           </div>
@@ -202,41 +178,26 @@ export default function UserInfoCard({ profile }: { profile: any }) {
 
         <button
           onClick={openModal}
-          className="flex w-full items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 lg:inline-flex lg:w-auto"
+          className="flex w-full items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 lg:w-auto"
         >
-          <svg
-            className="fill-current"
-            width="18"
-            height="18"
-            viewBox="0 0 18 18"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              fillRule="evenodd"
-              clipRule="evenodd"
-              d="M15.0911 2.78206C14.2125 1.90338 12.7878 1.90338 11.9092 2.78206L4.57524 10.116C4.26682 10.4244 4.0547 10.8158 3.96468 11.2426L3.31231 14.3352C3.25997 14.5833 3.33653 14.841 3.51583 15.0203C3.69512 15.1996 3.95286 15.2761 4.20096 15.2238L7.29355 14.5714C7.72031 14.4814 8.11172 14.2693 8.42013 13.9609L15.7541 6.62695C16.6327 5.74827 16.6327 4.32365 15.7541 3.44497L15.0911 2.78206ZM12.9698 3.84272C13.2627 3.54982 13.7376 3.54982 14.0305 3.84272L14.6934 4.50563C14.9863 4.79852 14.9863 5.2734 14.6934 5.56629L14.044 6.21573L12.3204 4.49215L12.9698 3.84272ZM11.2597 5.55281L5.6359 11.1766C5.53309 11.2794 5.46238 11.4099 5.43238 11.5522L5.01758 13.5185L6.98394 13.1037C7.1262 13.0737 7.25666 13.003 7.35947 12.9002L12.9833 7.27639L11.2597 5.55281Z"
-              fill=""
-            />
-          </svg>
-          Edit
+          ✏️ Edit
         </button>
       </div>
 
+      {/* === MODAL EDIT === */}
       <Modal isOpen={isOpen} onClose={closeModal} className="max-w-[700px] m-4">
         <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
           <div className="px-2 pr-14">
             <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
               Edit Personal Information
             </h4>
-            <p className="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">
+            <p className="mb-6 text-sm text-gray-500 dark:text-gray-400">
               Update your details to keep your profile up-to-date.
             </p>
           </div>
+
           <form
             className="flex flex-col"
-            method="POST"
-            encType="multipart/form-data"
             onSubmit={(e) => {
               e.preventDefault();
               handleSave();
@@ -244,82 +205,44 @@ export default function UserInfoCard({ profile }: { profile: any }) {
           >
             <div className="custom-scrollbar h-[450px] overflow-y-auto px-2 pb-3">
               <div className="mt-7">
-                <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
+                <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90">
                   Personal Information
                 </h5>
 
                 <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
-
-                  {/* First Name */}
-                  <div className="col-span-2 lg:col-span-1">
+                  <div>
                     <Label>First Name</Label>
-                    <Input
-                      name={`firstName`}
-                      type="text"
-                      defaultValue={firstName || ""}
-                      placeholder="Enter first name"
-                    />
+                    <Input name="firstName" type="text" defaultValue={firstName} placeholder="Enter first name" />
                   </div>
-
-                  {/* Last Name - optional */}
-                  <div className="col-span-2 lg:col-span-1">
-                    <Label>Last Name (Optional)</Label>
-                    <Input
-                      name={`lastName`}
-                      type="text"
-                      defaultValue={lastName || ""}
-                      placeholder="Enter last name"
-                    />
+                  <div>
+                    <Label>Last Name</Label>
+                    <Input name="lastName" type="text" defaultValue={lastName} placeholder="Enter last name" />
                   </div>
+                  <div>
+                    <Label>Email Address</Label><Input type="email" name="email" value={userEmail || ""} readOnly disabled />
 
-                  {/* Email - read-only */}
-                  <div className="col-span-2 lg:col-span-1">
-                    <Label>Email Address</Label>
-                    <Input
-                      type="email"
-                      defaultValue={userEmail || ""}
-                      readOnly disabled
-                    />
                   </div>
-
-                  {/* Phone */}
-                  <div className="col-span-2 lg:col-span-2">
+                  <div className="col-span-2">
                     <Label>Phone</Label>
                     <div className="grid grid-cols-3 gap-2">
-                      {/* Kode negara */}
                       <div className="col-span-1 flex">
                         <span className="inline-flex items-center px-3 rounded-l-lg border border-gray-300 bg-gray-100 text-gray-600 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400">
                           +
                         </span>
-                        <Input
-                          name={`country_code`}
-                          type="number"
-                          placeholder="62"
-                          defaultValue={profile?.country_code || "62"}
-                          className="rounded-l-none"
-                        />
+                        <Input name="country_code" type="number" placeholder="62" defaultValue="62" className="rounded-l-none" />
                       </div>
-
-                      {/* Nomor telepon */}
                       <div className="col-span-2">
-                        <Input
-                          name={`phone_number`}
-                          type="tel"
-                          placeholder="81234567890"
-                          defaultValue={profile?.phone_number || ""}
-                        />
+                        <Input name="phone_number" type="tel" defaultValue={formData.phone_number} placeholder="81234567890" />
                       </div>
                     </div>
                   </div>
 
-
-                  {/* Gender */}
-                  <div className="col-span-2 lg:col-span-1">
+                  <div>
                     <Label>Gender</Label>
                     <select
-                      name={`gender`}
+                      name="gender"
                       className="w-full rounded-md border border-gray-300 p-2 dark:border-gray-600 dark:bg-gray-800"
-                      defaultValue={profile?.gender || ""}
+                      defaultValue={formData.gender}
                     >
                       <option value="">Select gender</option>
                       <option value="L">Male</option>
@@ -327,76 +250,46 @@ export default function UserInfoCard({ profile }: { profile: any }) {
                     </select>
                   </div>
 
-                  {/* Date of Birth */}
-                  <div className="col-span-2 lg:col-span-1">
-                    <Label>Date Of Birth</Label>
-                    <Input
-                      name={`date_of_birth`}
-                      type="date"
-                      defaultValue={profile?.date_of_birth || ""}
-                    />
+                  <div>
+                    <Label>Date of Birth</Label>
+                    <Input name="date_of_birth" type="date" defaultValue={formData.date_of_birth} />
                   </div>
-                  {/* Instagram */}
-                  <div className="col-span-2 lg:col-span-1">
+
+                  <div>
                     <Label>Instagram</Label>
-                    <Input
-                      name={`instagram`}
-                      type="text"
-                      defaultValue={profile?.instagram || ""}
-                      placeholder="@username / URL"
-                    />
+                    <Input name="instagram" type="text" defaultValue={profile?.instagram || ""} placeholder="@username / URL" />
                   </div>
-
-                  {/* Facebook */}
-                  <div className="col-span-2 lg:col-span-1">
+                  <div>
                     <Label>Facebook</Label>
-                    <Input
-                      name={`facebook`}
-                      type="text"
-                      defaultValue={profile?.facebook || ""}
-                      placeholder="Profile URL"
-                    />
+                    <Input name="facebook" type="text" defaultValue={profile?.facebook || ""} placeholder="Profile URL" />
                   </div>
-
-                  {/* TikTok */}
-                  <div className="col-span-2 lg:col-span-1">
+                  <div>
                     <Label>TikTok</Label>
-                    <Input
-                      name={`tiktok`}
-                      type="text"
-                      defaultValue={profile?.tiktok || ""}
-                      placeholder="@username / URL"
-                    />
+                    <Input name="tiktok" type="text" defaultValue={profile?.tiktok || ""} placeholder="@username / URL" />
                   </div>
 
-                  {/* Upload Photo */}
                   <div className="col-span-2">
                     <Label>Profile Photo</Label>
                     <input
                       type="file"
                       name="profile_photo"
                       accept="image/*"
-                      className="block w-full text-sm text-gray-500 file:mr-4 file:rounded-lg file:border-0 file:bg-gray-100 file:px-4 file:py-2 file:text-sm file:font-semibold hover:file:bg-gray-200 dark:file:bg-gray-700 dark:hover:file:bg-gray-600"
+                      className="block w-full text-sm text-gray-500 file:mr-4 file:rounded-lg file:border-0 file:bg-gray-100 file:px-4 file:py-2 file:font-semibold hover:file:bg-gray-200 dark:file:bg-gray-700 dark:hover:file:bg-gray-600"
                     />
                   </div>
                 </div>
               </div>
             </div>
-            {/* Buttons */}
+
             <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
               <Button size="sm" variant="outline" onClick={closeModal}>
                 Close
               </Button>
-              <Button
-                type="submit"
-                size="sm"
-              >
+              <Button type="submit" size="sm">
                 Save Changes
               </Button>
-
             </div>
           </form>
-
         </div>
       </Modal>
     </div>

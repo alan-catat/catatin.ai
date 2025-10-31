@@ -19,18 +19,39 @@ export default function SignUpForm() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [passwordError, setPasswordError] = useState("");
 
-  // 🌐 URL webhook n8n (dari .env.local)
   const WEBHOOK_URL = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL!;
   const WEBHOOK_GOOGLE = process.env.NEXT_PUBLIC_N8N_GOOGLE_SIGNUP_URL!;
 
-  // ✅ Handle Manual Sign-Up → kirim ke n8n
+  // ✅ Validasi sebelum submit
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setErrorMsg("");
+    setPasswordError("");
+
+    // Validasi required
+    if (!firstName || !email || !password || !confirmPassword) {
+      setErrorMsg("Please fill in all required fields.");
+      return;
+    }
+
+    // Validasi checkbox
+    if (!isChecked) {
+      setErrorMsg("You must agree to the Terms and Conditions.");
+      return;
+    }
+
+    // Validasi password
+    if (password !== confirmPassword) {
+      setPasswordError("Passwords do not match.");
+      return;
+    }
+
+    setLoading(true);
 
     try {
       const response = await fetch(WEBHOOK_URL, {
@@ -46,22 +67,20 @@ export default function SignUpForm() {
       });
 
       let data;
-      const text = await response.text(); // ambil dulu sebagai teks mentah
+      const text = await response.text();
       try {
-        data = JSON.parse(text); // coba parse jadi JSON
+        data = JSON.parse(text);
       } catch {
-        data = text; // kalau gagal, berarti dia teks biasa
+        data = text;
       }
 
       if (typeof data === "string") {
-        // responsnya bukan JSON
         if (data.toLowerCase().includes("sudah terdaftar")) {
           setErrorMsg("Anda sudah terdaftar, silakan login.");
         } else {
           setErrorMsg(data);
         }
       } else if (data.success) {
-        // JSON valid dan sukses
         const userData = {
           firstName,
           lastName,
@@ -71,7 +90,6 @@ export default function SignUpForm() {
         localStorage.setItem("user", JSON.stringify(userData));
         router.push("/check-email");
       } else {
-        // JSON valid tapi gagal
         if (data.error === "User already registered") {
           setErrorMsg("Anda sudah terdaftar, silakan login.");
         } else {
@@ -86,20 +104,10 @@ export default function SignUpForm() {
     }
   };
 
-  // 🟢 Handle Google Sign-Up (redirect ke n8n workflow)
-  const handleGoogleSignUp = async () => {
-    try {
-      if (!WEBHOOK_GOOGLE) {
-        console.error("❌ Missing NEXT_PUBLIC_N8N_GOOGLE_SIGNUP_URL in .env.local");
-        setErrorMsg("Google Sign-Up belum dikonfigurasi.");
-        return;
-      }
-      window.location.href = WEBHOOK_GOOGLE; // arahkan langsung ke workflow Google
-    } catch (error) {
-      console.error("Google Sign Up failed:", error);
-      setErrorMsg("Gagal memulai Google Sign Up.");
-    }
-  };
+ const handleGoogleSignUp = () => {
+  window.location.href = process.env.NEXT_PUBLIC_N8N_GOOGLE_SIGNUP_URL!;
+  
+};
 
   return (
     <div className="flex flex-col flex-1 lg:w-1/2 w-full overflow-y-auto no-scrollbar">
@@ -121,13 +129,7 @@ export default function SignUpForm() {
               onClick={handleGoogleSignUp}
               className="inline-flex items-center justify-center gap-3 py-3 text-sm font-normal text-gray-700 transition-colors bg-gray-100 rounded-lg px-7 hover:bg-gray-200 hover:text-gray-800 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10"
             >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 20 20"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                 <path
                   d="M18.7511 10.1944C18.7511 9.47495 18.6915 8.94995 18.5626 8.40552H10.1797V11.6527H15.1003C15.0011 12.4597 14.4654 13.675 13.2749 14.4916L13.2582 14.6003L15.9087 16.6126L16.0924 16.6305C17.7788 15.1041 18.7511 12.8583 18.7511 10.1944Z"
                   fill="#4285F4"
@@ -173,6 +175,7 @@ export default function SignUpForm() {
                     onChange={(e) => setFirstName(e.target.value)}
                     placeholder="Enter your first name"
                     required
+                    className={!firstName && errorMsg ? "border-red-500" : ""}
                   />
                 </div>
                 <div>
@@ -194,6 +197,7 @@ export default function SignUpForm() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email"
                   required
+                  className={!email && errorMsg ? "border-red-500" : ""}
                 />
               </div>
 
@@ -206,6 +210,7 @@ export default function SignUpForm() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    className={passwordError ? "border-red-500" : ""}
                   />
                   <span
                     onClick={() => setShowPassword(!showPassword)}
@@ -226,9 +231,10 @@ export default function SignUpForm() {
                   <Input
                     placeholder="Enter your password"
                     type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
                     required
+                    className={passwordError ? "border-red-500" : ""}
                   />
                   <span
                     onClick={() => setShowPassword(!showPassword)}
@@ -241,6 +247,9 @@ export default function SignUpForm() {
                     )}
                   </span>
                 </div>
+                {passwordError && (
+                  <p className="text-red-500 text-sm mt-1">{passwordError}</p>
+                )}
               </div>
 
               <div className="flex items-center gap-3">
@@ -265,7 +274,14 @@ export default function SignUpForm() {
                 className="w-full"
                 size="sm"
                 type="submit"
-                disabled={loading || !isChecked}
+                disabled={
+                  loading ||
+                  !isChecked ||
+                  !firstName ||
+                  !email ||
+                  !password ||
+                  !confirmPassword
+                }
               >
                 {loading ? "Signing up..." : "Sign Up"}
               </Button>
