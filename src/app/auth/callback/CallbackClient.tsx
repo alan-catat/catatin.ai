@@ -19,8 +19,18 @@ export default function CallbackClient() {
         if (dataParam) {
           const decoded = JSON.parse(decodeURIComponent(dataParam));
 
-          // Simpan user ke localStorage
-          localStorage.setItem("user", JSON.stringify(decoded));
+          // Pastikan struktur data user yang konsisten
+          const userData = {
+            firstName: decoded.given_name || decoded.firstName || "",
+            lastName: decoded.family_name || decoded.lastName || "",
+            email: decoded.email || "",
+            avatar: decoded.picture || decoded.avatar || "",
+            createdAt: new Date().toISOString(),
+            provider: "google",
+          };
+
+          // 🧠 Simpan user ke localStorage agar langsung login
+          localStorage.setItem("user", JSON.stringify(userData));
 
           setStatus("success");
           return;
