@@ -24,9 +24,16 @@ export default function UserDropdown() {
   useEffect(() => {
     const fetchUserFromN8N = async () => {
       try {
+        const userLocal = JSON.parse(localStorage.getItem("user") || "{}");
+      if (!userLocal.email) {
+        console.warn("Email user tidak ditemukan di localStorage");
+        return;
+      }
+      
         const res = await fetch(process.env.NEXT_PUBLIC_N8N_GETPROFILE_URL!, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: userLocal.email }),
         });
 
         if (!res.ok) throw new Error("Gagal ambil data user dari n8n");
