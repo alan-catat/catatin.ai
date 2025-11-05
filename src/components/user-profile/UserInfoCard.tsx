@@ -7,6 +7,7 @@ import Button from "../ui/button/Button";
 import Input from "../form/input/InputField";
 import Label from "../form/Label";
 import { useAlert } from "../ui/alert/Alert";
+import DatePicker from "@/components/form/date-picker";
 
 export default function UserInfoCard({ profile }: { profile: any }) {
   const { isOpen, openModal, closeModal } = useModal();
@@ -251,9 +252,25 @@ export default function UserInfoCard({ profile }: { profile: any }) {
                   </div>
 
                   <div>
-                    <Label>Date of Birth</Label>
-                    <Input name="date_of_birth" type="date" defaultValue={formData.date_of_birth} />
-                  </div>
+  <DatePicker
+    id="date_of_birth"
+    label="Date of Birth"
+    defaultDate={formData.date_of_birth} // nilai awal dari data user
+    placeholder="Select your birth date"
+    onChange={([selectedDate]: any) => {
+      if (selectedDate) {
+        const formatted = selectedDate.toISOString().split("T")[0];
+
+        // Simpan hasilnya ke formData (pastikan kamu punya setFormData)
+        setFormData((prev: any) => ({
+          ...prev,
+          date_of_birth: formatted,
+        }));
+      }
+    }}
+  />
+</div>
+
 
                   <div>
                     <Label>Instagram</Label>
