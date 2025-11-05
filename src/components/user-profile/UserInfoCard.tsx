@@ -204,25 +204,28 @@ export default function UserInfoCard({ profile }: { profile: any }) {
               handleSave();
             }}
           >
-            <div className="custom-scrollbar h-[450px] overflow-y-auto px-2 pb-3">
+            <div className="custom-scrollbar h-[70vh] overflow-y-auto px-3 pb-6 space-y-6">
               <div className="mt-7">
                 <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90">
                   Personal Information
                 </h5>
 
-                <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
-                  <div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 w-full">
+                  <div className="col-span-2 sm:col-span-1">
                     <Label>First Name</Label>
                     <Input name="firstName" type="text" defaultValue={firstName} placeholder="Enter first name" />
                   </div>
-                  <div>
+
+                  <div className="col-span-2 sm:col-span-1">
                     <Label>Last Name</Label>
                     <Input name="lastName" type="text" defaultValue={lastName} placeholder="Enter last name" />
                   </div>
-                  <div>
-                    <Label>Email Address</Label><Input type="email" name="email" value={userEmail || ""} readOnly disabled />
 
+                  <div className="col-span-2">
+                    <Label>Email Address</Label>
+                    <Input type="email" name="email" value={userEmail || ""} readOnly disabled />
                   </div>
+
                   <div className="col-span-2">
                     <Label>Phone</Label>
                     <div className="grid grid-cols-3 gap-2">
@@ -238,7 +241,7 @@ export default function UserInfoCard({ profile }: { profile: any }) {
                     </div>
                   </div>
 
-                  <div>
+                  <div className="col-span-2 sm:col-span-1">
                     <Label>Gender</Label>
                     <select
                       name="gender"
@@ -251,7 +254,7 @@ export default function UserInfoCard({ profile }: { profile: any }) {
                     </select>
                   </div>
 
-                  <div>
+                  <div className="col-span-2 sm:col-span-1">
   <DatePicker
     id="date_of_birth"
     label="Date of Birth"
@@ -272,15 +275,15 @@ export default function UserInfoCard({ profile }: { profile: any }) {
 </div>
 
 
-                  <div>
+                  <div className="col-span-2 sm:col-span-1">
                     <Label>Instagram</Label>
                     <Input name="instagram" type="text" defaultValue={profile?.instagram || ""} placeholder="@username / URL" />
                   </div>
-                  <div>
+                  <div className="col-span-2 sm:col-span-1">
                     <Label>Facebook</Label>
                     <Input name="facebook" type="text" defaultValue={profile?.facebook || ""} placeholder="Profile URL" />
                   </div>
-                  <div>
+                  <div className="col-span-2 sm:col-span-1">
                     <Label>TikTok</Label>
                     <Input name="tiktok" type="text" defaultValue={profile?.tiktok || ""} placeholder="@username / URL" />
                   </div>
