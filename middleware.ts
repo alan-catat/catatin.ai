@@ -2,6 +2,16 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl;
+
+  // ✅ IZINKAN Webhook & Midtrans tanpa redirect
+  if (
+    pathname.startsWith("/api/webhook/report") || 
+    pathname.startsWith("/api/midtrans")
+  ) {
+    return NextResponse.next();
+  }
+
   const url = req.nextUrl.clone();
   const hostname = req.headers.get("host") || "";
 

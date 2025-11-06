@@ -54,7 +54,7 @@ export default function UserInfoCard({ profile }: { profile: any }) {
       const countryCode = (document.querySelector<HTMLInputElement>('input[name="country_code"]')?.value || "").trim();
       const phoneNumber = (document.querySelector<HTMLInputElement>('input[name="phone_number"]')?.value || "").trim();
       const gender = (document.querySelector<HTMLSelectElement>('select[name="gender"]')?.value || "").trim();
-      const dateOfBirth = (document.querySelector<HTMLInputElement>('input[name="date_of_birth"]')?.value || "").trim();
+      const dateOfBirth = formData.date_of_birth?.trim() || null;
       const instagram = (document.querySelector<HTMLInputElement>('input[name="instagram"]')?.value || "").trim();
       const facebook = (document.querySelector<HTMLInputElement>('input[name="facebook"]')?.value || "").trim();
       const tiktok = (document.querySelector<HTMLInputElement>('input[name="tiktok"]')?.value || "").trim();
@@ -262,7 +262,7 @@ export default function UserInfoCard({ profile }: { profile: any }) {
     placeholder="Select your birth date"
     onChange={([selectedDate]: any) => {
       if (selectedDate) {
-        const formatted = selectedDate.toISOString().split("T")[0];
+        const formatted = selectedDate.toLocaleDateString("en-CA");
 
         // Simpan hasilnya ke formData (pastikan kamu punya setFormData)
         setFormData((prev: any) => ({
