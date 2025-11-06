@@ -9,6 +9,35 @@ import Label from "../form/Label";
 import { useAlert } from "../ui/alert/Alert";
 import DatePicker from "@/components/form/date-picker";
 
+/* 🧩 Tambahan helper kecil untuk kirim notifikasi ke n8n */
+async function sendNotification({
+  user,
+  message,
+  avatar,
+  user_id,
+}: {
+  user: string;
+  message: string;
+  avatar?: string;
+  user_id?: string;
+}) {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_N8N_NOTIFICATION_URL}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user_id,
+        user,
+        message,
+        avatar: avatar || "https://i.pravatar.cc/40?u=" + user,
+      }),
+    });
+    if (!res.ok) console.warn("⚠️ Gagal kirim notifikasi:", await res.text());
+  } catch (err) {
+    console.error("❌ Error kirim notifikasi:", err);
+  }
+}
+
 export default function UserInfoCard({ profile }: { profile: any }) {
   const { isOpen, openModal, closeModal } = useModal();
   const { setAlertData } = useAlert();
@@ -29,7 +58,6 @@ export default function UserInfoCard({ profile }: { profile: any }) {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string>("/images/user/edit.png");
 
-  // Konversi link Google Drive agar bisa tampil di <Image/>
   const convertDriveUrl = (url: string) => {
     if (!url) return "/images/user/edit.png";
     const match = url.match(/[-\w]{25,}/);
@@ -107,7 +135,15 @@ export default function UserInfoCard({ profile }: { profile: any }) {
 
       if (!res.ok) throw new Error("Gagal update profil");
 
-      await res.text(); // aman walau kosong
+      await res.text();
+
+      /* ✅ Tambahkan trigger notifikasi setelah sukses update profil */
+      await sendNotification({
+        user: `${firstName} ${lastName}`,
+        user_id: userEmail || profile?.email || "",
+        message: "berhasil memperbarui profilnya.",
+        avatar: uploadedUrl,
+      });
 
       setAlertData({
         variant: "success",
@@ -116,7 +152,7 @@ export default function UserInfoCard({ profile }: { profile: any }) {
       });
 
       closeModal();
-      window.location.reload(); // refresh supaya sinkron dengan halaman lain
+      window.location.reload();
     } catch (err: any) {
       console.error("Update profile error:", err);
       setAlertData({
@@ -126,8 +162,7 @@ export default function UserInfoCard({ profile }: { profile: any }) {
       });
     }
   };
-
-
+  
   return (
     <div className="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
