@@ -10,7 +10,7 @@ export async function sendNotification({
   user_id?: string;
 }) {
   try {
-    const res = await fetch("https://n8n.domain.com/webhook/notifications", {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_N8N_NOTIFICATION_URL}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
