@@ -1,15 +1,13 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+import type { NextConfig } from "next";
 
-  eslint: { ignoreDuringBuilds: true },
-  typescript: { ignoreBuildErrors: true },
-  experimental: {
-    appDir: true, // ✅ Wajib kalau kamu pakai App Router (folder "app")
+const nextConfig: NextConfig = {
+  eslint: {
+    ignoreDuringBuilds: true,
   },
-  // 👇 tambahkan ini biar Next tahu bahwa semua source ada di folder "src"
-  srcDir: "src",
-
-  webpack(config:any) {
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  webpack(config: any) {
     config.module.rules.push({
       test: /\.svg$/,
       use: ["@svgr/webpack"],
