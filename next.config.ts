@@ -1,15 +1,15 @@
-import type { NextConfig } from "next";
+/** @type {import('next').NextConfig} */
+const nextConfig = {
 
-const nextConfig: NextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true, // <--- Tambahkan ini
+  eslint: { ignoreDuringBuilds: true },
+  typescript: { ignoreBuildErrors: true },
+  experimental: {
+    appDir: true, // ✅ Wajib kalau kamu pakai App Router (folder "app")
   },
-  typescript: {
-    // ⬇️ Ini penting, biar Vercel gak stop build gara2 error TS
-    ignoreBuildErrors: true,
-  },
-  /* config options here */
-  webpack(config) {
+  // 👇 tambahkan ini biar Next tahu bahwa semua source ada di folder "src"
+  srcDir: "src",
+
+  webpack(config:any) {
     config.module.rules.push({
       test: /\.svg$/,
       use: ["@svgr/webpack"],
@@ -26,12 +26,12 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "drive.google.com", // ✅ untuk link uc?export=view
+        hostname: "drive.google.com",
         pathname: "/**",
       },
       {
         protocol: "https",
-        hostname: "lh3.googleusercontent.com", // ✅ untuk link direct Google Photo
+        hostname: "lh3.googleusercontent.com",
         pathname: "/**",
       },
     ],
