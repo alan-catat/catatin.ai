@@ -9,6 +9,7 @@ const N8N_BASE = process.env.NEXT_PUBLIC_N8N_BASE_URL || "https://n8n.srv1074739
 const N8N_GETREPORTS_URL = process.env.NEXT_PUBLIC_N8N_GETREPORTS_URL || `${N8N_BASE}/webhook/get-reports`;
 const N8N_GETGROUPS_URL = process.env.NEXT_PUBLIC_N8N_GETGROUPS_URL || `${N8N_BASE}/webhook/get-groups`;
 const N8N_ADDREPORTS_URL = process.env.NEXT_PUBLIC_N8N_ADDREPORTS_URL || `${N8N_BASE}/webhook/add-report`;
+const N8N_EXPORT_URL = process.env.NEXT_PUBLIC_N8N_EXPORT_URL || `${N8N_BASE}/webhook/export`;
 
 /** Helper: buat string YYYY-MM-DD dari Date (lokal) */
 function formatDateLocal(d: Date) {
@@ -123,21 +124,45 @@ export default function ReportPage() {
   };
 
   // Export unchanged
-  const handleExport = () => {
-    if (!reports.length) {
-      alert("Tidak ada data untuk diexport");
+ const handleExport = async () => {
+  try {
+    const userEmail =
+      localStorage.getItem("user_email") ||
+      JSON.parse(localStorage.getItem("user") || "{}")?.email;
+
+    console.log("User email found:", userEmail);
+
+    if (!userEmail) {
+      alert("User tidak terdeteksi. Silakan login ulang.");
       return;
     }
-    const rows = reports.map((r) => ({
-      Date: r.date,
-      Type: r.type,
-      Category: r.category,
-      Merchant: r.merchant,
-      Item: r.item,
-      Amount: r.amount,
-    }));
-    exportToExcel(rows, { fileName: "reports.xlsx" });
-  };
+
+    // ✅ rekomendasi final — taruh di sini:
+    const N8N_EXPORT_URL =
+      process.env.NEXT_PUBLIC_N8N_EXPORT_URL ||
+      "https://n8n.srv1074739.hstgr.cloud/webhook/export";
+
+    const res = await fetch(N8N_EXPORT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: userEmail }),
+    });
+
+    console.log("Request sent to:", N8N_EXPORT_URL);
+
+    const data = await res.json().catch(() => ({}));
+    console.log("Webhook response:", data);
+
+    if (data.sheetUrl) {
+      window.open(data.sheetUrl, "_blank");
+    } else {
+      alert("Export berhasil, tetapi n8n tidak mengembalikan link sheet.");
+    }
+  } catch (err) {
+    console.error("Gagal export:", err);
+    alert("Gagal export data ke Google Sheet.");
+  }
+};
 
   // --- modal submit using state (uses DatePicker, not input[type="date"]) ---
   const submitModal = async (e: React.FormEvent) => {
