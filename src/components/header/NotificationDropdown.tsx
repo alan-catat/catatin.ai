@@ -57,11 +57,12 @@ export default function NotificationDropdown() {
 }
 
     }
-
+if (isOpen) {
     fetchNotifications();
     const interval = setInterval(fetchNotifications, 5000);
     return () => clearInterval(interval);
-  }, []);
+}
+  }, [isOpen]);
 
   return (
     <div className="relative">
