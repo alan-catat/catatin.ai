@@ -51,57 +51,107 @@ export default function ReportPage() {
   const uniqueGroups = Array.from(new Map(groups.map((g) => [g.group_name, g])).values());
 
   // --- fetch groups ---
-  const fetchGroups = async () => {
-    try {
-      console.log("Fetching groups from:", N8N_GETGROUPS_URL);
-      const res = await fetch(N8N_GETGROUPS_URL);
-      const data = await res.json();
-      console.log("groups raw:", data);
-      if (Array.isArray(data)) setGroups(data);
-    } catch (err) {
-      console.error("Error fetching groups:", err);
+  // --- fetch groups (ambil email dari localStorage) ---
+const fetchGroups = async () => {
+  try {
+    const userEmail =
+      localStorage.getItem("user_email") ||
+      JSON.parse(localStorage.getItem("user") || "{}")?.email;
+
+    if (!userEmail) {
+      console.warn("User email not found, skipping fetchGroups");
+      return;
     }
-  };
 
-  // --- fetch reports (robust building of query params) ---
-  const fetchReports = async () => {
-    try {
-      const params = new URLSearchParams();
-      if (selectedGroup) params.append("group", selectedGroup);
-      if (dateFrom) params.append("dateFrom", dateFrom);
-      if (dateTo) params.append("dateTo", dateTo);
+    console.log("Fetching groups (POST) to:", N8N_GETGROUPS_URL);
 
-      const url = params.toString() ? `${N8N_GETREPORTS_URL}?${params.toString()}` : N8N_GETREPORTS_URL;
-      console.log("Fetching reports from:", url);
+    const res = await fetch(N8N_GETGROUPS_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: userEmail, // kirim email user ke n8n
+      }),
+    });
 
-      const res = await fetch(url);
-      if (!res.ok) {
-        console.error("Fetch reports status:", res.status, await res.text());
-        return;
-      }
-      const data = await res.json();
-      console.log("reports raw:", data);
-
-      if (Array.isArray(data)) {
-        setReports(
-          data.map((r) => ({
-            // sesuaikan field dengan response n8n: gunakan flow_date atau flow_transaction_date sesuai output
-            date: r.flow_date || r.flow_transaction_date || r.flow_transaction_date_formatted || "",
-            type: r.flow_type,
-            category: r.flow_category || r.category_name || "-",
-            merchant: r.flow_merchant,
-            item: r.flow_items,
-            amount: Number(r.flow_amount) || 0,
-          }))
-        );
-      } else {
-        console.warn("Expected array from get-reports, got:", data);
-        setReports([]);
-      }
-    } catch (err) {
-      console.error("Error fetching reports:", err);
+    if (!res.ok) {
+      throw new Error(`Fetch failed with status ${res.status}`);
     }
-  };
+
+    const data = await res.json();
+    console.log("groups raw:", data);
+
+    if (Array.isArray(data)) {
+      setGroups(data);
+    } else {
+      console.warn("Unexpected response:", data);
+    }
+  } catch (err) {
+    console.error("Error fetching groups:", err);
+  }
+};
+
+
+  // --- fetch reports (POST version) ---
+const fetchReports = async (filters: any = {}) => {
+  try {
+    const userEmail =
+      localStorage.getItem("user_email") ||
+      JSON.parse(localStorage.getItem("user") || "{}")?.email;
+
+    if (!userEmail) {
+      console.warn("User email not found, skipping fetchReports");
+      return;
+    }
+
+    const groupValue = filters.group ?? selectedGroup ?? "";
+    const dateFromValue = filters.from ?? dateFrom ?? null;
+    const dateToValue = filters.to ?? dateTo ?? null;
+
+    const payload = {
+      email: userEmail,
+      group: groupValue,
+      dateFrom: dateFromValue,
+      dateTo: dateToValue,
+      skipDateFilter: !dateFromValue || !dateToValue,
+    };
+
+    console.log("Fetching reports (POST) to:", N8N_GETREPORTS_URL, payload);
+
+    const res = await fetch(N8N_GETREPORTS_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      console.error("Fetch reports status:", res.status, await res.text());
+      return;
+    }
+
+    const data = await res.json();
+    console.log("reports raw:", data);
+
+    if (Array.isArray(data)) {
+      setReports(
+        data.map((r) => ({
+          date: r.flow_date || r.flow_transaction_date || "",
+          type: r.flow_type,
+          category: r.flow_category || "-",
+          merchant: r.flow_merchant,
+          item: r.flow_items,
+          amount: Number(r.flow_amount) || 0,
+        }))
+      );
+    } else {
+      console.warn("Expected array from get-reports, got:", data);
+      setReports([]);
+    }
+  } catch (err) {
+    console.error("Error fetching reports:", err);
+  }
+};
 
   // initial load
   useEffect(() => {

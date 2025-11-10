@@ -32,10 +32,10 @@ import {
       { name: "Overview", path: "/dashboard-user", icon: <GridIcon /> },
       { name: "WebChat", path: "/dashboard-user/webchat", icon: <ChatIcon /> },
       { name: "Profile Management", path: "/dashboard-user/profile", icon: <UserCircleIcon /> },
-      { name: "Subscription & Billing", path: "/dashboard-user/subscriptions", icon: <PlugInIcon /> },
+      
       { name: "Reports", path: "/dashboard-user/reports", icon: <CalenderIcon /> },
-      { name: "Support", path: "/dashboard-user/supports", icon: <PageIcon /> },
-      { name: "Settings", path: "/dashboard-user/settings", icon: <PlugInIcon /> },
+      
+      
     ],
   };
   
