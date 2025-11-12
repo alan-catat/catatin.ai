@@ -161,7 +161,9 @@ export default function Paket() {
     );
   }
 
-  return (
+const freePackages = packages.filter((p) => !p.is_paid);
+
+return (
     <div className="py-12 md:py-16 bg-gradient-to-b from-white via-[#B2F7FF] to-[#80F2FF] text-slate-800 antialiased"
     >
 
@@ -199,8 +201,8 @@ export default function Paket() {
 
       {/* Pricing Cards */}
       <main className="flex-1">
-        <div id="pricing" className="grid gap-6 lg:grid-cols-3 max-w-6xl mx-auto w-full px-6 mb-16">
-          {packages.map((pkg, index) => {
+        <div id="pricing" className="grid gap-6 grid-cols-1 lg:grid-cols-1 max-w-6xl mx-auto w-full px-6 mb-16 justify-center place-items-center">
+          {freePackages.map((pkg, index) => {
             const plan = pkg.billing_plans.find((bp) => bp.billing_cycle === billingCycle);
             if (!plan) return null;
 
@@ -208,7 +210,7 @@ export default function Paket() {
               <div
                 key={pkg.id}
                 style={{ transitionDelay: `${index * 100}ms` }}
-                className={`relative border rounded-2xl p-6 flex flex-col shadow-sm transform transition-all duration-300 ease-out hover:scale-105 hover:shadow-xl
+                className={`relative border rounded-3xl p-6 flex flex-col shadow-sm transform transition-all duration-300 ease-out hover:scale-105 hover:shadow-xl
                 ${pkg.name === "Pro" ? "bg-gray-900 text-white" : "bg-white"}
               `}
               >
@@ -252,15 +254,7 @@ export default function Paket() {
                   ))}
                 </ul>
 
-                <Link
-                  href={`/subscription?plan=${pkg.name.toLowerCase()}`}
-                  className={`mt-6 w-full py-2 rounded-lg font-medium text-center block ${pkg.name === "Pro"
-                    ? "bg-indigo-500 hover:bg-indigo-600 text-white"
-                    : "bg-gray-900 text-white hover:bg-gray-800"
-                    }`}
-                >
-                  Mulai {pkg.name}
-                </Link>
+                
               </div>
             );
           })}
@@ -275,7 +269,7 @@ export default function Paket() {
             <thead className="bg-gray-100 text-gray-700">
               <tr>
                 <th className="p-3 border">Fitur</th>
-                {packages.map((pkg) => (
+                {freePackages.map((pkg) => (
                   <th key={pkg.id} className="p-3 border text-center font-semibold">
                     {pkg.name}
                   </th>
@@ -285,14 +279,14 @@ export default function Paket() {
             <tbody>
               {Array.from(
                 new Set(
-                  packages.flatMap((pkg) =>
+                  freePackages.flatMap((pkg) =>
                     pkg.billing_plans.find((bp) => bp.billing_cycle === billingCycle)?.features || []
                   )
                 )
               ).map((feature, idx) => (
                 <tr key={idx} className={`border-t ${idx % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-gray-100 transition`}>
                   <td className="p-3 border">{feature}</td>
-                  {packages.map((pkg) => {
+                  {freePackages.map((pkg) => {
                     const plan = pkg.billing_plans.find((bp) => bp.billing_cycle === billingCycle);
                     const hasFeature = plan?.features.includes(feature);
                     return (
