@@ -1,11 +1,12 @@
 "use client";
 
 import React from "react";
+import { ArrowUp, ArrowDown } from "lucide-react"
 
 interface StatCardProps {
   title: string;
   value: string | number;
-  change: string;
+  change?: string;
   compare?: string; // ✅ opsional
 }
 
@@ -18,15 +19,19 @@ export function StatCard({ title, value, change, compare }: StatCardProps) {
         {value}
       </h2>
       <div className="text-xs font-medium mt-1 flex items-center gap-1">
-        <span
-          className={change.startsWith("-") ? "text-red-500" : "text-green-600"}
-        >
-          {change}
-        </span>
-        {compare && (
-          <span className="text-gray-400">{compare}</span>
-        )}
-      </div>
+  {change && (
+  <span
+    className={`flex items-center gap-1 ${
+      change.toString().startsWith("-")
+        ? "text-red-500"
+        : "text-green-600"
+    }`}
+  >
+    {change.toString().startsWith("-") ? <ArrowDown size={12} /> : <ArrowUp size={12} />}
+    {change}
+  </span>
+)}
+    </div>
     </div>
   );
 }
