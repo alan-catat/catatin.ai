@@ -10,6 +10,7 @@ const N8N_GETREPORTS_URL = process.env.NEXT_PUBLIC_N8N_GETREPORTS_URL || `${N8N_
 const N8N_GETGROUPS_URL = process.env.NEXT_PUBLIC_N8N_GETGROUPS_URL || `${N8N_BASE}/webhook/get-groups`;
 const N8N_ADDREPORTS_URL = process.env.NEXT_PUBLIC_N8N_ADDREPORTS_URL || `${N8N_BASE}/webhook/add-report`;
 const N8N_EXPORT_URL = process.env.NEXT_PUBLIC_N8N_EXPORT_URL || `${N8N_BASE}/webhook/export`;
+const N8N_EDIT_URL = process.env.NEXT_PUBLIC_N8N_EDIT_URL || `${N8N_BASE}/webhook/edit`;
 
 /** Helper: buat string YYYY-MM-DD dari Date (lokal) */
 function formatDateLocal(d: Date) {
@@ -46,6 +47,9 @@ export default function ReportPage() {
   const [modalMerchant, setModalMerchant] = useState<string>("");
   const [modalItem, setModalItem] = useState<string>("");
   const [modalAmount, setModalAmount] = useState<number | "">("");
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingReport, setEditingReport] = useState<any | null>(null);
+
 
   // unique groups by name (frontend only)
   const uniqueGroups = Array.from(new Map(groups.map((g) => [g.group_name, g])).values());
@@ -136,6 +140,7 @@ const fetchReports = async (filters: any = {}) => {
     if (Array.isArray(data)) {
       setReports(
         data.map((r) => ({
+          id: r.id,
           date: r.flow_date || r.flow_transaction_date || "",
           type: r.flow_type,
           category: r.flow_category || "-",
@@ -215,52 +220,70 @@ const fetchReports = async (filters: any = {}) => {
 };
 
   // --- modal submit using state (uses DatePicker, not input[type="date"]) ---
-  const submitModal = async (e: React.FormEvent) => {
-    e.preventDefault();
-    // basic validation
-    if (!modalDate || !modalType || !modalCategory) {
-      alert("Please fill all fields");
+const submitModal = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  // basic validation
+  if (!modalDate || !modalType || !modalCategory) {
+    alert("Please fill all fields");
+    return;
+  }
+
+  try {
+    // Ambil email dari localStorage (pakai key yang sama seperti di fetchReports)
+    const userEmail =
+      localStorage.getItem("user_email") ||
+      JSON.parse(localStorage.getItem("user") || "{}")?.email;
+
+    if (!userEmail) {
+      alert("Email pengguna tidak ditemukan. Silakan login ulang.");
       return;
     }
 
     const payload = {
-      flow_transaction_date: modalDate,
-      flow_type: modalType,
+      date: modalDate,
+      type: modalType,
       category: modalCategory,
-      flow_merchant: modalMerchant,
-      flow_items: modalItem,
-      flow_amount: modalAmount || 0,
+      merchant: modalMerchant,
+      item: modalItem,
+      amount: modalAmount,
+      email: userEmail, // kirim email ke n8n
     };
 
-    try {
-      console.log("Posting add-report to:", N8N_ADDREPORTS_URL, payload);
-      const res = await fetch(N8N_ADDREPORTS_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+    console.log("Posting add-report to:", N8N_ADDREPORTS_URL, payload);
 
-      if (res.ok) {
-        alert("Data saved successfully");
-        setShowAddModal(false);
-        // clear modal fields
-        setModalDate("");
-        setModalType("");
-        setModalCategory("");
-        setModalMerchant("");
-        setModalItem("");
-        setModalAmount("");
-        // refresh list
-        fetchReports();
-      } else {
-        console.error("Add report failed:", res.status, await res.text());
-        alert("Failed to save data");
-      }
-    } catch (err) {
-      console.error("Error posting add-report:", err);
-      alert("Failed to save data (network)");
+    const res = await fetch(N8N_ADDREPORTS_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (res.ok) {
+      alert("Data saved successfully");
+      setShowAddModal(false);
+      // reset semua field
+      setModalDate("");
+      setModalType("");
+      setModalCategory("");
+      setModalMerchant("");
+      setModalItem("");
+      setModalAmount("");
+      // refresh list
+      fetchReports();
+    } else {
+      console.error("Add report failed:", res.status, await res.text());
+      alert("Failed to save data");
     }
-  };
+  } catch (err) {
+    console.error("Error posting add-report:", err);
+    alert("Failed to save data (network)");
+  }
+};
+
+function openEditModal(report: any) {
+  setEditingReport(report);
+  setShowEditModal(true);
+}
 
   return (
     <div className="p-6 space-y-6">
@@ -336,12 +359,19 @@ const fetchReports = async (filters: any = {}) => {
                 <th className="px-4 py-3 text-left">Merchant</th>
                 <th className="px-4 py-3 text-left">Item</th>
                 <th className="px-4 py-3 text-left">Amount</th>
+                <th className="px-4 py-3 text-left">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
               {reports.map((row, idx) => (
                 <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                  <td className="px-4 py-3">{row.date}</td>
+                  <td className="px-4 py-3">
+                  {new Date(row.date).toLocaleDateString("id-ID", {
+                      day: "2-digit",
+                      month: "long",
+                      year: "numeric",
+                      })}
+                  </td>
                   <td className="px-4 py-3">{row.type}</td>
                   <td className="px-4 py-3">{row.category}</td>
                   <td className="px-4 py-3">{row.merchant}</td>
@@ -349,6 +379,14 @@ const fetchReports = async (filters: any = {}) => {
                   <td className={`px-4 py-3 font-medium ${row.amount > 0 ? "text-green-600" : "text-red-600"}`}>
                     {row.amount > 0 ? `+${row.amount.toFixed(2)}` : `-${Math.abs(row.amount).toFixed(2)}`}
                   </td>
+                   <td className="px-4 py-3">
+    <button
+      onClick={() => openEditModal(row)}
+      className="px-4 py-1 text-sm font-medium text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 hover:border-blue-400 transition"
+    >
+      Edit
+    </button>
+</td>
                 </tr>
               ))}
             </tbody>
@@ -396,6 +434,121 @@ const fetchReports = async (filters: any = {}) => {
           </div>
         </div>
       )}
+
+
+       {showEditModal && editingReport && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="w-full max-w-lg bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-6">
+               <h2 className="text-xl font-semibold mb-4">Edit Report</h2>
+            <form
+              className="flex flex-col gap-4"
+              onSubmit={async (e) => {
+              e.preventDefault();
+              const userEmail =
+              localStorage.getItem("user_email") ||
+              JSON.parse(localStorage.getItem("user") || "{}")?.email;
+
+          if (!userEmail) {
+            alert("Email pengguna tidak ditemukan. Silakan login ulang.");
+            return;
+          }
+
+          const payload = {
+            id: editingReport.id, // pastikan n8n punya kolom ID unik
+            date: editingReport.date,
+            type: editingReport.type,
+            category: editingReport.category,
+            merchant: editingReport.merchant,
+            item: editingReport.item,
+            amount: editingReport.amount,
+            email: userEmail,
+          };
+
+          const res = await fetch(N8N_EDIT_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          if (res.ok) {
+            alert("Data updated successfully");
+            setShowEditModal(false);
+            setEditingReport(null);
+            fetchReports();
+          } else {
+            alert("Gagal memperbarui data");
+          }
+        }}
+      >
+        <input
+          type="text"
+          value={editingReport.id || ""}
+          readOnly
+          className="border rounded-lg px-3 py-2 bg-gray-100 text-gray-500 cursor-not-allowed"
+          placeholder="ID"
+        />
+        <input
+          type="text"
+          value={editingReport.category}
+          onChange={(e) =>
+            setEditingReport({ ...editingReport, category: e.target.value })
+          }
+          className="border rounded-lg px-3 py-2"
+          placeholder="Category"
+        />
+
+        <input
+          type="text"
+          value={editingReport.merchant}
+          onChange={(e) =>
+            setEditingReport({ ...editingReport, merchant: e.target.value })
+          }
+          className="border rounded-lg px-3 py-2"
+          placeholder="Merchant"
+        />
+
+        <input
+          type="text"
+          value={editingReport.item}
+          onChange={(e) =>
+            setEditingReport({ ...editingReport, item: e.target.value })
+          }
+          className="border rounded-lg px-3 py-2"
+          placeholder="Item"
+        />
+
+        <input
+          type="number"
+          value={editingReport.amount}
+          onChange={(e) =>
+            setEditingReport({
+              ...editingReport,
+              amount: Number(e.target.value),
+            })
+          }
+          className="border rounded-lg px-3 py-2"
+          placeholder="Amount"
+        />
+
+        <div className="flex justify-end gap-2 mt-4">
+          <button
+            type="button"
+            className="px-4 py-2 border rounded-lg hover:bg-gray-100"
+            onClick={() => setShowEditModal(false)}
+          >
+            Close
+          </button>
+          <button
+            type="submit"
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+          >
+            Save Changes
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
     </div>
   );
-}
+};
