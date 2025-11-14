@@ -243,7 +243,7 @@ export default function SignUpForm() {
 
               <p className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
                 <Link
-                  href="/landing"
+                  href="/home"
                   className="text-brand-500 hover:text-brand-600 dark:text-brand-400"
                 >
                   ← Kembali ke halaman utama
