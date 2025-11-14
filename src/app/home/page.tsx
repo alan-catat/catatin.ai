@@ -86,7 +86,6 @@ export default function Home() {
 
       <FeaturesSection />
       <HowItWorksSection />
-      <Paket />
       <CTASection />
       <Footer />
     </main>

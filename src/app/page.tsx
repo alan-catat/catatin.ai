@@ -13,5 +13,5 @@ export default async function RootRedirect() {
     redirect("/dashboard-user");
   }
 
-  redirect("/landing");
+  redirect("/home");
 }

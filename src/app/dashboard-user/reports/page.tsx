@@ -11,6 +11,8 @@ const N8N_GETGROUPS_URL = process.env.NEXT_PUBLIC_N8N_GETGROUPS_URL || `${N8N_BA
 const N8N_ADDREPORTS_URL = process.env.NEXT_PUBLIC_N8N_ADDREPORTS_URL || `${N8N_BASE}/webhook/add-report`;
 const N8N_EXPORT_URL = process.env.NEXT_PUBLIC_N8N_EXPORT_URL || `${N8N_BASE}/webhook/export`;
 const N8N_EDIT_URL = process.env.NEXT_PUBLIC_N8N_EDIT_URL || `${N8N_BASE}/webhook/edit`;
+const N8N_ADDGROUP_URL = process.env.NEXT_PUBLIC_N8N_ADDGROUP_URL || `${N8N_BASE}/webhook/addgroup`;
+
 
 /** Helper: buat string YYYY-MM-DD dari Date (lokal) */
 function formatDateLocal(d: Date) {
@@ -35,6 +37,7 @@ export default function ReportPage() {
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [creategroups, setcreategroups] = useState(false);
 
   // temporary picker states
   const [tempDateFrom, setTempDateFrom] = useState<string>("");
@@ -49,6 +52,9 @@ export default function ReportPage() {
   const [modalAmount, setModalAmount] = useState<number | "">("");
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingReport, setEditingReport] = useState<any | null>(null);
+  const [modalgroupType, setmodalgroupType] = useState<string>("");
+  const [modalgroupName, setmodalgroupName] = useState<string>("");
+  const [ModalChannel, setModalChannel] = useState<string>("");
 
 
   // unique groups by name (frontend only)
@@ -219,7 +225,6 @@ const fetchReports = async (filters: any = {}) => {
   }
 };
 
-  // --- modal submit using state (uses DatePicker, not input[type="date"]) ---
 const submitModal = async (e: React.FormEvent) => {
   e.preventDefault();
 
@@ -230,7 +235,6 @@ const submitModal = async (e: React.FormEvent) => {
   }
 
   try {
-    // Ambil email dari localStorage (pakai key yang sama seperti di fetchReports)
     const userEmail =
       localStorage.getItem("user_email") ||
       JSON.parse(localStorage.getItem("user") || "{}")?.email;
@@ -261,6 +265,7 @@ const submitModal = async (e: React.FormEvent) => {
     if (res.ok) {
       alert("Data saved successfully");
       setShowAddModal(false);
+      setcreategroups(false);
       // reset semua field
       setModalDate("");
       setModalType("");
@@ -268,6 +273,9 @@ const submitModal = async (e: React.FormEvent) => {
       setModalMerchant("");
       setModalItem("");
       setModalAmount("");
+      setmodalgroupName("");
+      setmodalgroupType("");
+      setModalChannel("");
       // refresh list
       fetchReports();
     } else {
@@ -280,14 +288,55 @@ const submitModal = async (e: React.FormEvent) => {
   }
 };
 
+const submitAddGroup = async () => {
+  try {
+    const userEmail =
+      localStorage.getItem("user_email") ||
+      JSON.parse(localStorage.getItem("user") || "{}")?.email;
+
+    if (!userEmail) {
+      alert("Email pengguna tidak ditemukan. Silakan login ulang.");
+      return;
+    }
+
+    const payload = {
+      date: modalDate,
+      group_type: modalgroupType,
+      group_name: modalgroupName,
+      channel: ModalChannel,
+      email: userEmail,
+    };
+
+    console.log("Posting add-group to:", N8N_ADDGROUP_URL, payload);
+
+    const res = await fetch(N8N_ADDGROUP_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      console.error("Add group failed:", res.status, await res.text());
+      alert("Failed to save group");
+      return;
+    }
+
+    alert("Group saved successfully");
+    setcreategroups(false);
+    fetchGroups();
+  } catch (err) {
+    console.error("Error posting add-group:", err);
+  }
+};
+
 function openEditModal(report: any) {
   setEditingReport(report);
   setShowEditModal(true);
+  setcreategroups(true);
 }
 
   return (
     <div className="p-6 space-y-6">
-      {/* FILTER BAR */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full md:w-auto">
           <select
@@ -337,7 +386,12 @@ function openEditModal(report: any) {
           >
             Add New Report
           </button>
-
+<button
+            onClick={() => setcreategroups(true)}
+            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+          >
+            Add New Group
+          </button>
           <button
             onClick={handleExport}
             className="flex items-center justify-center gap-2 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 w-full sm:w-auto"
@@ -347,7 +401,6 @@ function openEditModal(report: any) {
         </div>
       </div>
 
-      {/* TABLE (tidak berubah) */}
       <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
         <div className="overflow-x-auto w-full">
           <table className="min-w-[600px] w-full text-sm text-gray-800 dark:text-gray-200">
@@ -435,7 +488,46 @@ function openEditModal(report: any) {
         </div>
       )}
 
+{creategroups && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="w-full max-w-lg bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-6">
+            <h2 className="text-xl font-semibold mb-4">Add New Groups</h2>
 
+            <form className="flex flex-col gap-4" onSubmit={submitAddGroup}>
+              <DatePicker
+                id="modal_flow_date"
+                placeholder="Flow Date"
+                defaultDate={parseYMDToDate(modalDate)}
+                onChange={(dates: any[]) => {
+                  const d = dates?.[0];
+                  if (d) setModalDate(formatDateLocal(d));
+                }}
+              />
+              <input value={modalgroupName} onChange={(e) => setmodalgroupName(e.target.value)} type="text" className="border rounded-lg px-3 py-2" placeholder="Group Name" />
+              
+              <select value={modalgroupType} onChange={(e) => setmodalgroupType(e.target.value)} className="border rounded-lg px-3 py-2">
+                <option value="">-Type-</option>
+                <option value="Keluarga">Keluarga</option>
+                <option value="Bisnis">Bisnis</option>
+              </select>
+              <select value={ModalChannel} onChange={(e) => setModalChannel(e.target.value)} className="border rounded-lg px-3 py-2">
+                <option value="">-Channel-</option>
+                <option value="Whatapps">Whatapps</option>
+                <option value="Telegram">Telegram</option>
+              </select>
+              
+              <div className="flex justify-end gap-2 mt-4">
+                <button type="button" className="px-4 py-2 border rounded-lg hover:bg-gray-100" onClick={() => setShowAddModal(false)}>
+                  Close
+                </button>
+                <button type="submit" className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                  Save
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
        {showEditModal && editingReport && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="w-full max-w-lg bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-6">

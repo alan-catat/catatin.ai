@@ -2,6 +2,7 @@ import {
     GridIcon, UserCircleIcon, ListIcon, PageIcon, PlugInIcon, CalenderIcon,
     ChatIcon,
   } from "@/icons";
+import { GroupIcon } from "lucide-react";
   
   export type NavItem = {
     name: string;
@@ -32,7 +33,7 @@ import {
       { name: "Overview", path: "/dashboard-user", icon: <GridIcon /> },
       { name: "WebChat", path: "/dashboard-user/webchat", icon: <ChatIcon /> },
       { name: "Profile Management", path: "/dashboard-user/profile", icon: <UserCircleIcon /> },
-      
+      { name: "Add-Group", path: "/dashboard-user/add-group", icon: <GroupIcon /> },
       { name: "Reports", path: "/dashboard-user/reports", icon: <CalenderIcon /> },
       
       
