@@ -8,6 +8,7 @@ export default function VerifyContent() {
   const router = useRouter();
   const [status, setStatus] = useState<"loading" | "success" | "failed">("loading");
   const [progress, setProgress] = useState(0);
+  
 
   // === Simulasi animasi progress bar ===
   useEffect(() => {
@@ -46,16 +47,22 @@ export default function VerifyContent() {
         const data = await res.json();
 
         if (data.status === "success") {
-          setStatus("success");
-          setTimeout(() => router.replace("/dashboard-user"), 3000);
-        } else {
-          setStatus("failed");
-          setTimeout(() => router.replace("/auth/dashboard-user/signup"), 4000);
-        }
+  setStatus("success");
+  setTimeout(() => {
+    window.open("/dashboard-user/add-group", "_blank" as const);
+  }, 3000);
+} else {
+  setStatus("failed");
+  setTimeout(() => {
+    window.open("/auth/dashboard-user/signup", "_blank" as const);
+  }, 4000);
+}
+
       } catch (err) {
         console.error("Error verifikasi:", err);
         setStatus("failed");
-        setTimeout(() => router.replace("/auth/dashboard-user/signup"), 4000);
+        setTimeout(() => {window.open("/auth/dashboard-user/signup", "_blank" as const);
+      }, 4000);
       }
     };
 

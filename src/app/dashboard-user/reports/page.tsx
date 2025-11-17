@@ -332,7 +332,6 @@ const submitAddGroup = async () => {
 function openEditModal(report: any) {
   setEditingReport(report);
   setShowEditModal(true);
-  setcreategroups(true);
 }
 
   return (
@@ -512,12 +511,11 @@ function openEditModal(report: any) {
               </select>
               <select value={ModalChannel} onChange={(e) => setModalChannel(e.target.value)} className="border rounded-lg px-3 py-2">
                 <option value="">-Channel-</option>
-                <option value="Whatapps">Whatapps</option>
                 <option value="Telegram">Telegram</option>
               </select>
               
               <div className="flex justify-end gap-2 mt-4">
-                <button type="button" className="px-4 py-2 border rounded-lg hover:bg-gray-100" onClick={() => setShowAddModal(false)}>
+                <button type="button" className="px-4 py-2 border rounded-lg hover:bg-gray-100" onClick={() => setcreategroups(false)}>
                   Close
                 </button>
                 <button type="submit" className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
