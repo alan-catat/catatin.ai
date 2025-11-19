@@ -49,7 +49,7 @@ export default function Home() {
         email: userEmail,
       };
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_N8N_GETPROFILE_URL}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_N8N_ADDGROUP_URL}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -96,10 +96,11 @@ export default function Home() {
 
             <p className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto md:mx-0 mb-10 leading-relaxed">
               <br /><br />Langkah awal untuk memulai dengan telegram:<br /><br />
-              1. Buat group telegram dengan catatin.ai, dengan klik tombol "add-group".<br />
-              2. Kirim kode aktivasi dari email ke group.<br />
-              3. Jika balasan “berhasil”, lanjut undang siapapun ke group.<br />
-              4. Kami bantu catat semua transaksimu.<br /><br />
+              1. Buat group telegram bareng "catatin.ai" (search).<br />
+              2. Dapatkan kode aktivasi dengan klik tombol "add-group" (cek email).<br />
+              3. Kirim kode aktivasi dari email ke group.<br />
+              4. Jika balasan “berhasil”, lanjut undang siapapun ke group.<br />
+              5. Kami bantu catat semua transaksimu.<br /><br />
             </p>
 
             <button
@@ -108,8 +109,25 @@ export default function Home() {
             >
               add-group
             </button>
+            <p className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto md:mx-0 mb-10 leading-relaxed">
+              <br /><br />Langkah awal untuk memulai dengan whatsapp:<br /><br />
+              1. Kirim pesan WA ke CS catatin.ai.<br />
+              2. Dapatkan kode aktivasi dengan klik tombol "add-channel".<br />
+              3. Kirim kode aktivasi dari email ke ai.<br />
+              4. Jika balasan “berhasil”, kamu sudah bisa gunakan catatin.ai.<br />
+              5. Kami bantu catat semua transaksimu.<br /><br />
+            </p>
+
+            <button
+              onClick={() => setcreategroups(true)}
+              className="px-6 py-3 rounded-full bg-[#05668D] text-white font-medium shadow hover:bg-blue-700"
+            >
+              add-WhatsApp
+            </button>
           </div>
 
+
+          
           {/* MODAL */}
           {creategroups && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
