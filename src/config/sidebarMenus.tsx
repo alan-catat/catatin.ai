@@ -33,7 +33,7 @@ import { GroupIcon } from "lucide-react";
       { name: "Overview", path: "/dashboard-user", icon: <GridIcon /> },
       { name: "WebChat", path: "/dashboard-user/webchat", icon: <ChatIcon /> },
       { name: "Profile Management", path: "/dashboard-user/profile", icon: <UserCircleIcon /> },
-      { name: "Add-Group", path: "/dashboard-user/add-group", icon: <GroupIcon /> },
+      { name: "Add-Channel", path: "/dashboard-user/add-channel", icon: <GroupIcon /> },
       { name: "Reports", path: "/dashboard-user/reports", icon: <CalenderIcon /> },
       
       

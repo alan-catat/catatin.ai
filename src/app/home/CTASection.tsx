@@ -2,6 +2,7 @@ import { Button } from "./button";
 import { ArrowRight, MessageCircle, Bot } from "lucide-react";
 import Image from "next/image";
 import owlMascot from "./catatin.png";
+import FloatingCards from "./FloatingCards";
 
 const CTASection = () => {
   return (
@@ -9,7 +10,7 @@ const CTASection = () => {
       id="signup"
       className="relative px-6 md:px-37 md:pr-37 py-20 text-center text-white overflow-hidden bg-[#2e2e2e] font-nunito"
     >
-
+  <FloatingCards />
       {/* Content */}
       <div className="container mx-auto px-5 text-center relative z-10">
         <div className="max-w-4xl mx-auto">

@@ -46,25 +46,11 @@ export default function VerifyContent() {
         if (!res.ok) throw new Error("Response not OK");
         const data = await res.json();
 
-        if (data.status === "success") {
-  setStatus("success");
-  setTimeout(() => {
-    window.open("/dashboard-user/add-group", "_blank" as const);
-  }, 3000);
-} else {
-  setStatus("failed");
-  setTimeout(() => {
-    window.open("/auth/dashboard-user/signup", "_blank" as const);
-  }, 4000);
-}
-
-      } catch (err) {
-        console.error("Error verifikasi:", err);
-        setStatus("failed");
-        setTimeout(() => {window.open("/auth/dashboard-user/signup", "_blank" as const);
-      }, 4000);
-      }
-    };
+        if (data.status === "success") { setStatus("success"); setTimeout(() => router.replace("/dashboard-user/add-channel"), 3000); 
+        } else { setStatus("failed"); setTimeout(() => router.replace("/auth/dashboard-user/signup"), 4000); }       
+      } catch (err) { console.error("Error verifikasi:", err); setStatus("failed"); setTimeout(() => router.replace("/auth/dashboard-user/signup"), 4000); 
+        } 
+      };
 
     verifyToken();
   }, [searchParams, router]);
