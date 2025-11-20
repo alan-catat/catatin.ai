@@ -191,6 +191,14 @@ export default function ReportPage() {
     setLoading(false);
   }
 };
+const safeDate = (d: string) => {
+  const date = new Date(d);
+  return isNaN(date.getTime()) ? d : date.toLocaleDateString();
+};
+const safeAmount = (val: any) => {
+  const num = Number(val);
+  return isNaN(num) ? 0 : num;
+};
 
 
   const handleDownloadExcel = () => {

@@ -15,17 +15,30 @@ export default function Page() {
       return;
     }
 
+    // 1. Ambil email dulu (sebelum fetch)
+    const userEmail =
+      localStorage.getItem("user_email") ||
+      JSON.parse(localStorage.getItem("user") || "{}")?.email;
+
+    if (!userEmail) {
+      alert("Email pengguna tidak ditemukan.");
+      return; // HENTIKAN agar fetch tidak dikirim
+    }
+
     try {
+      // 2. Baru fetch ke webhook
       const res = await fetch(webhookUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: input }),
+        body: JSON.stringify({
+          prompt: input,
+          email: userEmail, // sekalian kirim email kalau kamu butuh
+        }),
       });
 
       const data = await res.json();
       console.log("Response dari webhook:", data);
 
-      // Pastikan output berupa string agar tidak error
       const message =
         typeof data.message === "string"
           ? data.message
