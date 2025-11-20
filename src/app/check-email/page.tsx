@@ -5,7 +5,7 @@ export default function CheckEmailPage() {
         <div className="max-w-md w-full text-center">
           <h1 className="text-2xl font-bold mb-4">Cek email mu.</h1>
           <p className="text-gray-600 dark:text-gray-300">
-            Kita sudah kirim kode verifikasi. 
+            Kita sudah kirim email verifikasi. 
             Sekarang cek email kamu dan klik tombol verikasi untuk melanjutkan.
           </p>
         </div>

@@ -1,11 +1,11 @@
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 
 interface ExportOptions {
   fileName?: string;
   sheetName?: string;
 }
 
-export function exportToExcel<T extends Record<string, any>>(
+export async function exportToExcel<T extends Record<string, any>>(
   data: T[],
   options: ExportOptions = {}
 ) {
@@ -19,26 +19,74 @@ export function exportToExcel<T extends Record<string, any>>(
     return;
   }
 
-  const worksheet = XLSX.utils.json_to_sheet(data);
-  const workbook = XLSX.utils.book_new();
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet(sheetName);
 
-  XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+  // Ambil header dari key data
+  const headers = Object.keys(data[0]);
 
-  const excelBuffer = XLSX.write(workbook, {
-    type: "array",
-    bookType: "xlsx",
+  // Tambahkan header
+  worksheet.addRow(headers);
+
+  const headerRow = worksheet.getRow(1);
+
+  // Styling Header
+  headerRow.eachCell((cell) => {
+    cell.font = { bold: true, color: { argb: "FFFFFFFF" } }; // putih
+    cell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FF4A90E2" }, // biru
+    };
+    cell.border = {
+      top: { style: "thin" },
+      left: { style: "thin" },
+      bottom: { style: "thin" },
+      right: { style: "thin" },
+    };
+    cell.alignment = { horizontal: "center" };
   });
 
-  const blob = new Blob([excelBuffer], {
+  // Tambahkan data rows
+  data.forEach((item) => {
+    const row = worksheet.addRow(Object.values(item));
+
+    // border untuk setiap cell
+    row.eachCell((cell) => {
+      cell.border = {
+        top: { style: "thin" },
+        left: { style: "thin" },
+        bottom: { style: "thin" },
+        right: { style: "thin" },
+      };
+    });
+  });
+
+  // Auto column width
+  worksheet.columns.forEach((column, colIndex) => {
+  let maxLength = 10;
+
+  worksheet.eachRow((row) => {
+    const cell = row.getCell(colIndex + 1);
+    const value = cell.value ? cell.value.toString() : "";
+    maxLength = Math.max(maxLength, value.length + 2);
+  });
+
+  column.width = maxLength;
+});
+
+
+  // Generate Buffer untuk browser
+  const buffer = await workbook.xlsx.writeBuffer();
+
+  const blob = new Blob([buffer], {
     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   });
 
   const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = fileName;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName;
+  a.click();
   URL.revokeObjectURL(url);
 }
