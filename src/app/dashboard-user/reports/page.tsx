@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import DatePicker from "@/components/form/date-picker"; // path sesuai
-import { Modal } from "@/components/ui/modal";
+import { useEffect, useState, FormEvent } from "react";
+import DatePicker from "@/components/form/date-picker";
 import { exportToExcel } from "@/utils/exportExcel";
 
 const N8N_BASE = process.env.NEXT_PUBLIC_N8N_BASE_URL || "https://n8n.srv1074739.hstgr.cloud";
@@ -13,8 +12,7 @@ const N8N_EXPORT_URL = process.env.NEXT_PUBLIC_N8N_EXPORT_URL || `${N8N_BASE}/we
 const N8N_EDIT_URL = process.env.NEXT_PUBLIC_N8N_EDIT_URL || `${N8N_BASE}/webhook/edit`;
 const N8N_ADDGROUP_URL = process.env.NEXT_PUBLIC_N8N_ADDGROUP_URL || `${N8N_BASE}/webhook/addgroup`;
 
-
-/** Helper: buat string YYYY-MM-DD dari Date (lokal) */
+// --- Helper ---
 function formatDateLocal(d: Date) {
   const y = d.getFullYear();
   const m = `${d.getMonth() + 1}`.padStart(2, "0");
@@ -22,7 +20,6 @@ function formatDateLocal(d: Date) {
   return `${y}-${m}-${day}`;
 }
 
-/** Helper: parse "YYYY-MM-DD" jadi Date lokal (hindari new Date("YYYY-MM-DD") yang bisa jadi UTC) */
 function parseYMDToDate(ymd?: string | null) {
   if (!ymd) return undefined;
   const [y, m, d] = ymd.split("-").map(Number);
@@ -30,104 +27,78 @@ function parseYMDToDate(ymd?: string | null) {
   return new Date(y, m - 1, d);
 }
 
+interface Report {
+  id: string;
+  date: string;
+  type: string;
+  category: string;
+  merchant: string;
+  item: string;
+  amount: number;
+}
+
 export default function ReportPage() {
-  const [reports, setReports] = useState<any[]>([]);
+  const [reports, setReports] = useState<Report[]>([]);
   const [groups, setGroups] = useState<any[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<string>("");
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [creategroups, setcreategroups] = useState(false);
-
-  // temporary picker states
   const [tempDateFrom, setTempDateFrom] = useState<string>("");
   const [tempDateTo, setTempDateTo] = useState<string>("");
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [creategroups, setcreategroups] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingReport, setEditingReport] = useState<Report | null>(null);
 
-  // modal form state (replace reading from DOM)
-  const [modalDate, setModalDate] = useState<string>(""); // YYYY-MM-DD
+  const [modalDate, setModalDate] = useState<string>("");
   const [modalType, setModalType] = useState<string>("");
   const [modalCategory, setModalCategory] = useState<string>("");
   const [modalMerchant, setModalMerchant] = useState<string>("");
   const [modalItem, setModalItem] = useState<string>("");
   const [modalAmount, setModalAmount] = useState<number | "">("");
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editingReport, setEditingReport] = useState<any | null>(null);
+
   const [modalgroupType, setmodalgroupType] = useState<string>("");
   const [modalgroupName, setmodalgroupName] = useState<string>("");
   const [ModalChannel, setModalChannel] = useState<string>("");
 
-
-  // unique groups by name (frontend only)
   const uniqueGroups = Array.from(new Map(groups.map((g) => [g.group_name, g])).values());
 
-  // --- fetch groups ---
-  // --- fetch groups (ambil email dari localStorage) ---
-const fetchGroups = async () => {
+  // --- Fetch Groups ---
+  const fetchGroups = async () => {
+    try {
+      const userEmail =
+        localStorage.getItem("user_email") ||
+        JSON.parse(localStorage.getItem("user") || "{}")?.email;
+      if (!userEmail) return;
+
+      const res = await fetch(N8N_GETGROUPS_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: userEmail }),
+      });
+
+      if (!res.ok) throw new Error(`Fetch failed with status ${res.status}`);
+      const data = await res.json();
+      if (Array.isArray(data)) setGroups(data);
+    } catch (err) {
+      console.error("Error fetching groups:", err);
+    }
+  };
+
+  // --- Fetch Reports ---
+  const fetchReports = async (filters: any = {}) => {
   try {
-    const userEmail =
-      localStorage.getItem("user_email") ||
-      JSON.parse(localStorage.getItem("user") || "{}")?.email;
-
-    if (!userEmail) {
-      console.warn("User email not found, skipping fetchGroups");
-      return;
-    }
-
-    console.log("Fetching groups (POST) to:", N8N_GETGROUPS_URL);
-
-    const res = await fetch(N8N_GETGROUPS_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email: userEmail, // kirim email user ke n8n
-      }),
-    });
-
-    if (!res.ok) {
-      throw new Error(`Fetch failed with status ${res.status}`);
-    }
-
-    const data = await res.json();
-    console.log("groups raw:", data);
-
-    if (Array.isArray(data)) {
-      setGroups(data);
-    } else {
-      console.warn("Unexpected response:", data);
-    }
-  } catch (err) {
-    console.error("Error fetching groups:", err);
-  }
-};
-
-
-  // --- fetch reports (POST version) ---
-const fetchReports = async (filters: any = {}) => {
-  try {
-    const userEmail =
-      localStorage.getItem("user_email") ||
-      JSON.parse(localStorage.getItem("user") || "{}")?.email;
-
-    if (!userEmail) {
-      console.warn("User email not found, skipping fetchReports");
-      return;
-    }
-
-    const groupValue = filters.group ?? selectedGroup ?? "";
-    const dateFromValue = filters.from ?? dateFrom ?? null;
-    const dateToValue = filters.to ?? dateTo ?? null;
+    const userEmail = localStorage.getItem("user_email") || JSON.parse(localStorage.getItem("user") || "{}")?.email;
+    if (!userEmail) return;
 
     const payload = {
       email: userEmail,
-      group: groupValue,
-      dateFrom: dateFromValue,
-      dateTo: dateToValue,
-      skipDateFilter: !dateFromValue || !dateToValue,
+      group: filters.group ?? "",      // kosong = semua group
+      dateFrom: filters.from ?? null,  // null = tanpa filter tanggal
+      dateTo: filters.to ?? null,
+      skipDateFilter: !filters.from && !filters.to, // skip filter kalau kosong
     };
-
-    console.log("Fetching reports (POST) to:", N8N_GETREPORTS_URL, payload);
 
     const res = await fetch(N8N_GETREPORTS_URL, {
       method: "POST",
@@ -135,17 +106,17 @@ const fetchReports = async (filters: any = {}) => {
       body: JSON.stringify(payload),
     });
 
-    if (!res.ok) {
-      console.error("Fetch reports status:", res.status, await res.text());
+    // Tangani response kosong
+    const text = await res.text();
+    if (!text) {
+      setReports([]);
       return;
     }
 
-    const data = await res.json();
-    console.log("reports raw:", data);
-
+    const data = JSON.parse(text);
     if (Array.isArray(data)) {
       setReports(
-        data.map((r) => ({
+        data.map((r: any) => ({
           id: r.id,
           date: r.flow_date || r.flow_transaction_date || "",
           type: r.flow_type,
@@ -156,183 +127,161 @@ const fetchReports = async (filters: any = {}) => {
         }))
       );
     } else {
-      console.warn("Expected array from get-reports, got:", data);
       setReports([]);
     }
   } catch (err) {
-    console.error("Error fetching reports:", err);
+    console.error(err);
+    setReports([]);
   }
 };
 
-  // initial load
   useEffect(() => {
     fetchGroups();
     fetchReports();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // call fetchReports when filters change — ensures apply works because we only call fetch after state set
   useEffect(() => {
-    if (dateFrom || dateTo || selectedGroup) {
-    fetchReports();
-    }
-  }, [selectedGroup, dateFrom, dateTo]);
+  if (dateFrom || dateTo || selectedGroup) fetchReports({ group: selectedGroup, from: dateFrom, to: dateTo });
+}, [selectedGroup, dateFrom, dateTo]);
 
-  // Apply button: set states only
   const handleApplyDates = () => {
     setDateFrom(tempDateFrom);
     setDateTo(tempDateTo);
   };
 
-  // Export unchanged
- const handleExport = async () => {
+  const handleFetchExport = async () => {
   try {
     const userEmail =
       localStorage.getItem("user_email") ||
       JSON.parse(localStorage.getItem("user") || "{}")?.email;
+    if (!userEmail) return;
 
-    console.log("User email found:", userEmail);
+    setLoading(true);
 
-    if (!userEmail) {
-      alert("User tidak terdeteksi. Silakan login ulang.");
-      return;
-    }
-
-    // ✅ rekomendasi final — taruh di sini:
-    const N8N_EXPORT_URL =
-      process.env.NEXT_PUBLIC_N8N_EXPORT_URL ||
-      "https://n8n.srv1074739.hstgr.cloud/webhook/export";
+    const payload = {
+      userEmail,
+      group: selectedGroup,
+      date_from: dateFrom,
+      date_to: dateTo,
+    };
 
     const res = await fetch(N8N_EXPORT_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: userEmail }),
-    });
-
-    console.log("Request sent to:", N8N_EXPORT_URL);
-
-    const data = await res.json().catch(() => ({}));
-    console.log("Webhook response:", data);
-
-    if (data.sheetUrl) {
-      window.open(data.sheetUrl, "_blank");
-    } else {
-      alert("Export berhasil, tetapi n8n tidak mengembalikan link sheet.");
-    }
-  } catch (err) {
-    console.error("Gagal export:", err);
-    alert("Gagal export data ke Google Sheet.");
-  }
-};
-
-const submitModal = async (e: React.FormEvent) => {
-  e.preventDefault();
-
-  // basic validation
-  if (!modalDate || !modalType || !modalCategory) {
-    alert("Please fill all fields");
-    return;
-  }
-
-  try {
-    const userEmail =
-      localStorage.getItem("user_email") ||
-      JSON.parse(localStorage.getItem("user") || "{}")?.email;
-
-    if (!userEmail) {
-      alert("Email pengguna tidak ditemukan. Silakan login ulang.");
-      return;
-    }
-
-    const payload = {
-      date: modalDate,
-      type: modalType,
-      category: modalCategory,
-      merchant: modalMerchant,
-      item: modalItem,
-      amount: modalAmount,
-      email: userEmail, // kirim email ke n8n
-    };
-
-    console.log("Posting add-report to:", N8N_ADDREPORTS_URL, payload);
-
-    const res = await fetch(N8N_ADDREPORTS_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
 
-    if (res.ok) {
-      alert("Data saved successfully");
-      setShowAddModal(false);
+    if (!res.ok) throw new Error("Gagal memuat data.");
+
+    const result = await res.json();
+
+    // Pastikan state terupdate
+    setReports(result.data || []);
+
+    // 🔥 Langsung download file Excel
+    exportToExcel(result.data || [], {
+      fileName: result.fileName || `export_${Date.now()}.xlsx`,
+      sheetName: result.sheetName || "Sheet1",
+    });
+
+  } catch (err) {
+    console.error(err);
+    alert("Export gagal memuat data");
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+  const handleDownloadExcel = () => {
+    if (!reports.length) return alert("Tidak ada data untuk diexport");
+
+    const { fileName, sheetName } = (window as any).exportFileInfo || {};
+    exportToExcel(reports, { fileName, sheetName });
+  };
+
+  const submitModal = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!modalDate || !modalType || !modalCategory) return alert("Please fill all fields");
+
+    try {
+      const userEmail =
+        localStorage.getItem("user_email") ||
+        JSON.parse(localStorage.getItem("user") || "{}")?.email;
+      if (!userEmail) return alert("Email pengguna tidak ditemukan.");
+
+      const payload = {
+        date: modalDate,
+        type: modalType,
+        category: modalCategory,
+        merchant: modalMerchant,
+        item: modalItem,
+        amount: modalAmount,
+        email: userEmail,
+      };
+
+      const res = await fetch(N8N_ADDREPORTS_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        alert("Data saved successfully");
+        setShowAddModal(false);
+        setModalDate(""); setModalType(""); setModalCategory(""); setModalMerchant("");
+        setModalItem(""); setModalAmount("");
+        fetchReports();
+      } else {
+        console.error(await res.text());
+        alert("Failed to save data");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Failed to save data (network)");
+    }
+  };
+
+  const submitAddGroup = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    try {
+      const userEmail =
+        localStorage.getItem("user_email") ||
+        JSON.parse(localStorage.getItem("user") || "{}")?.email;
+      if (!userEmail) return alert("Email pengguna tidak ditemukan.");
+
+      const payload = {
+        date: modalDate,
+        group_type: modalgroupType,
+        group_name: modalgroupName,
+        channel: ModalChannel,
+        email: userEmail,
+      };
+
+      const res = await fetch(N8N_ADDGROUP_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        console.error(await res.text());
+        return alert("Failed to save group");
+      }
+
+      alert("Group saved successfully");
       setcreategroups(false);
-      // reset semua field
-      setModalDate("");
-      setModalType("");
-      setModalCategory("");
-      setModalMerchant("");
-      setModalItem("");
-      setModalAmount("");
-      setmodalgroupName("");
-      setmodalgroupType("");
-      setModalChannel("");
-      // refresh list
-      fetchReports();
-    } else {
-      console.error("Add report failed:", res.status, await res.text());
-      alert("Failed to save data");
+      fetchGroups();
+    } catch (err) {
+      console.error(err);
     }
-  } catch (err) {
-    console.error("Error posting add-report:", err);
-    alert("Failed to save data (network)");
-  }
-};
+  };
 
-const submitAddGroup = async () => {
-  try {
-    const userEmail =
-      localStorage.getItem("user_email") ||
-      JSON.parse(localStorage.getItem("user") || "{}")?.email;
+  const openEditModal = (report: Report) => {
+    setEditingReport(report);
+    setShowEditModal(true);
+  };
 
-    if (!userEmail) {
-      alert("Email pengguna tidak ditemukan. Silakan login ulang.");
-      return;
-    }
-
-    const payload = {
-      date: modalDate,
-      group_type: modalgroupType,
-      group_name: modalgroupName,
-      channel: ModalChannel,
-      email: userEmail,
-    };
-
-    console.log("Posting add-group to:", N8N_ADDGROUP_URL, payload);
-
-    const res = await fetch(N8N_ADDGROUP_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    if (!res.ok) {
-      console.error("Add group failed:", res.status, await res.text());
-      alert("Failed to save group");
-      return;
-    }
-
-    alert("Group saved successfully");
-    setcreategroups(false);
-    fetchGroups();
-  } catch (err) {
-    console.error("Error posting add-group:", err);
-  }
-};
-
-function openEditModal(report: any) {
-  setEditingReport(report);
-  setShowEditModal(true);
-}
 
   return (
     <div className="p-6 space-y-6">
@@ -392,7 +341,7 @@ function openEditModal(report: any) {
             Add New Group
           </button>
           <button
-            onClick={handleExport}
+            onClick={handleFetchExport}
             className="flex items-center justify-center gap-2 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 w-full sm:w-auto"
           >
             Export
@@ -415,33 +364,33 @@ function openEditModal(report: any) {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {reports.map((row, idx) => (
-                <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                  <td className="px-4 py-3">
-                  {new Date(row.date).toLocaleDateString("id-ID", {
-                      day: "2-digit",
-                      month: "long",
-                      year: "numeric",
-                      })}
-                  </td>
-                  <td className="px-4 py-3">{row.type}</td>
-                  <td className="px-4 py-3">{row.category}</td>
-                  <td className="px-4 py-3">{row.merchant}</td>
-                  <td className="px-4 py-3">{row.item}</td>
-                  <td className={`px-4 py-3 font-medium ${row.amount > 0 ? "text-green-600" : "text-red-600"}`}>
-                    {row.amount > 0 ? `+${row.amount.toFixed(2)}` : `-${Math.abs(row.amount).toFixed(2)}`}
-                  </td>
-                   <td className="px-4 py-3">
-    <button
-      onClick={() => openEditModal(row)}
-      className="px-4 py-1 text-sm font-medium text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 hover:border-blue-400 transition"
-    >
-      Edit
-    </button>
-</td>
-                </tr>
-              ))}
-            </tbody>
+  {reports.length > 0 ? (
+    reports.map((row, idx) => (
+      <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+        <td className="px-4 py-3">{new Date(row.date).toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" })}</td>
+        <td className="px-4 py-3">{row.type}</td>
+        <td className="px-4 py-3">{row.category}</td>
+        <td className="px-4 py-3">{row.merchant}</td>
+        <td className="px-4 py-3">{row.item}</td>
+        <td className={`px-4 py-3 font-medium ${row.amount > 0 ? "text-green-600" : "text-red-600"}`}>
+          {row.amount > 0 ? `+${row.amount.toFixed(2)}` : `-${Math.abs(row.amount).toFixed(2)}`}
+        </td>
+        <td className="px-4 py-3">
+          <button onClick={() => openEditModal(row)} className="px-4 py-1 text-sm font-medium text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 hover:border-blue-400 transition">
+            Edit
+          </button>
+        </td>
+      </tr>
+    ))
+  ) : (
+    <tr>
+      <td colSpan={7} className="text-center py-4 text-gray-500">
+        No data
+      </td>
+    </tr>
+  )}
+</tbody>
+
           </table>
         </div>
       </div>

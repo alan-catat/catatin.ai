@@ -96,35 +96,6 @@ export default function UserSocialCard({ profile }: { profile: any }) {
 
             {(phoneNumber || formData.instagram || formData.facebook || formData.tiktok) && (
               <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                {/* Telegram */}
-                {phoneNumber && (
-                  <a
-                    href={`https://t.me/+${phoneNumber}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex h-12 min-w-[120px] items-center justify-center gap-2 rounded-lg border transition hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 24 24" className="text-blue-500">
-                      <path d="M9.999 15.17 8.614 18.91a.75.75 0 0 1-1.45-.04l-1.47-5.58-4.34-1.53a.75.75 0 0 1-.06-1.4l20-8a.75.75 0 0 1 .98.95l-3.5 12a.75.75 0 0 1-1.12.44l-5.5-3.5-2.5 3.92z" />
-                    </svg>
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Telegram</span>
-                  </a>
-                )}
-
-                {/* WhatsApp */}
-                {phoneNumber && (
-                  <a
-                    href={`https://wa.me/+${phoneNumber}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex h-12 min-w-[120px] items-center justify-center gap-2 rounded-lg border transition hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 24 24" className="text-green-500">
-                      <path d="M16.999 14.4c-.27-.13-1.6-.79-1.85-.88-.25-.09-.43-.13-.6.13-.18.27-.7.87-.85 1.05-.15.18-.31.2-.58.07-.27-.13-1.12-.41-2.14-1.31-.79-.7-1.31-1.56-1.46-1.83-.15-.27-.02-.41.11-.54.11-.11.27-.29.4-.43.13-.14.18-.23.27-.38.09-.15.04-.29-.02-.41-.07-.13-.6-1.45-.82-1.98-.21-.5-.43-.43-.6-.43-.15 0-.33-.02-.51-.02s-.47.07-.72.34c-.25.27-.95.93-.95 2.27s.97 2.63 1.1 2.81c.13.18 1.91 2.9 4.63 4.07.65.28 1.16.45 1.56.58.65.21 1.24.18 1.7.11.52-.08 1.6-.65 1.83-1.28.23-.63.23-1.16.16-1.28-.06-.11-.25-.18-.52-.31z" />
-                    </svg>
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-200">WhatsApp</span>
-                  </a>
-                )}
 
                 {/* Instagram */}
                 {formData.instagram && (
@@ -164,9 +135,16 @@ export default function UserSocialCard({ profile }: { profile: any }) {
                     rel="noopener noreferrer"
                     className="flex h-12 min-w-[120px] items-center justify-center gap-2 rounded-lg border transition hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 24 24" className="text-black dark:text-white">
-                      <path d="M12.75 2h2.25a5.25 5.25 0 0 0 5.25 5.25v2.25a7.5 7.5 0 0 1-5.25-2.25V15a7.5 7.5 0 1 1-7.5-7.5h2.25a5.25 5.25 0 1 0 5.25 5.25V2z" />
-                    </svg>
+                    <svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="20"
+  height="20"
+  viewBox="0 0 24 24"
+  fill="currentColor"
+  className="text-black dark:text-white"
+>
+  <path d="M12.5 2h3.1c.1.9.5 1.8 1.1 2.5.7.8 1.7 1.3 2.8 1.4v3.1c-1.7-.1-3.4-.7-4.8-1.8v8.2c0 1.8-.7 3.5-2 4.8-1.1 1.2-2.7 1.9-4.4 1.9A6.4 6.4 0 0 1 2 14.6a6.4 6.4 0 0 1 6.4-6.4c.6 0 1.2.1 1.8.3v3.3a3.3 3.3 0 1 0 2.3 3.2V2Z" />
+</svg>
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-200">TikTok</span>
                   </a>
                 )}

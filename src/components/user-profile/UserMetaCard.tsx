@@ -166,6 +166,10 @@ export default function UserMetaCard({ profile }: { profile: any }) {
       setSaving(false);
     }
   };
+const formatPhone = (phone?: string) => {
+  if (!phone) return "-";
+  return phone.replace(/^62/, "0");
+};
 
   return (
     <div className="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
@@ -187,6 +191,9 @@ export default function UserMetaCard({ profile }: { profile: any }) {
             </h4>
             <p className="text-sm text-gray-500 dark:text-gray-400 text-center xl:text-left">
               {profile?.email || "-"}
+            </p>
+             <p className="text-sm text-gray-500 dark:text-gray-400 text-center xl:text-left">
+              {formatPhone(profile?.phone_number || "-")}
             </p>
           </div>
         </div>
