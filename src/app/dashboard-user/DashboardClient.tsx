@@ -104,7 +104,7 @@ export default function DashboardUser() {
           flow_amount: Math.abs(Number(r.flow_amount)) || 0,
           created_at: new Date().toISOString(),
           user_id: storedEmail,
-          category: { id: r.group_channel, name: r.group_channel || "Unknown" },
+          category: { id: r.flow_category, name: r.flow_category || "Unknown" },
         })
       );
 
@@ -179,8 +179,12 @@ export default function DashboardUser() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title={USER_OVERVIEWS.totalBalance.title} value={`Rp${(stats.balance || 0).toLocaleString()}`} />
-        <StatCard title={USER_OVERVIEWS.totalIncome.title} value={`Rp${(stats.totalIncome || 0).toLocaleString()}`} />
+        <StatCard
+  title={USER_OVERVIEWS.totalBalance.title}
+  value={`Rp${Math.abs(stats.balance || 0).toLocaleString()}`}
+  className={stats.balance < 0 ? "text-red-500" : ""}
+/>
+<StatCard title={USER_OVERVIEWS.totalIncome.title} value={`Rp${(stats.totalIncome || 0).toLocaleString()}`} />
         <StatCard title={USER_OVERVIEWS.totalExpense.title} value={`Rp${(stats.totalExpense || 0).toLocaleString()}`} />
         <StatCard title={USER_OVERVIEWS.entries.title} value={stats.entries || 0} />
       </div>
