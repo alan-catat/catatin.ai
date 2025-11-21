@@ -36,7 +36,7 @@ export async function exportToExcel<T extends Record<string, any>>(
     cell.fill = {
       type: "pattern",
       pattern: "solid",
-      fgColor: { argb: "FF4A90E2" }, // biru
+      fgColor: { argb: "2E2E2E" },
     };
     cell.border = {
       top: { style: "thin" },

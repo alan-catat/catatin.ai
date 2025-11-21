@@ -181,6 +181,7 @@ const formatPhone = (phone?: string) => {
               height={80}
               src={photoUrl}
               alt={profile?.full_name || "user"}
+              className="w-full h-full object-cover"
               onError={() => setPhotoUrl("/images/user/edit.png")}
             />
           </div>
@@ -278,6 +279,16 @@ const formatPhone = (phone?: string) => {
                     />
                   </div>
 
+                      <div className="col-span-2">
+                    <Label>Profile Photo</Label>
+                    <input
+                      type="file"
+                      name="profile_photo"
+                      accept="image/*"
+                      className="block w-full text-sm text-gray-500 file:mr-4 file:rounded-lg file:border-0 file:bg-gray-100 file:px-4 file:py-2 file:font-semibold hover:file:bg-gray-200 dark:file:bg-gray-700 dark:hover:file:bg-gray-600"
+                    />
+                  </div>
+                  
                   <div className="col-span-2 sm:col-span-1">
                     <Label>Instagram</Label>
                     <Input name="instagram" type="text" defaultValue={profile?.instagram || ""} placeholder="@username / URL" />
@@ -291,16 +302,6 @@ const formatPhone = (phone?: string) => {
                   <div className="col-span-2 sm:col-span-1">
                     <Label>TikTok</Label>
                     <Input name="tiktok" type="text" defaultValue={profile?.tiktok || ""} placeholder="@username / URL" />
-                  </div>
-
-                  <div className="col-span-2">
-                    <Label>Profile Photo</Label>
-                    <input
-                      type="file"
-                      name="profile_photo"
-                      accept="image/*"
-                      className="block w-full text-sm text-gray-500 file:mr-4 file:rounded-lg file:border-0 file:bg-gray-100 file:px-4 file:py-2 file:font-semibold hover:file:bg-gray-200 dark:file:bg-gray-700 dark:hover:file:bg-gray-600"
-                    />
                   </div>
 
                 </div>
