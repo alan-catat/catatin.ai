@@ -85,30 +85,19 @@ export default function ReportPage() {
       console.error("Error fetching groups:", err);
     }
   };
-const normalizeReports = (data: any[]): Report[] =>
-  data.map((r: any) => ({
-    id: r.id || r.flow_id || "",
-    date: r.flow_date || r.date || "",
-    type: r.flow_type || r.type || "",
-    category: r.flow_category || r.category || "-",
-    merchant: r.flow_merchant || r.merchant || "",
-    item: r.flow_items || r.item || "",
-    amount: Number(r.flow_amount || r.amount || 0),
-  }));
 
   // --- Fetch Reports ---
-const fetchReports = async (filters: any = {}) => {
+  const fetchReports = async (filters: any = {}) => {
   try {
-    const userEmail =
-      localStorage.getItem("user_email") ||
-      JSON.parse(localStorage.getItem("user") || "{}")?.email;
+    const userEmail = localStorage.getItem("user_email") || JSON.parse(localStorage.getItem("user") || "{}")?.email;
     if (!userEmail) return;
 
     const payload = {
-  userEmail,
-  group: filters.group ? filters.group : null,      // kosong -> null  
-  date_from: filters.from && filters.from !== "" ? filters.from : null,
-  date_to: filters.to && filters.to !== "" ? filters.to : null,
+  email: userEmail,
+  group: filters.group ?? "",
+  date_from: filters.from ?? null,
+  date_to: filters.to ?? null,
+  skipDateFilter: !filters.from && !filters.to,
 };
 
 
@@ -118,6 +107,7 @@ const fetchReports = async (filters: any = {}) => {
       body: JSON.stringify(payload),
     });
 
+    // Tangani response kosong
     const text = await res.text();
     if (!text) {
       setReports([]);
@@ -126,7 +116,17 @@ const fetchReports = async (filters: any = {}) => {
 
     const data = JSON.parse(text);
     if (Array.isArray(data)) {
-      setReports(normalizeReports(data));
+      setReports(
+        data.map((r: any) => ({
+          id: r.id,
+          date: r.flow_date || r.flow_transaction_date || "",
+          type: r.flow_type,
+          category: r.flow_category || "-",
+          merchant: r.flow_merchant,
+          item: r.flow_items,
+          amount: Number(r.flow_amount) || 0,
+        }))
+      );
     } else {
       setReports([]);
     }
@@ -141,15 +141,8 @@ const fetchReports = async (filters: any = {}) => {
     fetchReports();
   }, []);
 
-
-
-// panggil setiap kali filter berubah
-useEffect(() => {
-  fetchReports({
-    group: selectedGroup || null,
-    from: dateFrom || null,
-    to: dateTo || null,
-  });
+  useEffect(() => {
+  fetchReports({ group: selectedGroup, from: dateFrom, to: dateTo });
 }, [selectedGroup, dateFrom, dateTo]);
 
 
@@ -168,11 +161,12 @@ useEffect(() => {
     setLoading(true);
 
     const payload = {
-      userEmail,
-      group: selectedGroup,
-      date_from: dateFrom,
-      date_to: dateTo,
-    };
+  email: userEmail, // BUKAN userEmail
+  group: selectedGroup,
+  date_from: dateFrom,
+  date_to: dateTo,
+};
+
 
     const res = await fetch(N8N_EXPORT_URL, {
       method: "POST",
@@ -349,7 +343,7 @@ const safeAmount = (val: any) => {
             onClick={() => setShowAddModal(true)}
             className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
           >
-            Add New Transaksi
+            Add New Report
           </button>
 <button
             onClick={() => setcreategroups(true)}
