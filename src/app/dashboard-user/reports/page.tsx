@@ -5,12 +5,12 @@ import DatePicker from "@/components/form/date-picker";
 import { exportToExcel } from "@/utils/exportExcel";
 
 const N8N_BASE = process.env.NEXT_PUBLIC_N8N_BASE_URL || "https://n8n.srv1074739.hstgr.cloud";
-const N8N_GETREPORTS_URL = process.env.NEXT_PUBLIC_N8N_GETREPORTS_URL || `${N8N_BASE}/webhook/get-reports`;
-const N8N_GETGROUPS_URL = process.env.NEXT_PUBLIC_N8N_GETGROUPS_URL || `${N8N_BASE}/webhook/get-groups`;
-const N8N_ADDREPORTS_URL = process.env.NEXT_PUBLIC_N8N_ADDREPORTS_URL || `${N8N_BASE}/webhook/add-report`;
-const N8N_EXPORT_URL = process.env.NEXT_PUBLIC_N8N_EXPORT_URL || `${N8N_BASE}/webhook/export`;
-const N8N_EDIT_URL = process.env.NEXT_PUBLIC_N8N_EDIT_URL || `${N8N_BASE}/webhook/edit`;
-const N8N_ADDGROUP_URL = process.env.NEXT_PUBLIC_N8N_ADDGROUP_URL || `${N8N_BASE}/webhook/addgroup`;
+const N8N_GETREPORTS_URL = `${N8N_BASE}/webhook/get-reports`;
+const N8N_GETGROUPS_URL = `${N8N_BASE}/webhook/get-groups`;
+const N8N_ADDREPORTS_URL = `${N8N_BASE}/webhook/add-reports`; 
+const N8N_EXPORT_URL = `${N8N_BASE}/webhook/export`;
+const N8N_EDIT_URL = `${N8N_BASE}/webhook/edit`;
+const N8N_ADDGROUP_URL = `${N8N_BASE}/webhook/addgroup`;
 
 // --- Helper ---
 function formatDateLocal(d: Date) {
@@ -70,7 +70,12 @@ export default function ReportPage() {
       const userEmail =
         localStorage.getItem("user_email") ||
         JSON.parse(localStorage.getItem("user") || "{}")?.email;
-      if (!userEmail) return;
+      if (!userEmail) {
+        console.log("No user email found");
+        return;
+      }
+
+      console.log("Fetching groups for:", userEmail);
 
       const res = await fetch(N8N_GETGROUPS_URL, {
         method: "POST",
@@ -78,9 +83,17 @@ export default function ReportPage() {
         body: JSON.stringify({ email: userEmail }),
       });
 
-      if (!res.ok) throw new Error(`Fetch failed with status ${res.status}`);
+      if (!res.ok) {
+        console.error(`Fetch groups failed with status ${res.status}`);
+        return;
+      }
+
       const data = await res.json();
-      if (Array.isArray(data)) setGroups(data);
+      console.log("Groups data:", data);
+      
+      if (Array.isArray(data)) {
+        setGroups(data);
+      }
     } catch (err) {
       console.error("Error fetching groups:", err);
     }
@@ -88,53 +101,86 @@ export default function ReportPage() {
 
   // --- Fetch Reports ---
   const fetchReports = async (filters: any = {}) => {
-  try {
-    const userEmail = localStorage.getItem("user_email") || JSON.parse(localStorage.getItem("user") || "{}")?.email;
-    if (!userEmail) return;
+    try {
+      const userEmail = localStorage.getItem("user_email") || 
+        JSON.parse(localStorage.getItem("user") || "{}")?.email;
+      
+      if (!userEmail) {
+        console.log("No user email found");
+        return;
+      }
 
-    const payload = {
-  email: userEmail,
-  group: filters.group ?? "",
-  date_from: filters.from ?? null,
-  date_to: filters.to ?? null,
-  skipDateFilter: !filters.from && !filters.to,
-};
+      // Payload sesuai dengan workflow get-reports.json
+      const payload: any = {
+        email: userEmail,
+        group: selectedGroup,
+      };
 
+      // Hanya tambahkan filter jika ada nilai
+      if (filters.from && filters.to) {
+        payload.date_from = filters.from;
+        payload.date_to = filters.to;
+      }
 
-    const res = await fetch(N8N_GETREPORTS_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+      console.log("Fetching reports with payload:", payload);
 
-    // Tangani response kosong
-    const text = await res.text();
-    if (!text) {
+      const res = await fetch(N8N_GETREPORTS_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      console.log("Response status:", res.status);
+
+      // Tangani response kosong
+      const text = await res.text();
+      console.log("Response text:", text);
+
+      if (!text || text.trim() === "") {
+        console.log("Empty response, setting empty reports");
+        setReports([]);
+        return;
+      }
+
+      try {
+        const data = JSON.parse(text);
+        console.log("Parsed data:", data);
+
+        if (Array.isArray(data)) {
+          const mappedReports = data.map((r: any) => ({
+            id: r.id || "",
+            date: r.flow_date || "",
+            type: r.flow_type || "",
+            category: r.flow_category || "-",
+            merchant: r.flow_merchant || "",
+            item: r.flow_items || "",
+            amount: Number(r.flow_amount) || 0,
+          }));
+
+          console.log("Mapped reports:", mappedReports);
+
+          // Filter by group jika dipilih (karena workflow belum filter by group)
+          let filteredReports = mappedReports;
+          if (filters.group) {
+            filteredReports = mappedReports.filter((r: any) => 
+              r.group_name === filters.group
+            );
+          }
+
+          setReports(filteredReports);
+        } else {
+          console.log("Data is not array, setting empty");
+          setReports([]);
+        }
+      } catch (parseErr) {
+        console.error("Failed to parse JSON:", parseErr);
+        setReports([]);
+      }
+    } catch (err) {
+      console.error("Error fetching reports:", err);
       setReports([]);
-      return;
     }
-
-    const data = JSON.parse(text);
-    if (Array.isArray(data)) {
-      setReports(
-        data.map((r: any) => ({
-          id: r.id,
-          date: r.flow_date || r.flow_transaction_date || "",
-          type: r.flow_type,
-          category: r.flow_category || "-",
-          merchant: r.flow_merchant,
-          item: r.flow_items,
-          amount: Number(r.flow_amount) || 0,
-        }))
-      );
-    } else {
-      setReports([]);
-    }
-  } catch (err) {
-    console.error(err);
-    setReports([]);
-  }
-};
+  };
 
   useEffect(() => {
     fetchGroups();
@@ -142,85 +188,94 @@ export default function ReportPage() {
   }, []);
 
   useEffect(() => {
-  fetchReports({ group: selectedGroup, from: dateFrom, to: dateTo });
-}, [selectedGroup, dateFrom, dateTo]);
-
+    // Fetch ulang ketika filter berubah
+    if (dateFrom && dateTo) {
+      fetchReports({ group: selectedGroup, from: dateFrom, to: dateTo });
+    } else if (selectedGroup) {
+      fetchReports({ group: selectedGroup });
+    }
+  }, [selectedGroup, dateFrom, dateTo]);
 
   const handleApplyDates = () => {
     setDateFrom(tempDateFrom);
     setDateTo(tempDateTo);
+    setGroups(groups);
   };
 
   const handleFetchExport = async () => {
-  try {
-    const userEmail =
-      localStorage.getItem("user_email") ||
-      JSON.parse(localStorage.getItem("user") || "{}")?.email;
-    if (!userEmail) return;
+    try {
+      const userEmail =
+        localStorage.getItem("user_email") ||
+        JSON.parse(localStorage.getItem("user") || "{}")?.email;
+      
+      if (!userEmail) {
+        alert("Email tidak ditemukan. Silakan login ulang.");
+        return;
+      }
 
-    setLoading(true);
+      setLoading(true);
 
-    const payload = {
-  email: userEmail, // BUKAN userEmail
-  group: selectedGroup,
-  date_from: dateFrom,
-  date_to: dateTo,
-};
+      // Payload sesuai dengan Export workflow
+      const payload: any = {
+        userEmail,
+        group: selectedGroup || "", // Kirim empty string jika tidak ada
+        date_from: dateFrom || "",
+        date_to: dateTo || "",
+      };
 
+      console.log("Export payload:", payload);
 
-    const res = await fetch(N8N_EXPORT_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+      const res = await fetch(N8N_EXPORT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
-    if (!res.ok) throw new Error("Gagal memuat data.");
+      if (!res.ok) {
+        throw new Error(`Export failed with status ${res.status}`);
+      }
 
-    const result = await res.json();
+      const result = await res.json();
+      console.log("Export result:", result);
 
-    // Pastikan state terupdate
-    setReports(result.data || []);
+      if (Array.isArray(result) && result.length > 0) {
+        // Download Excel
+        exportToExcel(result, {
+          fileName: `export_${selectedGroup || 'all'}_${Date.now()}.xlsx`,
+          sheetName: selectedGroup || "All Data",
+        });
 
-    // 🔥 Langsung download file Excel
-    exportToExcel(result.data || [], {
-      fileName: result.fileName || `export_${Date.now()}.xlsx`,
-      sheetName: result.sheetName || "Sheet1",
-    });
-
-  } catch (err) {
-    console.error(err);
-    alert("Export gagal memuat data");
-  } finally {
-    setLoading(false);
-  }
-};
-const safeDate = (d: string) => {
-  const date = new Date(d);
-  return isNaN(date.getTime()) ? d : date.toLocaleDateString();
-};
-const safeAmount = (val: any) => {
-  const num = Number(val);
-  return isNaN(num) ? 0 : num;
-};
-
-
-  const handleDownloadExcel = () => {
-    if (!reports.length) return alert("Tidak ada data untuk diexport");
-
-    const { fileName, sheetName } = (window as any).exportFileInfo || {};
-    exportToExcel(reports, { fileName, sheetName });
+        alert("Export berhasil!");
+      } else {
+        alert("Tidak ada data untuk diexport. Pastikan sudah pilih group dan tanggal.");
+      }
+    } catch (err) {
+      console.error("Export error:", err);
+      alert("Export gagal: " + (err as Error).message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const submitModal = async (e: FormEvent) => {
     e.preventDefault();
-    if (!modalDate || !modalType || !modalCategory) return alert("Please fill all fields");
+    
+    if (!modalDate || !modalType || !modalCategory) {
+      alert("Mohon isi semua field yang wajib");
+      return;
+    }
 
     try {
       const userEmail =
         localStorage.getItem("user_email") ||
         JSON.parse(localStorage.getItem("user") || "{}")?.email;
-      if (!userEmail) return alert("Email pengguna tidak ditemukan.");
+      
+      if (!userEmail) {
+        alert("Email tidak ditemukan. Silakan login ulang.");
+        return;
+      }
 
+      // Payload sesuai dengan add-reports workflow
       const payload = {
         date: modalDate,
         type: modalType,
@@ -231,6 +286,8 @@ const safeAmount = (val: any) => {
         email: userEmail,
       };
 
+      console.log("Add report payload:", payload);
+
       const res = await fetch(N8N_ADDREPORTS_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -238,28 +295,42 @@ const safeAmount = (val: any) => {
       });
 
       if (res.ok) {
-        alert("Data saved successfully");
+        alert("Data berhasil disimpan!");
         setShowAddModal(false);
-        setModalDate(""); setModalType(""); setModalCategory(""); setModalMerchant("");
-        setModalItem(""); setModalAmount("");
-        fetchReports();
+        
+        // Reset form
+        setModalDate("");
+        setModalType("");
+        setModalCategory("");
+        setModalMerchant("");
+        setModalItem("");
+        setModalAmount("");
+        
+        // Refresh data
+        fetchReports({ group: selectedGroup, from: dateFrom, to: dateTo });
       } else {
-        console.error(await res.text());
-        alert("Failed to save data");
+        const errorText = await res.text();
+        console.error("Add report failed:", errorText);
+        alert("Gagal menyimpan data: " + errorText);
       }
     } catch (err) {
-      console.error(err);
-      alert("Failed to save data (network)");
+      console.error("Add report error:", err);
+      alert("Gagal menyimpan data: " + (err as Error).message);
     }
   };
 
   const submitAddGroup = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
     try {
       const userEmail =
         localStorage.getItem("user_email") ||
         JSON.parse(localStorage.getItem("user") || "{}")?.email;
-      if (!userEmail) return alert("Email pengguna tidak ditemukan.");
+      
+      if (!userEmail) {
+        alert("Email tidak ditemukan. Silakan login ulang.");
+        return;
+      }
 
       const payload = {
         date: modalDate,
@@ -269,6 +340,8 @@ const safeAmount = (val: any) => {
         email: userEmail,
       };
 
+      console.log("Add group payload:", payload);
+
       const res = await fetch(N8N_ADDGROUP_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -276,15 +349,26 @@ const safeAmount = (val: any) => {
       });
 
       if (!res.ok) {
-        console.error(await res.text());
-        return alert("Failed to save group");
+        const errorText = await res.text();
+        console.error("Add group failed:", errorText);
+        alert("Gagal menyimpan group: " + errorText);
+        return;
       }
 
-      alert("Group saved successfully");
+      alert("Group berhasil disimpan!");
       setcreategroups(false);
+      
+      // Reset form
+      setModalDate("");
+      setmodalgroupType("");
+      setmodalgroupName("");
+      setModalChannel("");
+      
+      // Refresh groups
       fetchGroups();
     } catch (err) {
-      console.error(err);
+      console.error("Add group error:", err);
+      alert("Gagal menyimpan group: " + (err as Error).message);
     }
   };
 
@@ -293,6 +377,58 @@ const safeAmount = (val: any) => {
     setShowEditModal(true);
   };
 
+  const submitEdit = async (e: FormEvent) => {
+    e.preventDefault();
+    
+    if (!editingReport) return;
+
+    try {
+      const userEmail =
+        localStorage.getItem("user_email") ||
+        JSON.parse(localStorage.getItem("user") || "{}")?.email;
+
+      if (!userEmail) {
+        alert("Email tidak ditemukan. Silakan login ulang.");
+        return;
+      }
+
+      // Payload sesuai dengan Edit-report workflow
+      const payload = {
+        id: editingReport.id,
+        date: editingReport.date,
+        type: editingReport.type,
+        category: editingReport.category,
+        merchant: editingReport.merchant,
+        item: editingReport.item,
+        amount: editingReport.amount,
+        email: userEmail,
+      };
+
+      console.log("Edit payload:", payload);
+
+      const res = await fetch(N8N_EDIT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        alert("Data berhasil diupdate!");
+        setShowEditModal(false);
+        setEditingReport(null);
+        
+        // Refresh data
+        fetchReports({ group: selectedGroup, from: dateFrom, to: dateTo });
+      } else {
+        const errorText = await res.text();
+        console.error("Edit failed:", errorText);
+        alert("Gagal update data: " + errorText);
+      }
+    } catch (err) {
+      console.error("Edit error:", err);
+      alert("Gagal update data: " + (err as Error).message);
+    }
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -332,7 +468,10 @@ const safeAmount = (val: any) => {
               }}
             />
 
-            <button onClick={handleApplyDates} className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+            <button 
+              onClick={handleApplyDates} 
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+            >
               Apply
             </button>
           </div>
@@ -345,7 +484,7 @@ const safeAmount = (val: any) => {
           >
             Add New Report
           </button>
-<button
+          <button
             onClick={() => setcreategroups(true)}
             className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
           >
@@ -353,9 +492,10 @@ const safeAmount = (val: any) => {
           </button>
           <button
             onClick={handleFetchExport}
-            className="flex items-center justify-center gap-2 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 w-full sm:w-auto"
+            disabled={loading}
+            className="flex items-center justify-center gap-2 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 w-full sm:w-auto disabled:opacity-50"
           >
-            Export
+            {loading ? "Exporting..." : "Export"}
           </button>
         </div>
       </div>
@@ -375,40 +515,53 @@ const safeAmount = (val: any) => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-  {reports.length > 0 ? (
-    reports.map((row, idx) => (
-      <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-gray-800">
-        <td className="px-4 py-3">{new Date(row.date).toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" })}</td>
-        <td className="px-4 py-3">{row.type}</td>
-        <td className="px-4 py-3">{row.category}</td>
-        <td className="px-4 py-3">{row.merchant}</td>
-        <td className="px-4 py-3">{row.item}</td>
-        <td className={`px-4 py-3 font-medium ${row.amount > 0 ? "text-green-600" : "text-red-600"}`}>
-          {row.amount > 0 ? `+${row.amount.toFixed(2)}` : `-${Math.abs(row.amount).toFixed(2)}`}
-        </td>
-        <td className="px-4 py-3">
-          <button onClick={() => openEditModal(row)} className="px-4 py-1 text-sm font-medium text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 hover:border-blue-400 transition">
-            Edit
-          </button>
-        </td>
-      </tr>
-    ))
-  ) : (
-    <tr>
-      <td colSpan={7} className="text-center py-4 text-gray-500">
-        No data
-      </td>
-    </tr>
-  )}
-</tbody>
+              {reports.length > 0 ? (
+                reports.map((row, idx) => (
+                  <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                    <td className="px-4 py-3">
+                      {row.date ? new Date(row.date).toLocaleDateString("id-ID", { 
+                        day: "2-digit", 
+                        month: "long", 
+                        year: "numeric" 
+                      }) : "-"}
+                    </td>
+                    <td className="px-4 py-3">{row.type}</td>
+                    <td className="px-4 py-3">{row.category}</td>
+                    <td className="px-4 py-3">{row.merchant}</td>
+                    <td className="px-4 py-3">{row.item}</td>
+                    <td
+  className={`px-4 py-3 font-medium ${
+    row.amount >= 0 ? "text-green-600" : "text-red-600"
+  }`}
+>
+  {Math.abs(row.amount).toLocaleString("id-ID")}
+</td>
 
+                    <td className="px-4 py-3">
+                      <button 
+                        onClick={() => openEditModal(row)} 
+                        className="px-4 py-1 text-sm font-medium text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 hover:border-blue-400 transition"
+                      >
+                        Edit
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={7} className="text-center py-4 text-gray-500">
+                    No data available
+                  </td>
+                </tr>
+              )}
+            </tbody>
           </table>
         </div>
       </div>
 
-      {/* MODAL ADD REPORT (pakai state + DatePicker) */}
+      {/* MODAL ADD REPORT */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
           <div className="w-full max-w-lg bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-6">
             <h2 className="text-xl font-semibold mb-4">Add New Report</h2>
 
@@ -423,22 +576,59 @@ const safeAmount = (val: any) => {
                 }}
               />
 
-              <select value={modalType} onChange={(e) => setModalType(e.target.value)} className="border rounded-lg px-3 py-2">
-                <option value="">Select Type</option>
+              <select 
+                value={modalType} 
+                onChange={(e) => setModalType(e.target.value)} 
+                className="border rounded-lg px-3 py-2"
+                required
+              >
+                <option value="">Select Type *</option>
                 <option value="income">Income</option>
                 <option value="expense">Expense</option>
               </select>
 
-              <input value={modalCategory} onChange={(e) => setModalCategory(e.target.value)} type="text" className="border rounded-lg px-3 py-2" placeholder="Category" />
-              <input value={modalMerchant} onChange={(e) => setModalMerchant(e.target.value)} type="text" className="border rounded-lg px-3 py-2" placeholder="Merchant" />
-              <input value={modalItem} onChange={(e) => setModalItem(e.target.value)} type="text" className="border rounded-lg px-3 py-2" placeholder="Item" />
-              <input value={modalAmount} onChange={(e) => setModalAmount(e.target.value ? Number(e.target.value) : "")} type="number" className="border rounded-lg px-3 py-2" placeholder="Amount" />
+              <input 
+                value={modalCategory} 
+                onChange={(e) => setModalCategory(e.target.value)} 
+                type="text" 
+                className="border rounded-lg px-3 py-2" 
+                placeholder="Category *" 
+                required
+              />
+              <input 
+                value={modalMerchant} 
+                onChange={(e) => setModalMerchant(e.target.value)} 
+                type="text" 
+                className="border rounded-lg px-3 py-2" 
+                placeholder="Merchant" 
+              />
+              <input 
+                value={modalItem} 
+                onChange={(e) => setModalItem(e.target.value)} 
+                type="text" 
+                className="border rounded-lg px-3 py-2" 
+                placeholder="Item" 
+              />
+              <input 
+                value={modalAmount} 
+                onChange={(e) => setModalAmount(e.target.value ? Number(e.target.value) : "")} 
+                type="number" 
+                className="border rounded-lg px-3 py-2" 
+                placeholder="Amount" 
+              />
 
               <div className="flex justify-end gap-2 mt-4">
-                <button type="button" className="px-4 py-2 border rounded-lg hover:bg-gray-100" onClick={() => setShowAddModal(false)}>
+                <button 
+                  type="button" 
+                  className="px-4 py-2 border rounded-lg hover:bg-gray-100" 
+                  onClick={() => setShowAddModal(false)}
+                >
                   Close
                 </button>
-                <button type="submit" className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                <button 
+                  type="submit" 
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                >
                   Save
                 </button>
               </div>
@@ -447,38 +637,64 @@ const safeAmount = (val: any) => {
         </div>
       )}
 
-{creategroups && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* MODAL ADD GROUP */}
+      {creategroups && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
           <div className="w-full max-w-lg bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">Add New Groups</h2>
+            <h2 className="text-xl font-semibold mb-4">Add New Group</h2>
 
             <form className="flex flex-col gap-4" onSubmit={submitAddGroup}>
               <DatePicker
-                id="modal_flow_date"
-                placeholder="Flow Date"
+                id="modal_group_date"
+                placeholder="Date"
                 defaultDate={parseYMDToDate(modalDate)}
                 onChange={(dates: any[]) => {
                   const d = dates?.[0];
                   if (d) setModalDate(formatDateLocal(d));
                 }}
               />
-              <input value={modalgroupName} onChange={(e) => setmodalgroupName(e.target.value)} type="text" className="border rounded-lg px-3 py-2" placeholder="Group Name" />
+              <input 
+                value={modalgroupName} 
+                onChange={(e) => setmodalgroupName(e.target.value)} 
+                type="text" 
+                className="border rounded-lg px-3 py-2" 
+                placeholder="Group Name *" 
+                required
+              />
               
-              <select value={modalgroupType} onChange={(e) => setmodalgroupType(e.target.value)} className="border rounded-lg px-3 py-2">
-                <option value="">-Type-</option>
+              <select 
+                value={modalgroupType} 
+                onChange={(e) => setmodalgroupType(e.target.value)} 
+                className="border rounded-lg px-3 py-2"
+                required
+              >
+                <option value="">-Type- *</option>
                 <option value="Keluarga">Keluarga</option>
                 <option value="Bisnis">Bisnis</option>
               </select>
-              <select value={ModalChannel} onChange={(e) => setModalChannel(e.target.value)} className="border rounded-lg px-3 py-2">
-                <option value="">-Channel-</option>
+              
+              <select 
+                value={ModalChannel} 
+                onChange={(e) => setModalChannel(e.target.value)} 
+                className="border rounded-lg px-3 py-2"
+                required
+              >
+                <option value="">-Channel- *</option>
                 <option value="Telegram">Telegram</option>
               </select>
               
               <div className="flex justify-end gap-2 mt-4">
-                <button type="button" className="px-4 py-2 border rounded-lg hover:bg-gray-100" onClick={() => setcreategroups(false)}>
+                <button 
+                  type="button" 
+                  className="px-4 py-2 border rounded-lg hover:bg-gray-100" 
+                  onClick={() => setcreategroups(false)}
+                >
                   Close
                 </button>
-                <button type="submit" className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                <button 
+                  type="submit" 
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                >
                   Save
                 </button>
               </div>
@@ -486,119 +702,84 @@ const safeAmount = (val: any) => {
           </div>
         </div>
       )}
-       {showEditModal && editingReport && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="w-full max-w-lg bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-6">
-               <h2 className="text-xl font-semibold mb-4">Edit Report</h2>
-            <form
-              className="flex flex-col gap-4"
-              onSubmit={async (e) => {
-              e.preventDefault();
-              const userEmail =
-              localStorage.getItem("user_email") ||
-              JSON.parse(localStorage.getItem("user") || "{}")?.email;
 
-          if (!userEmail) {
-            alert("Email pengguna tidak ditemukan. Silakan login ulang.");
-            return;
-          }
+      {/* MODAL EDIT REPORT */}
+      {showEditModal && editingReport && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+          <div className="w-full max-w-lg bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-6">
+            <h2 className="text-xl font-semibold mb-4">Edit Report</h2>
+            
+            <form className="flex flex-col gap-4" onSubmit={submitEdit}>
+              <input
+                type="text"
+                value={editingReport.id || ""}
+                readOnly
+                className="border rounded-lg px-3 py-2 bg-gray-100 text-gray-500 cursor-not-allowed"
+                placeholder="ID"
+              />
+              
+              <input
+                type="text"
+                value={editingReport.category}
+                onChange={(e) =>
+                  setEditingReport({ ...editingReport, category: e.target.value })
+                }
+                className="border rounded-lg px-3 py-2"
+                placeholder="Category"
+              />
 
-          const payload = {
-            id: editingReport.id, // pastikan n8n punya kolom ID unik
-            date: editingReport.date,
-            type: editingReport.type,
-            category: editingReport.category,
-            merchant: editingReport.merchant,
-            item: editingReport.item,
-            amount: editingReport.amount,
-            email: userEmail,
-          };
+              <input
+                type="text"
+                value={editingReport.merchant}
+                onChange={(e) =>
+                  setEditingReport({ ...editingReport, merchant: e.target.value })
+                }
+                className="border rounded-lg px-3 py-2"
+                placeholder="Merchant"
+              />
 
-          const res = await fetch(N8N_EDIT_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
+              <input
+                type="text"
+                value={editingReport.item}
+                onChange={(e) =>
+                  setEditingReport({ ...editingReport, item: e.target.value })
+                }
+                className="border rounded-lg px-3 py-2"
+                placeholder="Item"
+              />
 
-          if (res.ok) {
-            alert("Data updated successfully");
-            setShowEditModal(false);
-            setEditingReport(null);
-            fetchReports();
-          } else {
-            alert("Gagal memperbarui data");
-          }
-        }}
-      >
-        <input
-          type="text"
-          value={editingReport.id || ""}
-          readOnly
-          className="border rounded-lg px-3 py-2 bg-gray-100 text-gray-500 cursor-not-allowed"
-          placeholder="ID"
-        />
-        <input
-          type="text"
-          value={editingReport.category}
-          onChange={(e) =>
-            setEditingReport({ ...editingReport, category: e.target.value })
-          }
-          className="border rounded-lg px-3 py-2"
-          placeholder="Category"
-        />
+              <input
+                type="number"
+                value={editingReport.amount}
+                onChange={(e) =>
+                  setEditingReport({
+                    ...editingReport,
+                    amount: Number(e.target.value),
+                  })
+                }
+                className="border rounded-lg px-3 py-2"
+                placeholder="Amount"
+              />
 
-        <input
-          type="text"
-          value={editingReport.merchant}
-          onChange={(e) =>
-            setEditingReport({ ...editingReport, merchant: e.target.value })
-          }
-          className="border rounded-lg px-3 py-2"
-          placeholder="Merchant"
-        />
-
-        <input
-          type="text"
-          value={editingReport.item}
-          onChange={(e) =>
-            setEditingReport({ ...editingReport, item: e.target.value })
-          }
-          className="border rounded-lg px-3 py-2"
-          placeholder="Item"
-        />
-
-        <input
-          type="number"
-          value={editingReport.amount}
-          onChange={(e) =>
-            setEditingReport({
-              ...editingReport,
-              amount: Number(e.target.value),
-            })
-          }
-          className="border rounded-lg px-3 py-2"
-          placeholder="Amount"
-        />
-
-        <div className="flex justify-end gap-2 mt-4">
-          <button
-            type="button"
-            className="px-4 py-2 border rounded-lg hover:bg-gray-100"
-            onClick={() => setShowEditModal(false)}
-          >
-            Close
-          </button>
-          <button
-            type="submit"
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-          >
-            Save Changes
-          </button>
+              <div className="flex justify-end gap-2 mt-4">
+                <button
+                  type="button"
+                  className="px-4 py-2 border rounded-lg hover:bg-gray-100"
+                  onClick={() => setShowEditModal(false)}
+                >
+                  Close
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
-      </form>
-    </div>
-  </div>
-)}
+      )}
     </div>
   );
-};
+}

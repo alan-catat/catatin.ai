@@ -23,9 +23,24 @@ interface CashFlow {
   category: Category;
 }
 
+ function getMostExpensive(cashflows: CashFlow[]) {
+  if (!cashflows.length) return [];
+
+  const items = cashflows
+    .filter((d) => d.flow_type === "expense")
+    .map((d) => ({
+      name: d.category?.name || "Unknown",
+      qty: 1,
+      amount: d.flow_amount,
+    }));
+
+  items.sort((a, b) => b.amount - a.amount);
+  return items.slice(0, 5); // top 5 termahal
+}
+
 export default function DashboardUser() {
   const { setAlertData } = useAlert();
-
+const [mostExpensive, setMostExpensive] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [cashFlows, setCashFlows] = useState<CashFlow[]>([]);
   const [stats, setStats] = useState<any>({});
@@ -126,33 +141,33 @@ export default function DashboardUser() {
     const incomeData = groupByCategory(data, "income");
     const expenseData = groupByCategory(data, "expense");
 
-    return { balance, totalIncome, totalExpense, entries: data.length, incomeData, expenseData };
+     return { balance, totalIncome, totalExpense, entries: data.length, incomeData, expenseData };
   }
-
-  // === INIT pertama ===
+    // === INIT pertama ===
   useEffect(() => {
-    const init = async () => {
-      const p = generatePeriods();
-      setPeriods(p);
-      const flows = await fetchCashFlows(p[p.length - 1]);
-      setSelectedPeriod(p[p.length - 1]);
-      setStats(calculateStats(flows));
-      setLoading(false);
-    };
-    init();
-  }, []);
+  const init = async () => {
+    const p = generatePeriods();
+    setPeriods(p);
+    const flows = await fetchCashFlows(p[p.length - 1]);
+    setSelectedPeriod(p[p.length - 1]);
+    setStats(calculateStats(flows));
+    setMostExpensive(getMostExpensive(flows));
+    setLoading(false);
+  };
+  init();
+}, []);
 
-  // === Update saat period berganti ===
-  useEffect(() => {
-    if (!selectedPeriod) return;
-    (async () => {
-      const flows = await fetchCashFlows(selectedPeriod);
-      setStats(calculateStats(flows));
-    })();
-  }, [selectedPeriod]);
+useEffect(() => {
+  if (!selectedPeriod) return;
+  (async () => {
+    const flows = await fetchCashFlows(selectedPeriod);
+    setStats(calculateStats(flows));
+    setMostExpensive(getMostExpensive(flows));
+  })();
+}, [selectedPeriod]);
 
+   
   if (loading) return <div className="text-center mt-10">Memuat dashboard...</div>;
-
   return (
     <div className="p-6 space-y-6">
       {/* Filter Bar */}
@@ -194,6 +209,33 @@ export default function DashboardUser() {
         <PieCart title={USER_OVERVIEWS.incomeChartBreakdown.title} data={stats.incomeData || []} total={stats.totalIncome || 0} />
         <PieCart title={USER_OVERVIEWS.expenseChartBreakdown.title} data={stats.expenseData || []} total={stats.totalExpense || 0} />
       </div>
+
+      {/* Most expensive purchases */}
+<div className="bg-white dark:bg-neutral-900 shadow rounded-lg p-4">
+  <h2 className="font-semibold text-lg mb-3">Most Expensive Purchases</h2>
+  <table className="w-full text-sm">
+    <thead>
+      <tr className="border-b border-gray-200 dark:border-gray-700 text-left">
+        <th className="py-2">Item Name</th>
+        <th className="py-2">Qty</th>
+        <th className="py-2">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      {mostExpensive.map((i, idx) => (
+        <tr
+          key={idx}
+          className="border-b border-gray-100 dark:border-gray-800"
+        >
+          <td className="py-2">{i.name}</td>
+          <td className="py-2">{i.qty}</td>
+          <td className="py-2 font-medium">Rp{i.amount.toLocaleString()}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+
     </div>
   );
 }
