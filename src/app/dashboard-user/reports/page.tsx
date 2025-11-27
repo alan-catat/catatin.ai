@@ -7,7 +7,7 @@ import { exportToExcel } from "@/utils/exportExcel";
 const N8N_BASE = process.env.NEXT_PUBLIC_N8N_BASE_URL || "https://n8n.srv1074739.hstgr.cloud";
 const N8N_GETREPORTS_URL = `${N8N_BASE}/webhook/get-reports`;
 const N8N_GETGROUPS_URL = `${N8N_BASE}/webhook/get-groups`;
-const N8N_ADDREPORTS_URL = `${N8N_BASE}/webhook/add-reports`; 
+const N8N_ADDREPORTS_URL = `${N8N_BASE}/webhook/add-reports`; // Fixed: sesuai workflow
 const N8N_EXPORT_URL = `${N8N_BASE}/webhook/export`;
 const N8N_EDIT_URL = `${N8N_BASE}/webhook/edit`;
 const N8N_ADDGROUP_URL = `${N8N_BASE}/webhook/addgroup`;
@@ -35,6 +35,7 @@ interface Report {
   merchant: string;
   item: string;
   amount: number;
+  group_name?: string; // Tambahkan ini
 }
 
 export default function ReportPage() {
@@ -63,6 +64,13 @@ export default function ReportPage() {
   const [ModalChannel, setModalChannel] = useState<string>("");
 
   const uniqueGroups = Array.from(new Map(groups.map((g) => [g.group_name, g])).values());
+
+  // Debug: Log groups
+  useEffect(() => {
+    console.log("Groups loaded:", groups.length);
+    console.log("Unique groups:", uniqueGroups.length);
+    console.log("Groups data:", groups);
+  }, [groups]);
 
   // --- Fetch Groups ---
   const fetchGroups = async () => {
@@ -110,96 +118,171 @@ export default function ReportPage() {
         return;
       }
 
-      // Payload sesuai dengan workflow get-reports.json
-      const payload: any = {
-        email: userEmail,
-        group: selectedGroup,
-      };
+      setLoading(true);
 
-      // Hanya tambahkan filter jika ada nilai
-      if (filters.from && filters.to) {
-        payload.date_from = filters.from;
-        payload.date_to = filters.to;
-      }
+      // Jika ada filter group, kita ambil data dari group tersebut
+      if (filters.group) {
+        // Cari group data dari state groups
+        const groupData = groups.find(g => g.group_name === filters.group);
+        
+        if (!groupData) {
+          console.error("Group not found:", filters.group);
+          setReports([]);
+          setLoading(false);
+          return;
+        }
 
-      console.log("Fetching reports with payload:", payload);
+        console.log("Fetching reports for group:", groupData);
 
-      const res = await fetch(N8N_GETREPORTS_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+        // Fetch langsung dari individual sheet
+        const sheetId = groupData["Link Individual gsheet"];
+        const payload = {
+          email: userEmail,
+          sheetId: sheetId,
+          groupName: filters.group,
+          date_from: filters.from || "",
+          date_to: filters.to || "",
+        };
 
-      console.log("Response status:", res.status);
+        console.log("Fetching group reports with payload:", payload);
 
-      // Tangani response kosong
-      const text = await res.text();
-      console.log("Response text:", text);
+        const res = await fetch(N8N_GETREPORTS_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
 
-      if (!text || text.trim() === "") {
-        console.log("Empty response, setting empty reports");
-        setReports([]);
-        return;
-      }
+        const text = await res.text();
+        
+        if (!text || text.trim() === "") {
+          setReports([]);
+          setLoading(false);
+          return;
+        }
 
-      try {
-        const data = JSON.parse(text);
-        console.log("Parsed data:", data);
+        try {
+          const data = JSON.parse(text);
+          console.log("Group reports data:", data);
 
-        if (Array.isArray(data)) {
-          const mappedReports = data.map((r: any) => ({
-            id: r.id || "",
-            date: r.flow_date || "",
-            type: r.flow_type || "",
-            category: r.flow_category || "-",
-            merchant: r.flow_merchant || "",
-            item: r.flow_items || "",
-            amount: Number(r.flow_amount) || 0,
-          }));
+          if (Array.isArray(data)) {
+            const mappedReports = data.map((r: any) => ({
+              id: r.id || "",
+              date: r.flow_date || "",
+              type: r.flow_type || "",
+              category: r.flow_category || "-",
+              merchant: r.flow_merchant || "",
+              item: r.flow_items || "",
+              amount: Number(r.flow_amount) || 0,
+              group_name: filters.group,
+            }));
 
-          console.log("Mapped reports:", mappedReports);
-
-          // Filter by group jika dipilih (karena workflow belum filter by group)
-          let filteredReports = mappedReports;
-          if (filters.group) {
-            filteredReports = mappedReports.filter((r: any) => 
-              r.group_name === filters.group
-            );
+            console.log("Mapped group reports:", mappedReports);
+            setReports(mappedReports);
+          } else {
+            setReports([]);
           }
-
-          setReports(filteredReports);
-        } else {
-          console.log("Data is not array, setting empty");
+        } catch (parseErr) {
+          console.error("Failed to parse group reports:", parseErr);
           setReports([]);
         }
-      } catch (parseErr) {
-        console.error("Failed to parse JSON:", parseErr);
-        setReports([]);
+      } else {
+        // Fetch all reports dari semua groups
+        console.log("Fetching all reports from all groups");
+
+        const allReports: Report[] = [];
+        const uniqueGroups = Array.from(
+          new Map(groups.map(g => [g.group_name, g])).values()
+        );
+
+        console.log("Unique groups to fetch:", uniqueGroups.length);
+
+        for (const group of uniqueGroups) {
+          try {
+            const sheetId = group["Link Individual gsheet"];
+            
+            if (!sheetId) {
+              console.warn(`No sheet ID for group: ${group.group_name}`);
+              continue;
+            }
+
+            const payload = {
+              email: userEmail,
+              sheetId: sheetId,
+              groupName: group.group_name,
+              date_from: filters.from || "",
+              date_to: filters.to || "",
+            };
+
+            console.log(`Fetching group: ${group.group_name}`);
+
+            const res = await fetch(N8N_GETREPORTS_URL, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+
+            const text = await res.text();
+            
+            if (!text || text.trim() === "") {
+              console.log(`Empty response for group: ${group.group_name}`);
+              continue;
+            }
+
+            const data = JSON.parse(text);
+            console.log(`Data from ${group.group_name}:`, data.length, "items");
+
+            if (Array.isArray(data)) {
+              const mappedReports = data.map((r: any) => ({
+                id: r.id || "",
+                date: r.flow_date || "",
+                type: r.flow_type || "",
+                category: r.flow_category || "-",
+                merchant: r.flow_merchant || "",
+                item: r.flow_items || "",
+                amount: Number(r.flow_amount) || 0,
+                group_name: group.group_name,
+              }));
+
+              allReports.push(...mappedReports);
+            }
+          } catch (err) {
+            console.error(`Error fetching reports for group ${group.group_name}:`, err);
+          }
+        }
+
+        console.log("Total reports from all groups:", allReports.length);
+        
+        // Remove duplicates berdasarkan ID (jika ada duplikasi)
+        const uniqueReports = Array.from(
+          new Map(allReports.map(r => [r.id + r.group_name, r])).values()
+        );
+        
+        console.log("After removing duplicates:", uniqueReports.length);
+        setReports(uniqueReports);
       }
+
+      setLoading(false);
     } catch (err) {
       console.error("Error fetching reports:", err);
       setReports([]);
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchGroups();
-    fetchReports();
   }, []);
 
   useEffect(() => {
-    // Fetch ulang ketika filter berubah
-    if (dateFrom && dateTo) {
+    // Fetch reports setelah groups loaded
+    if (groups.length > 0) {
       fetchReports({ group: selectedGroup, from: dateFrom, to: dateTo });
-    } else if (selectedGroup) {
-      fetchReports({ group: selectedGroup });
     }
-  }, [selectedGroup, dateFrom, dateTo]);
+  }, [groups.length, selectedGroup, dateFrom, dateTo]);
 
   const handleApplyDates = () => {
     setDateFrom(tempDateFrom);
     setDateTo(tempDateTo);
-    setGroups(groups);
   };
 
   const handleFetchExport = async () => {
@@ -247,7 +330,7 @@ export default function ReportPage() {
 
         alert("Export berhasil!");
       } else {
-        alert("Tidak ada data untuk diexport. Pastikan sudah pilih group dan tanggal.");
+        alert("Tidak ada data untuk diexport");
       }
     } catch (err) {
       console.error("Export error:", err);
@@ -501,35 +584,40 @@ export default function ReportPage() {
       </div>
 
       <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
-        <div className="overflow-x-auto w-full">
-          <table className="min-w-[600px] w-full text-sm text-gray-800 dark:text-gray-200">
-            <thead className="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
-              <tr>
-                <th className="px-4 py-3 text-left">Date</th>
-                <th className="px-4 py-3 text-left">Type</th>
-                <th className="px-4 py-3 text-left">Category</th>
-                <th className="px-4 py-3 text-left">Merchant</th>
-                <th className="px-4 py-3 text-left">Item</th>
-                <th className="px-4 py-3 text-left">Amount</th>
-                <th className="px-4 py-3 text-left">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {reports.length > 0 ? (
-                reports.map((row, idx) => (
-                  <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                    <td className="px-4 py-3">
-                      {row.date ? new Date(row.date).toLocaleDateString("id-ID", { 
-                        day: "2-digit", 
-                        month: "long", 
-                        year: "numeric" 
-                      }) : "-"}
-                    </td>
-                    <td className="px-4 py-3">{row.type}</td>
-                    <td className="px-4 py-3">{row.category}</td>
-                    <td className="px-4 py-3">{row.merchant}</td>
-                    <td className="px-4 py-3">{row.item}</td>
-                    <td
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-gray-500">Loading...</div>
+          </div>
+        ) : (
+          <div className="overflow-x-auto w-full">
+            <table className="min-w-[600px] w-full text-sm text-gray-800 dark:text-gray-200">
+              <thead className="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
+                <tr>
+                  <th className="px-4 py-3 text-left">Date</th>
+                  <th className="px-4 py-3 text-left">Type</th>
+                  <th className="px-4 py-3 text-left">Category</th>
+                  <th className="px-4 py-3 text-left">Merchant</th>
+                  <th className="px-4 py-3 text-left">Item</th>
+                  <th className="px-4 py-3 text-left">Amount</th>
+                  <th className="px-4 py-3 text-left">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                {reports.length > 0 ? (
+                  reports.map((row, idx) => (
+                    <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                      <td className="px-4 py-3">
+                        {row.date ? new Date(row.date).toLocaleDateString("id-ID", { 
+                          day: "2-digit", 
+                          month: "long", 
+                          year: "numeric" 
+                        }) : "-"}
+                      </td>
+                      <td className="px-4 py-3">{row.type}</td>
+                      <td className="px-4 py-3">{row.category}</td>
+                      <td className="px-4 py-3">{row.merchant}</td>
+                      <td className="px-4 py-3">{row.item}</td>
+                      <td
   className={`px-4 py-3 font-medium ${
     row.amount >= 0 ? "text-green-600" : "text-red-600"
   }`}
@@ -537,26 +625,27 @@ export default function ReportPage() {
   {Math.abs(row.amount).toLocaleString("id-ID")}
 </td>
 
-                    <td className="px-4 py-3">
-                      <button 
-                        onClick={() => openEditModal(row)} 
-                        className="px-4 py-1 text-sm font-medium text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 hover:border-blue-400 transition"
-                      >
-                        Edit
-                      </button>
+                      <td className="px-4 py-3">
+                        <button 
+                          onClick={() => openEditModal(row)} 
+                          className="px-4 py-1 text-sm font-medium text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 hover:border-blue-400 transition"
+                        >
+                          Edit
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={7} className="text-center py-4 text-gray-500">
+                      No data available
                     </td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={7} className="text-center py-4 text-gray-500">
-                    No data available
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* MODAL ADD REPORT */}

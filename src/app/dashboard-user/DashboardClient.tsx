@@ -23,6 +23,21 @@ interface CashFlow {
   category: Category;
 }
 
+function getLargestIncome(cashflows: CashFlow[]) {
+  if (!cashflows.length) return [];
+
+  const items = cashflows
+    .filter((d) => d.flow_type === "income")
+    .map((d) => ({
+      name: d.category?.name || "Unknown",
+      qty: 1,
+      amount: d.flow_amount,
+    }));
+
+  items.sort((a, b) => b.amount - a.amount);
+  return items.slice(0, 5);
+}
+
  function getMostExpensive(cashflows: CashFlow[]) {
   if (!cashflows.length) return [];
 
@@ -41,6 +56,8 @@ interface CashFlow {
 export default function DashboardUser() {
   const { setAlertData } = useAlert();
 const [mostExpensive, setMostExpensive] = useState<any[]>([]);
+const [largestIncome, setLargestIncome] = useState<any[]>([]);
+ const [chartLoading, setChartLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [cashFlows, setCashFlows] = useState<CashFlow[]>([]);
   const [stats, setStats] = useState<any>({});
@@ -66,7 +83,7 @@ const [mostExpensive, setMostExpensive] = useState<any[]>([]);
   // === Generate daftar bulan ===
   function generatePeriods() {
     const now = new Date();
-    const periods: string[] = [];
+    const periods: string[] = ["All Time"];
     for (let i = 0; i < 12; i++) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const month = d.toLocaleString("en-US", { month: "long" });
@@ -105,7 +122,7 @@ const [mostExpensive, setMostExpensive] = useState<any[]>([]);
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: storedEmail,
-          period: period || selectedPeriod,
+          period: period === "All Time" ? null : period,
         }),
       });
 
@@ -117,7 +134,7 @@ const [mostExpensive, setMostExpensive] = useState<any[]>([]);
           id: String(i),
           flow_type: r.flow_type || (Number(r.flow_amount) >= 0 ? "income" : "expense"),
           flow_amount: Math.abs(Number(r.flow_amount)) || 0,
-          created_at: new Date().toISOString(),
+          created_at: r.flow_date ? new Date(r.flow_date).toISOString() : new Date().toISOString(),
           user_id: storedEmail,
           category: { id: r.flow_category, name: r.flow_category || "Unknown" },
         })
@@ -143,7 +160,7 @@ const [mostExpensive, setMostExpensive] = useState<any[]>([]);
 
      return { balance, totalIncome, totalExpense, entries: data.length, incomeData, expenseData };
   }
-    // === INIT pertama ===
+
   useEffect(() => {
   const init = async () => {
     const p = generatePeriods();
@@ -152,6 +169,7 @@ const [mostExpensive, setMostExpensive] = useState<any[]>([]);
     setSelectedPeriod(p[p.length - 1]);
     setStats(calculateStats(flows));
     setMostExpensive(getMostExpensive(flows));
+    setLargestIncome(getLargestIncome(flows));
     setLoading(false);
   };
   init();
@@ -159,15 +177,31 @@ const [mostExpensive, setMostExpensive] = useState<any[]>([]);
 
 useEffect(() => {
   if (!selectedPeriod) return;
+  
   (async () => {
-    const flows = await fetchCashFlows(selectedPeriod);
-    setStats(calculateStats(flows));
-    setMostExpensive(getMostExpensive(flows));
+    try {
+      setChartLoading(true);
+      
+      const flows = await fetchCashFlows(selectedPeriod);
+      const newStats = calculateStats(flows);
+      
+      setStats(newStats);
+      setMostExpensive(getMostExpensive(flows));
+      setLargestIncome(getLargestIncome(flows));
+    } catch (error) {
+      console.error('Error loading data:', error);
+      // Set empty data on error
+      setStats({});
+      setMostExpensive([]);
+      setLargestIncome([]);
+    } finally {
+      setChartLoading(false); // ← PINDAH KE FINALLY supaya PASTI dipanggil
+    }
   })();
 }, [selectedPeriod]);
 
-   
   if (loading) return <div className="text-center mt-10">Memuat dashboard...</div>;
+
   return (
     <div className="p-6 space-y-6">
       {/* Filter Bar */}
@@ -175,9 +209,9 @@ useEffect(() => {
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
           <DatePicker
             selected={
-              selectedPeriod
-                ? new Date(`${selectedPeriod.split(" ")[0]} 1, ${selectedPeriod.split(" ")[1]}`)
-                : null
+              selectedPeriod === "All Time" || !selectedPeriod
+                ? null // ← Handle "All Time"
+                : new Date(`${selectedPeriod.split(" ")[0]} 1, ${selectedPeriod.split(" ")[1]}`)
             }
             onChange={(date) => {
               if (!date) return;
@@ -188,7 +222,18 @@ useEffect(() => {
             dateFormat="MMMM yyyy"
             showMonthYearPicker
             customInput={<CustomInput />}
+            placeholderText="Select period or All Time"
           />
+          <button
+            onClick={() => setSelectedPeriod("All Time")}
+            className={`px-4 py-2 rounded-lg border transition-colors ${
+              selectedPeriod === "All Time"
+                ? "bg-blue-500 text-white border-blue-500"
+                : "bg-white dark:bg-neutral-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-neutral-700"
+            }`}
+          >
+            All Time
+          </button>
         </div>
       </div>
 
@@ -204,37 +249,89 @@ useEffect(() => {
         <StatCard title={USER_OVERVIEWS.entries.title} value={stats.entries || 0} />
       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <PieCart title={USER_OVERVIEWS.incomeChartBreakdown.title} data={stats.incomeData || []} total={stats.totalIncome || 0} />
-        <PieCart title={USER_OVERVIEWS.expenseChartBreakdown.title} data={stats.expenseData || []} total={stats.totalExpense || 0} />
-      </div>
+      {/* Charts + Top Items */}
+<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-      {/* Most expensive purchases */}
-<div className="bg-white dark:bg-neutral-900 shadow rounded-lg p-4">
-  <h2 className="font-semibold text-lg mb-3">Most Expensive Purchases</h2>
-  <table className="w-full text-sm">
-    <thead>
-      <tr className="border-b border-gray-200 dark:border-gray-700 text-left">
-        <th className="py-2">Item Name</th>
-        <th className="py-2">Qty</th>
-        <th className="py-2">Amount</th>
-      </tr>
-    </thead>
-    <tbody>
-      {mostExpensive.map((i, idx) => (
-        <tr
-          key={idx}
-          className="border-b border-gray-100 dark:border-gray-800"
-        >
-          <td className="py-2">{i.name}</td>
-          <td className="py-2">{i.qty}</td>
-          <td className="py-2 font-medium">Rp{i.amount.toLocaleString()}</td>
+  {/* Income Category Breakdown */}
+  {chartLoading ? ( // ← TAMBAH INI - Loading state
+          <div className="bg-white dark:bg-neutral-900 shadow rounded-lg p-4 flex items-center justify-center h-64">
+            <p className="text-gray-500">Loading chart...</p>
+          </div>
+        ) : (
+          <PieCart
+            key={`income-${selectedPeriod}`}
+            title={USER_OVERVIEWS.incomeChartBreakdown.title}
+            data={stats.incomeData || []}
+            total={stats.totalIncome || 0}
+          />
+        )}
+
+        {/* Expense Category Breakdown */}
+        {chartLoading ? ( // ← TAMBAH INI - Loading state
+          <div className="bg-white dark:bg-neutral-900 shadow rounded-lg p-4 flex items-center justify-center h-64">
+            <p className="text-gray-500">Loading chart...</p>
+          </div>
+        ) : (
+          <PieCart
+            key={`expense-${selectedPeriod}`}
+            title={USER_OVERVIEWS.expenseChartBreakdown.title}
+            data={stats.expenseData || []}
+            total={stats.totalExpense || 0}
+          />
+        )}
+ 
+  {/* Largest Income Table */}
+  <div className="bg-white dark:bg-neutral-900 shadow rounded-lg p-4">
+    <h2 className="font-semibold text-lg mb-3">Largest Income Sources</h2>
+    <table className="w-full text-sm">
+      <thead>
+        <tr className="border-b border-gray-200 dark:border-gray-700 text-left">
+          <th className="py-2">Income Name</th>
+          <th className="py-2">Amount</th>
         </tr>
-      ))}
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        {largestIncome.map((i, idx) => (
+          <tr
+            key={idx}
+            className="border-b border-gray-100 dark:border-gray-800"
+          >
+            <td className="py-2">{i.name}</td>
+            <td className="py-2 font-medium">Rp{i.amount.toLocaleString()}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+ 
+
+  {/* Most Expensive Purchases */}
+  <div className="bg-white dark:bg-neutral-900 shadow rounded-lg p-4">
+    <h2 className="font-semibold text-lg mb-3">Most Expensive Purchases</h2>
+    <table className="w-full text-sm">
+      <thead>
+        <tr className="border-b border-gray-200 dark:border-gray-700 text-left">
+          <th className="py-2">Item Name</th>
+          <th className="py-2">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        {mostExpensive.map((i, idx) => (
+          <tr
+            key={idx}
+            className="border-b border-gray-100 dark:border-gray-800"
+          >
+            <td className="py-2">{i.name}</td>
+            <td className="py-2 font-medium">Rp{i.amount.toLocaleString()}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
 </div>
+
 
     </div>
   );
