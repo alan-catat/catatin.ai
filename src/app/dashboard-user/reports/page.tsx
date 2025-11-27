@@ -110,13 +110,11 @@ export default function ReportPage() {
   // --- Fetch Reports ---
   const fetchReports = async (filters: any = {}) => {
     try {
-      const userEmail = localStorage.getItem("user_email") || 
-        JSON.parse(localStorage.getItem("user") || "{}")?.email;
-      
-      if (!userEmail) {
-        console.log("No user email found");
-        return;
-      }
+       if (!userEmail) {
+      console.log("User email not ready yet");
+      return;
+    }
+
 
       setLoading(true);
 
@@ -160,6 +158,7 @@ export default function ReportPage() {
           return;
         }
 
+        
         try {
           const data = JSON.parse(text);
           console.log("Group reports data:", data);
@@ -268,17 +267,23 @@ export default function ReportPage() {
       setLoading(false);
     }
   };
+  
+const [userEmail, setUserEmail] = useState<string | null>(null);
+
+useEffect(() => {
+  const email =
+    localStorage.getItem("user_email") ||
+    JSON.parse(localStorage.getItem("user") || "{}")?.email;
+
+  setUserEmail(email);
+}, []);
+  useEffect(() => {
+  setTimeout(fetchGroups, 200); // 200ms
+}, []);
 
   useEffect(() => {
-    fetchGroups();
-  }, []);
-
-  useEffect(() => {
-    // Fetch reports setelah groups loaded
-    if (groups.length > 0) {
-      fetchReports({ group: selectedGroup, from: dateFrom, to: dateTo });
-    }
-  }, [groups.length, selectedGroup, dateFrom, dateTo]);
+  fetchReports({ group: selectedGroup, from: dateFrom, to: dateTo });
+}, [groups, selectedGroup, dateFrom, dateTo]);
 
   const handleApplyDates = () => {
     setDateFrom(tempDateFrom);

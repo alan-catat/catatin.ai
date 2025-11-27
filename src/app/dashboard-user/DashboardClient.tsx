@@ -21,6 +21,7 @@ interface CashFlow {
   created_at: string;
   user_id: string;
   category: Category;
+  group_name?: string;
 }
 
 function getLargestIncome(cashflows: CashFlow[]) {
@@ -63,7 +64,8 @@ const [largestIncome, setLargestIncome] = useState<any[]>([]);
   const [stats, setStats] = useState<any>({});
   const [periods, setPeriods] = useState<string[]>([]);
   const [selectedPeriod, setSelectedPeriod] = useState<string>("");
-
+const [groups, setGroups] = useState<string[]>([]);
+  const [selectedGroup, setSelectedGroup] = useState<string>("All Groups");
   // Warna dan ikon (optional)
   const colors = ["text-blue-500", "text-green-500", "text-purple-500", "text-orange-500", "text-pink-500"];
   const icons = [Wallet, ShoppingBag, Briefcase, CreditCard, DollarSign];
@@ -106,7 +108,7 @@ const [largestIncome, setLargestIncome] = useState<any[]>([]);
   }
 
   // === POST ke n8n (utk filter per user & periode) ===
-  async function fetchCashFlows(period?: string) {
+  async function fetchCashFlows(period?: string, groupName?: string) {
     try {
       const storedEmail = typeof window !== "undefined" ? localStorage.getItem("user_email") : null;
       if (!storedEmail) {
@@ -117,17 +119,30 @@ const [largestIncome, setLargestIncome] = useState<any[]>([]);
       const url = process.env.NEXT_PUBLIC_N8N_GETCASHFLOW_URL;
       if (!url) throw new Error("NEXT_PUBLIC_N8N_GETCASHFLOW_URL");
 
-      const res = await fetch(`${url}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: storedEmail,
-          period: period === "All Time" ? null : period,
-        }),
-      });
+      const requestBody: any = {
+      email: storedEmail,
+      period: period === "All Time" ? null : (period || null),
+    };
+    if (groupName !== undefined && groupName !== "All Groups") {
+      requestBody.group_name = groupName;
+    }
 
-      if (!res.ok) throw new Error("Gagal fetch data dari n8n");
-      const result = await res.json();
+      console.log('=== SENDING TO N8N ===');
+    console.log('Request Body:', JSON.stringify(requestBody, null, 2));
+    console.log('======================');
+
+      const res = await fetch(`${url}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(requestBody),
+    });
+
+    if (!res.ok) {
+      console.error('Response not OK:', res.status);
+      throw new Error("Gagal fetch data dari n8n");
+    }
+    
+    const result = await res.json();
 
       const formatted: CashFlow[] = (Array.isArray(result) ? result : result.data || []).map(
         (r: any, i: number) => ({
@@ -137,10 +152,14 @@ const [largestIncome, setLargestIncome] = useState<any[]>([]);
           created_at: r.flow_date ? new Date(r.flow_date).toISOString() : new Date().toISOString(),
           user_id: storedEmail,
           category: { id: r.flow_category, name: r.flow_category || "Unknown" },
+          group_name: r.group_name || "Unknown",
         })
       );
 
       setCashFlows(formatted);
+      const uniqueGroups = Array.from(new Set(formatted.map(f => f.group_name).filter(Boolean)));
+      setGroups(["All Groups", ...uniqueGroups] as string[]);
+      
       return formatted;
     } catch (err) {
       console.error(err);
@@ -165,12 +184,16 @@ const [largestIncome, setLargestIncome] = useState<any[]>([]);
   const init = async () => {
     const p = generatePeriods();
     setPeriods(p);
-    const flows = await fetchCashFlows(p[p.length - 1]);
+    const flows = await fetchCashFlows(p[p.length - 1], undefined); // undefined dulu
     setSelectedPeriod(p[p.length - 1]);
+      setSelectedGroup("All Groups");
     setStats(calculateStats(flows));
     setMostExpensive(getMostExpensive(flows));
     setLargestIncome(getLargestIncome(flows));
     setLoading(false);
+  setTimeout(() => {
+      setSelectedGroup("All Groups");
+    }, 100);
   };
   init();
 }, []);
@@ -198,7 +221,7 @@ useEffect(() => {
       setChartLoading(false); // ← PINDAH KE FINALLY supaya PASTI dipanggil
     }
   })();
-}, [selectedPeriod]);
+}, [selectedPeriod, selectedGroup]);;
 
   if (loading) return <div className="text-center mt-10">Memuat dashboard...</div>;
 
@@ -207,6 +230,17 @@ useEffect(() => {
       {/* Filter Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <select
+            value={selectedGroup}
+            onChange={(e) => setSelectedGroup(e.target.value)}
+            className="border rounded-lg px-3 py-2 dark:bg-neutral-800 dark:text-gray-400 dark:border-gray-600"
+          >
+            {groups.map((group) => (
+              <option key={group} value={group}>
+                {group}
+              </option>
+            ))}
+          </select>
           <DatePicker
             selected={
               selectedPeriod === "All Time" || !selectedPeriod
@@ -236,7 +270,9 @@ useEffect(() => {
           </button>
         </div>
       </div>
-
+<div className="text-sm text-gray-600 dark:text-gray-400">
+        Showing data for: <span className="font-semibold">{selectedGroup}</span> • <span className="font-semibold">{selectedPeriod}</span>
+      </div>
       {/* Summary Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
