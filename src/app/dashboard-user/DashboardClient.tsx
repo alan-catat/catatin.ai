@@ -122,6 +122,7 @@ const [groups, setGroups] = useState<string[]>([]);
       const requestBody: any = {
       email: storedEmail,
       period: period === "All Time" ? null : (period || null),
+      groupName: selectedGroup
     };
     if (groupName !== undefined && groupName !== "All Groups") {
       requestBody.group_name = groupName;
@@ -274,7 +275,7 @@ useEffect(() => {
         Showing data for: <span className="font-semibold">{selectedGroup}</span> • <span className="font-semibold">{selectedPeriod}</span>
       </div>
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
   title={USER_OVERVIEWS.totalBalance.title}
   value={`Rp${Math.abs(stats.balance || 0).toLocaleString()}`}
@@ -289,7 +290,7 @@ useEffect(() => {
 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
   {/* Income Category Breakdown */}
-  {chartLoading ? ( // ← TAMBAH INI - Loading state
+  {chartLoading ? ( 
           <div className="bg-white dark:bg-neutral-900 shadow rounded-lg p-4 flex items-center justify-center h-64">
             <p className="text-gray-500">Loading chart...</p>
           </div>

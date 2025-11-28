@@ -135,15 +135,7 @@ export default function Home() {
                 <h2 className="text-xl font-semibold mb-4">Add New Groups</h2>
 
                 <form className="flex flex-col gap-4" onSubmit={submitAddGroup}>
-                  <DatePicker
-                    id="modal_flow_date"
-                    placeholder="Flow Date"
-                    defaultDate={parseYMDToDate(modalDate)}
-                    onChange={(dates: any[]) => {
-                      const d = dates?.[0];
-                      if (d) setModalDate(formatDateLocal(d));
-                    }}
-                  />
+                  
 
                   <input
                     value={modalgroupName}
@@ -159,7 +151,7 @@ export default function Home() {
                     className="border rounded-lg px-3 py-2"
                   >
                     <option value="">-Type-</option>
-                    <option value="Keluarga">Keluarga</option>
+                    <option value="Keluarga">Personal</option>
                     <option value="Bisnis">Bisnis</option>
                   </select>
 
@@ -170,6 +162,7 @@ export default function Home() {
                   >
                     <option value="">-Channel-</option>
                     <option value="Telegram">Telegram</option>
+                    <option value="Telegram">Whatsapp</option>
                   </select>
 
                   <div className="flex justify-end gap-2 mt-4">
