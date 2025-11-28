@@ -3,6 +3,7 @@
 import { useEffect, useState, FormEvent } from "react";
 import DatePicker from "@/components/form/date-picker";
 import { exportToExcel } from "@/utils/exportExcel";
+import * as React from "react";
 
 const N8N_BASE = process.env.NEXT_PUBLIC_N8N_BASE_URL || "https://n8n.srv1074739.hstgr.cloud";
 const N8N_GETREPORTS_URL = `${N8N_BASE}/webhook/get-reports`;
@@ -63,7 +64,28 @@ export default function ReportPage() {
   const [modalgroupName, setmodalgroupName] = useState<string>("");
   const [ModalChannel, setModalChannel] = useState<string>("");
 
-  const uniqueGroups = Array.from(new Map(groups.map((g) => [g.group_name, g])).values());
+  const uniqueGroups = React.useMemo(() => {
+  console.log("Computing uniqueGroups from:", groups);
+  
+  if (!Array.isArray(groups) || groups.length === 0) {
+    return [];
+  }
+
+  // Jika array berisi string langsung
+  if (typeof groups[0] === "string") {
+    return groups.map(name => ({ group_name: name }));
+  }
+
+  // Jika array berisi object
+  return Array.from(
+    new Map(
+      groups.map((g) => {
+        const groupName = g.group_name || g.name || g.groupName || "";
+        return [groupName, { group_name: groupName }];
+      })
+    ).values()
+  ).filter(g => g.group_name); // Remove empty names
+}, [groups]);
 
   // Debug: Log groups
   useEffect(() => {
@@ -74,201 +96,154 @@ export default function ReportPage() {
 
   // --- Fetch Groups ---
   const fetchGroups = async () => {
-    try {
-      const userEmail =
-        localStorage.getItem("user_email") ||
-        JSON.parse(localStorage.getItem("user") || "{}")?.email;
-      if (!userEmail) {
-        console.log("No user email found");
-        return;
-      }
-
-      console.log("Fetching groups for:", userEmail);
-
-      const res = await fetch(N8N_GETGROUPS_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: userEmail }),
-      });
-
-      if (!res.ok) {
-        console.error(`Fetch groups failed with status ${res.status}`);
-        return;
-      }
-
-      const data = await res.json();
-      console.log("Groups data:", data);
-      
-      if (Array.isArray(data)) {
-        setGroups(data);
-      }
-    } catch (err) {
-      console.error("Error fetching groups:", err);
+  try {
+    const userEmail =
+      localStorage.getItem("user_email") ||
+      JSON.parse(localStorage.getItem("user") || "{}")?.email;
+    
+    if (!userEmail) {
+      console.log("No user email found");
+      return;
     }
-  };
+
+    console.log("=== FETCHING GROUPS ===");
+    console.log("userEmail:", userEmail);
+
+    const res = await fetch(N8N_GETGROUPS_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: userEmail }),
+    });
+
+    if (!res.ok) {
+      console.error(`Fetch groups failed with status ${res.status}`);
+      return;
+    }
+
+    const data = await res.json();
+    
+    // === DEBUG LOG ===
+    console.log("=== GROUPS DATA RECEIVED ===");
+    console.log("Type:", typeof data);
+    console.log("Is Array:", Array.isArray(data));
+    console.log("Length:", data?.length);
+    console.log("Raw data:", data);
+    
+    if (Array.isArray(data) && data.length > 0) {
+      console.log("=== FIRST GROUP SAMPLE ===");
+      console.log("Keys:", Object.keys(data[0]));
+      console.log("Values:", data[0]);
+      
+      // Cek apakah ada field group_name
+      console.log("Has group_name?", "group_name" in data[0]);
+      console.log("group_name value:", data[0].group_name);
+    }
+    
+    if (Array.isArray(data)) {
+      setGroups(data);
+    }
+  } catch (err) {
+    console.error("Error fetching groups:", err);
+  }
+};
 
   // --- Fetch Reports ---
-  const fetchReports = async (filters: any = {}) => {
-    try {
-       if (!userEmail) {
+const fetchReports = async (filters: any = {}) => {
+  try {
+    const userEmail =
+      localStorage.getItem("user_email") ||
+      JSON.parse(localStorage.getItem("user") || "{}")?.email;
+
+    if (!userEmail) {
       console.log("User email not ready yet");
       return;
     }
 
+    setLoading(true);
 
-      setLoading(true);
+    console.log("=== FETCH REPORTS CALLED ===");
+    console.log("filters:", filters);
 
-      // Jika ada filter group, kita ambil data dari group tersebut
-      if (filters.group) {
-        // Cari group data dari state groups
-        const groupData = groups.find(g => g.group_name === filters.group);
-        
-        if (!groupData) {
-          console.error("Group not found:", filters.group);
-          setReports([]);
-          setLoading(false);
-          return;
-        }
+    // PAYLOAD untuk master sheet
+    // N8N akan handle filtering by group_name
+    const payload = {
+      email: userEmail,
+      groupName: filters.group || "", // Kirim empty string untuk "All Groups"
+      date_from: filters.from || "",
+      date_to: filters.to || "",
+    };
 
-        console.log("Fetching reports for group:", groupData);
+    console.log("Payload:", payload);
 
-        // Fetch langsung dari individual sheet
-        const sheetId = groupData["Link Individual gsheet"];
-        const payload = {
-          email: userEmail,
-          sheetId: sheetId,
-          groupName: filters.group,
-          date_from: filters.from || "",
-          date_to: filters.to || "",
-        };
+    const res = await fetch(N8N_GETREPORTS_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
 
-        console.log("Fetching group reports with payload:", payload);
-
-        const res = await fetch(N8N_GETREPORTS_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-
-        const text = await res.text();
-        
-        if (!text || text.trim() === "") {
-          setReports([]);
-          setLoading(false);
-          return;
-        }
-
-        
-        try {
-          const data = JSON.parse(text);
-          console.log("Group reports data:", data);
-
-          if (Array.isArray(data)) {
-            const mappedReports = data.map((r: any) => ({
-              id: r.id || "",
-              date: r.flow_date || "",
-              type: r.flow_type || "",
-              category: r.flow_category || "-",
-              merchant: r.flow_merchant || "",
-              item: r.flow_items || "",
-              amount: Number(r.flow_amount) || 0,
-              group_name: filters.group,
-            }));
-
-            console.log("Mapped group reports:", mappedReports);
-            setReports(mappedReports);
-          } else {
-            setReports([]);
-          }
-        } catch (parseErr) {
-          console.error("Failed to parse group reports:", parseErr);
-          setReports([]);
-        }
-      } else {
-        // Fetch all reports dari semua groups
-        console.log("Fetching all reports from all groups");
-
-        const allReports: Report[] = [];
-        const uniqueGroups = Array.from(
-          new Map(groups.map(g => [g.group_name, g])).values()
-        );
-
-        console.log("Unique groups to fetch:", uniqueGroups.length);
-
-        for (const group of uniqueGroups) {
-          try {
-            const sheetId = group["Link Individual gsheet"];
-            
-            if (!sheetId) {
-              console.warn(`No sheet ID for group: ${group.group_name}`);
-              continue;
-            }
-
-            const payload = {
-              email: userEmail,
-              sheetId: sheetId,
-              groupName: group.group_name,
-              date_from: filters.from || "",
-              date_to: filters.to || "",
-            };
-
-            console.log(`Fetching group: ${group.group_name}`);
-
-            const res = await fetch(N8N_GETREPORTS_URL, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(payload),
-            });
-
-            const text = await res.text();
-            
-            if (!text || text.trim() === "") {
-              console.log(`Empty response for group: ${group.group_name}`);
-              continue;
-            }
-
-            const data = JSON.parse(text);
-            console.log(`Data from ${group.group_name}:`, data.length, "items");
-
-            if (Array.isArray(data)) {
-              const mappedReports = data.map((r: any) => ({
-                id: r.id || "",
-                date: r.flow_date || "",
-                type: r.flow_type || "",
-                category: r.flow_category || "-",
-                merchant: r.flow_merchant || "",
-                item: r.flow_items || "",
-                amount: Number(r.flow_amount) || 0,
-                group_name: group.group_name,
-              }));
-
-              allReports.push(...mappedReports);
-            }
-          } catch (err) {
-            console.error(`Error fetching reports for group ${group.group_name}:`, err);
-          }
-        }
-
-        console.log("Total reports from all groups:", allReports.length);
-        
-        // Remove duplicates berdasarkan ID (jika ada duplikasi)
-        const uniqueReports = Array.from(
-          new Map(allReports.map(r => [r.id + r.group_name, r])).values()
-        );
-        
-        console.log("After removing duplicates:", uniqueReports.length);
-        setReports(uniqueReports);
-      }
-
-      setLoading(false);
-    } catch (err) {
-      console.error("Error fetching reports:", err);
+    if (!res.ok) {
+      console.error(`HTTP error: ${res.status}`);
       setReports([]);
       setLoading(false);
+      return;
     }
-  };
+
+    const text = await res.text();
+
+    if (!text || text.trim() === "") {
+      console.log("Empty response from N8N");
+      setReports([]);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const data = JSON.parse(text);
+      console.log("✓ Received data:", data.length, "reports");
+
+      if (Array.isArray(data)) {
+        const mappedReports = data.map((r: any) => ({
+          id: r.id || "",
+          date: r.flow_date || "",
+          type: r.flow_type || "",
+          category: r.flow_category || "-",
+          merchant: r.flow_merchant || "",
+          item: r.flow_items || "",
+          amount: Number(r.flow_amount) || 0,
+          group_name: r.group_name || "", // Ambil dari kolom group_name
+        }));
+
+        console.log("=== MAPPED REPORTS ===");
+        console.log("Total:", mappedReports.length);
+        
+        // Optional: Filter by group di frontend (jika N8N belum filter)
+        const filteredReports = filters.group
+          ? mappedReports.filter(r => r.group_name === filters.group)
+          : mappedReports;
+
+        console.log("After filter:", filteredReports.length);
+        setReports(filteredReports);
+      } else {
+        console.log("Data is not an array");
+        setReports([]);
+      }
+    } catch (parseErr) {
+      console.error("Failed to parse response:", parseErr);
+      console.error("Response text:", text);
+      setReports([]);
+    }
+
+    setLoading(false);
+
+  } catch (err) {
+    console.error("Fatal error:", err);
+    setReports([]);
+    setLoading(false);
+  }
+};
   
 const [userEmail, setUserEmail] = useState<string | null>(null);
+const [initialLoadDone, setInitialLoadDone] = useState(false);
 
 useEffect(() => {
   const email =
@@ -277,17 +252,34 @@ useEffect(() => {
 
   setUserEmail(email);
 }, []);
-  useEffect(() => {
-  setTimeout(fetchGroups, 200); // 200ms
-}, []);
 
   useEffect(() => {
-  fetchReports({ group: selectedGroup, from: dateFrom, to: dateTo });
-}, [groups, selectedGroup, dateFrom, dateTo]);
+  if (userEmail) {
+    setTimeout(fetchGroups, 200);
+  }
+}, [userEmail]);
+
+useEffect(() => {
+  if (userEmail && groups.length > 0 && !initialLoadDone) {
+    console.log("Initial fetch reports");
+    fetchReports({ group: selectedGroup, from: dateFrom, to: dateTo });
+    setInitialLoadDone(true);
+  }
+}, [userEmail, groups]);
 
   const handleApplyDates = () => {
-    setDateFrom(tempDateFrom);
-    setDateTo(tempDateTo);
+  setDateFrom(tempDateFrom);
+  setDateTo(tempDateTo);
+    fetchReports({ 
+    group: selectedGroup, 
+    from: tempDateFrom, 
+    to: tempDateTo 
+  });
+};
+
+const handleGroupChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const newGroup = e.target.value;
+  setSelectedGroup(newGroup);
   };
 
   const handleFetchExport = async () => {
@@ -523,17 +515,20 @@ useEffect(() => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full md:w-auto">
           <select
-            className="border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 w-full sm:w-auto bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200"
-            value={selectedGroup}
-            onChange={(e) => setSelectedGroup(e.target.value)}
-          >
-            <option value="">All Groups</option>
-            {uniqueGroups.map((g) => (
-              <option key={g.group_name} value={g.group_name}>
-                {g.group_name}
-              </option>
-            ))}
-          </select>
+  className="border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 w-full sm:w-auto bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200"
+  value={selectedGroup}
+  onChange={handleGroupChange}
+>
+  <option value="">All Groups</option>
+  {uniqueGroups.map((g, index) => {
+    const groupName = typeof g === "string" ? g : g.group_name;
+    return (
+      <option key={groupName || index} value={groupName}>
+        {groupName}
+      </option>
+    );
+  })}
+</select>
 
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
             <DatePicker
