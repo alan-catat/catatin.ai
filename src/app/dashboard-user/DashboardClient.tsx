@@ -8,6 +8,7 @@ import { Wallet, ShoppingBag, Briefcase, CreditCard, DollarSign } from "lucide-r
 import { USER_OVERVIEWS } from "@/config/variables";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { Item } from "@radix-ui/react-dropdown-menu";
 
 interface Category {
   id: string;
@@ -22,6 +23,7 @@ interface CashFlow {
   user_id: string;
   category: Category;
   group_name?: string;
+  item: string;
 }
 
 function getLargestIncome(cashflows: CashFlow[]) {
@@ -30,7 +32,7 @@ function getLargestIncome(cashflows: CashFlow[]) {
   const items = cashflows
     .filter((d) => d.flow_type === "income")
     .map((d) => ({
-      name: d.category?.name || "Unknown",
+      name: d.item,
       qty: 1,
       amount: d.flow_amount,
     }));
@@ -45,7 +47,7 @@ function getLargestIncome(cashflows: CashFlow[]) {
   const items = cashflows
     .filter((d) => d.flow_type === "expense")
     .map((d) => ({
-      name: d.category?.name || "Unknown",
+      name: d.item,
       qty: 1,
       amount: d.flow_amount,
     }));
@@ -154,6 +156,7 @@ const [groups, setGroups] = useState<string[]>([]);
           user_id: storedEmail,
           category: { id: r.flow_category, name: r.flow_category || "Unknown" },
           group_name: r.group_name || "Unknown",
+          item: r.flow_items,
         })
       );
 
