@@ -589,7 +589,7 @@ const handleGroupChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
             <div className="text-gray-500">Loading...</div>
           </div>
         ) : (
-          <div className="overflow-x-auto w-full">
+          <div className="overflow-x-auto w-full table-wrapper">
             <table className="min-w-[600px] w-full text-sm text-gray-800 dark:text-gray-200">
               <thead className="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
                 <tr>
@@ -607,12 +607,16 @@ const handleGroupChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
                   reports.map((row, idx) => (
                     <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-gray-800">
                       <td className="px-4 py-3">
-                        {row.date ? new Date(row.date).toLocaleDateString("id-ID", { 
-                          day: "2-digit", 
-                          month: "long", 
-                          year: "numeric" 
-                        }) : "-"}
-                      </td>
+  {row.date
+    ? (() => {
+        const d = new Date(row.date);
+        const day = String(d.getDate()).padStart(2, "0");
+        const month = String(d.getMonth() + 1).padStart(2, "0");
+        const year = String(d.getFullYear()).slice(-2);
+        return `${day}-${month}-${year}`;
+      })()
+    : "-"}
+</td>
                       <td className="px-4 py-3">{row.type}</td>
                       <td className="px-4 py-3">{row.category}</td>
                       <td className="px-4 py-3">{row.merchant}</td>

@@ -24,7 +24,7 @@ export default function SignUpForm() {
   const [errorMsg, setErrorMsg] = useState("");
   const [passwordError, setPasswordError] = useState("");
 
-  const WEBHOOK_URL = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL!;
+  const WEBHOOK_URL = process.env.NEXT_PUBLIC_N8N_SIGNUP_URL!;
 
   // ✅ Validasi sebelum submit
   const handleSignUp = async (e: React.FormEvent) => {

@@ -885,3 +885,14 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .animate-fade-in {
   animation: fade-in 0.25s ease-out;
 }
+
+.table-wrapper {
+  overflow-x: auto;
+  width: 100%;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  white-space: nowrap;
+}

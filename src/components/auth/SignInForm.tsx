@@ -89,7 +89,15 @@ export default function SignInForm({ redirectTo }: SignInFormProps) {
   };
 
  const handleGoogleSignIn = () => {
-  window.location.href = process.env.NEXT_PUBLIC_N8N_GOOGLE_SIGNIN_URL!;
+  // Simpan redirect URL ke localStorage untuk digunakan setelah callback
+    localStorage.setItem("redirectAfterLogin", redirectTo);
+    
+    // Redirect ke n8n webhook untuk Google OAuth
+    const n8nWebhookUrl = process.env.NEXT_PUBLIC_N8N_GOOGLE_SIGNIN_URL;
+    const callbackUrl = `${window.location.origin}/auth/callback`;
+    
+    // Redirect ke n8n dengan parameter callback
+    window.location.href = `${n8nWebhookUrl}?callback=${encodeURIComponent(callbackUrl)}`;
   
 };
   return (
