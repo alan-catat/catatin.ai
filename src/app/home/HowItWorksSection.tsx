@@ -23,7 +23,7 @@ const HowItWorksSection = () => {
       number: "03",
       title: "Data Tersimpan",
       description:
-        "Transaksi otomatis tersimpan dan dianalisis untuk memberikan insight keuangan yang berguna.",
+        "Transaksi otomatis tersimpan dan dianalisis untuk memberikan gambaran keuangan yang lebih jelas.",
     },
     {
       icon: CheckCircle,

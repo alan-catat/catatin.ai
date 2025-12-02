@@ -70,121 +70,139 @@ export default function Home() {
   const openEditModal = () => setcreategroups(true);
 
   return (
-    <main className="min-h-screen bg-gradient-to-l from-white via-[#B2F7FF] to-[#80F2FF] text-slate-800 antialiased">
-      <section className="pt-10 w-full bg-gradient-to-l from-white via-[#B2F7FF] to-[#80F2FF] text-slate-800">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-0 py-16 md:py-20 flex flex-col md:flex-row items-center gap-12 md:gap-20">
+    <main className="min-h-screen bg-gradient-to-b from-white via-cyan-50 to-cyan-100 text-slate-800 antialiased">
+      <section className="pt-16 w-full">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           
-          {/* LEFT TEXT AREA */}
-          <div className="flex-5 text-center md:text-left">
-            <div className="flex justify-center md:justify-start mb-4">
-              <motion.img
-                src="/buku.png"
-                alt="Phone mockup"
-                className="text-center w-[120px] z-10"
-                animate={{ y: [0, -15, 0] }}
-                transition={{
-                  repeat: Infinity,
-                  duration: 3,
-                  ease: "easeInOut",
-                }}
-              />
-            </div>
-
-            <h2 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight mb-6 leading-tight">
-              Cara simpel Nyatet tanpa repot. ✨
+          {/* HEADER - Full Width di atas semua konten */}
+          <div className="flex items-center gap-4 justify-center md:justify-start mb-16">
+            <motion.img
+              src="/buku.png"
+              alt="Book illustration"
+              className="w-[130px] drop-shadow-xl flex-shrink-0"
+              animate={{ y: [0, -12, 0] }}
+              transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+            />
+        
+            <h2 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-tight">
+              Catat transaksi tanpa ribet, otomatis & simpel. ✨
             </h2>
-
-            <p className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto md:mx-0 mb-10 leading-relaxed">
-              <br /><br />Langkah awal untuk memulai dengan telegram:<br /><br />
-              1. Buat group telegram bareng "catatin.ai" (search).<br />
-              2. Dapatkan kode aktivasi dengan klik tombol "add-group" (cek email).<br />
-              3. Kirim kode aktivasi dari email ke group.<br />
-              4. Jika balasan “berhasil”, lanjut undang siapapun ke group.<br />
-              5. Kami bantu catat semua transaksimu.<br /><br />
-            </p>
-
-            <button
-              onClick={() => setcreategroups(true)}
-              className="px-6 py-3 rounded-full bg-[#05668D] text-white font-medium shadow hover:bg-blue-700"
-            >
-              add-group
-            </button>
-            <p className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto md:mx-0 mb-10 leading-relaxed">
-              <br /><br />Langkah awal untuk memulai dengan whatsapp:<br /><br />
-              1. Kirim pesan WA ke CS catatin.ai.<br />
-              2. Dapatkan kode aktivasi dengan klik tombol "add-channel".<br />
-              3. Kirim kode aktivasi dari email ke ai.<br />
-              4. Jika balasan “berhasil”, kamu sudah bisa gunakan catatin.ai.<br />
-              5. Kami bantu catat semua transaksimu.<br /><br />
-            </p>
-
-            <button
-              onClick={() => setcreategroups(true)}
-              className="px-6 py-3 rounded-full bg-[#05668D] text-white font-medium shadow hover:bg-blue-700"
-            >
-              add-WhatsApp
-            </button>
           </div>
 
+          {/* GRID CONTENT - Text Left & Video Right */}
+          <div className="grid md:grid-cols-[2fr_1fr] gap-16 items-center">
+            
+            {/* LEFT TEXT AREA */}
+            <div className="space-y-8">
+              <p className="text-lg text-slate-600 leading-relaxed max-w-xl">
+                Mulai menggunakan <span className="font-bold bg-gradient-to-r from-[#0566BD] to-[#A8E063] bg-clip-text text-transparent">
+            catatin.ai
+          </span> dengan cepat di <b>Telegram</b>:
+                <br /><br />
+                1. Buat grup Telegram dan tambahkan akun "catatin.ai".
+                <br />2. Klik tombol "Add Group" untuk dapatkan kode aktivasi.
+                <br />3. Kirim kode aktivasi ke dalam grup.
+                <br />4. Setelah konfirmasi "berhasil", undang anggota lain.
+                <br />5. Semua transaksi akan dicatat otomatis.
+              </p>
 
-          
-          {/* MODAL */}
-          {creategroups && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-              <div className="w-full max-w-lg bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-6">
-                <h2 className="text-xl font-semibold mb-4">Add New Groups</h2>
+              <button
+                onClick={() => setcreategroups(true)}
+                className="px-6 py-3 rounded-full bg-cyan-700 text-white font-medium shadow-md hover:bg-cyan-800 transition"
+              >
+                Add Group (Telegram)
+              </button>
 
-                <form className="flex flex-col gap-4" onSubmit={submitAddGroup}>
-                  
+              <p className="text-lg text-slate-600 leading-relaxed max-w-xl pt-6">
+                Mulai dengan <b>WhatsApp</b>:
+                <br /><br />
+                1. Chat CS catatin.ai melalui WhatsApp.
+                <br />2. Klik "Add Channel" untuk mendapatkan kode.
+                <br />3. Kirim kode tersebut ke AI.
+                <br />4. Setelah konfirmasi "berhasil", layanan siap digunakan.
+              </p>
 
-                  <input
-                    value={modalgroupName}
-                    onChange={(e) => setmodalgroupName(e.target.value)}
-                    type="text"
-                    className="border rounded-lg px-3 py-2"
-                    placeholder="Group Name"
-                  />
+              <button
+                onClick={() => setcreategroups(true)}
+                className="px-6 py-3 rounded-full bg-emerald-700 text-white font-medium shadow-md hover:bg-emerald-800 transition"
+              >
+                Add Channel (WhatsApp)
+              </button>
+            </div>
 
-                  <select
-                    value={modalgroupType}
-                    onChange={(e) => setmodalgroupType(e.target.value)}
-                    className="border rounded-lg px-3 py-2"
-                  >
-                    <option value="">-Type-</option>
-                    <option value="Keluarga">Personal</option>
-                    <option value="Bisnis">Bisnis</option>
-                  </select>
-
-                  <select
-                    value={ModalChannel}
-                    onChange={(e) => setModalChannel(e.target.value)}
-                    className="border rounded-lg px-3 py-2"
-                  >
-                    <option value="">-Channel-</option>
-                    <option value="Telegram">Telegram</option>
-                    <option value="Telegram">Whatsapp</option>
-                  </select>
-
-                  <div className="flex justify-end gap-2 mt-4">
-                    <button
-                      type="button"
-                      className="px-4 py-2 border rounded-lg hover:bg-gray-100"
-                      onClick={() => setcreategroups(false)}
-                    >
-                      Close
-                    </button>
-                    <button
-                      type="submit"
-                      className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-                    >
-                      Save
-                    </button>
-                  </div>
-                </form>
+            {/* RIGHT VIDEO AREA */}
+            <div className="flex-1 flex justify-center md:justify-end">
+              <div className="relative mx-auto md:mx-0 w-[220px] sm:w-[260px] md:w-[1800px] lg:w-[280px] rounded-[1.5rem] border-[6px] border-black overflow-hidden shadow-2xl">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-20 h-4 bg-black rounded-b-xl z-10"></div>
+                <video
+                  className="w-full h-full"
+                  autoPlay
+                  muted
+                  playsInline
+                  controls
+                >
+                  <source src="/cerah.mp4" type="video/mp4" />
+                </video>
               </div>
             </div>
-          )}
+
+          </div>
         </div>
+
+        {/* MODAL */}
+        {creategroups && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <div className="w-full max-w-lg bg-white rounded-3xl shadow-xl p-8 space-y-6">
+              <h2 className="text-2xl font-semibold">Tambah Group Baru</h2>
+
+              <form className="flex flex-col gap-5" onSubmit={submitAddGroup}>
+                <input
+                  value={modalgroupName}
+                  onChange={(e) => setmodalgroupName(e.target.value)}
+                  type="text"
+                  className="border border-slate-300 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                  placeholder="Nama Group"
+                />
+
+                <select
+                  value={modalgroupType}
+                  onChange={(e) => setmodalgroupType(e.target.value)}
+                  className="border border-slate-300 rounded-xl px-4 py-2 focus:ring-2 focus:ring-cyan-400"
+                >
+                  <option value="">Pilih Tipe</option>
+                  <option value="Personal">Personal</option>
+                  <option value="Bisnis">Bisnis</option>
+                </select>
+
+                <select
+                  value={ModalChannel}
+                  onChange={(e) => setModalChannel(e.target.value)}
+                  className="border border-slate-300 rounded-xl px-4 py-2 focus:ring-2 focus:ring-cyan-400"
+                >
+                  <option value="">Pilih Channel</option>
+                  <option value="Telegram">Telegram</option>
+                  <option value="Whatsapp">Whatsapp</option>
+                </select>
+
+                <div className="flex justify-end gap-3 pt-4">
+                  <button
+                    type="button"
+                    className="px-4 py-2 border rounded-xl hover:bg-gray-100"
+                    onClick={() => setcreategroups(false)}
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-cyan-600 text-white rounded-xl hover:bg-cyan-700"
+                  >
+                    Simpan
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </section>
     </main>
   );

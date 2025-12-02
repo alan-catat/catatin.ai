@@ -30,11 +30,11 @@ import { GroupIcon } from "lucide-react";
       { name: "Settings", path: "/dashboard-admin/settings", icon: <PlugInIcon /> },
     ],
     user: [
-      { name: "Overview", path: "/dashboard-user", icon: <GridIcon /> },
-      { name: "WebChat", path: "/dashboard-user/webchat", icon: <ChatIcon /> },
-      { name: "Profile Management", path: "/dashboard-user/profile", icon: <UserCircleIcon /> },
-      { name: "Add-Channel", path: "/dashboard-user/add-channel", icon: <GroupIcon /> },
-      { name: "Reports", path: "/dashboard-user/reports", icon: <CalenderIcon /> },
+      { name: "Beranda Pengguna", path: "/dashboard-user", icon: <GridIcon /> },
+      { name: "Obrolan Web", path: "/dashboard-user/webchat", icon: <ChatIcon /> },
+      { name: "Profil", path: "/dashboard-user/profile", icon: <UserCircleIcon /> },
+      { name: "Tambah Kanal", path: "/dashboard-user/add-channel", icon: <GroupIcon /> },
+      { name: "Laporan", path: "/dashboard-user/reports", icon: <CalenderIcon /> },
       
       
     ],

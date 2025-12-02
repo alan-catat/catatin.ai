@@ -58,7 +58,7 @@ export default function Header() {
               href="/auth/dashboard-user/signin"
               className="px-4 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition"
             >
-              Login
+              Masuk
             </Link>
             <Link
               href="/auth/dashboard-user/signup"

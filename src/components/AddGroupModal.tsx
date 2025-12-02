@@ -232,7 +232,7 @@ export default function AddGroupModal({ isOpen, onClose, onSuccess }: AddGroupMo
                 required
               >
                 <option value="">-- Select Type --</option>
-                <option value="Keluarga">Keluarga</option>
+                <option value="Personal">Personal</option>
                 <option value="Bisnis">Bisnis</option>
                 <option value="Pribadi">Pribadi</option>
               </select>

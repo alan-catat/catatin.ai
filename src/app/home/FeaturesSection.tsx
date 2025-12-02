@@ -15,14 +15,14 @@ const FeaturesSection = () => {
     {
       icon: ArrowBigRight,
       title: "AI Agent",
-      description: "AI membuat semua pekerjaan jadi lebih cepat.",
+      description: "AI agent yang dapat membuat semua pekerjaan jadi lebih cepat.",
       color: "text-success",
     },
     {
       icon: Bot,
-      title: "Telegram Integration",
+      title: "Whatsapp & Telegram Integration",
       description:
-        "Kirim transaksi langsung melalui Telegram. Cukup ketik dan kami akan mencatat otomatis.",
+        "Kirim transaksi melalui Telegram ataupun Whatsapp. Cukup ketik dan akan tercatat otomatis.",
       color: "text-primary",
     },
     {
@@ -36,19 +36,19 @@ const FeaturesSection = () => {
       icon: Shield,
       title: "Keamanan Terjamin",
       description:
-        "Data keuangan Anda dienkripsi dengan standar keamanan tingkat bank.",
+        "Kami memastikan data keuangan Anda tetap aman setiap saat.",
       color: "text-destructive",
     },
     {
       icon: Zap,
-      title: "Real-time Sync",
+      title: "Sinkron Otomatis",
       description:
-        "Sinkronisasi real-time di semua perangkat untuk akses data kapan saja.",
+        "Sinkronisasi otmomatis di perangkatmu untuk akses data kapan saja.",
       color: "text-accent",
     },
     {
       icon: Calculator,
-      title: "Smart Categorization",
+      title: "Kategori Cerdas",
       description:
         "AI otomatis mengkategorikan transaksi berdasarkan deskripsi dan pola.",
       color: "text-primary-light",

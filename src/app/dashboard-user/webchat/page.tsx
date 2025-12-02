@@ -54,29 +54,37 @@ export default function Page() {
   };
 
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen p-6">
-      <h1 className="text-xl font-bold mb-4">AI Agent Demo</h1>
+    <main className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-50">
+  <div className="w-full max-w-[600px] flex flex-col items-center">
+    <h1 className="text-3xl font-extrabold bg-gradient-to-r  from-[#0566BD] to-[#A8E063] bg-clip-text text-transparent tracking-wide">catatin.ai
+    </h1>
+    <h2 className="text-2xl font-bold bg-gradient-to-r mb-6 from-[#0566BD] to-[#A8E063] bg-clip-text text-transparent">Agent</h2>
 
       <textarea
         value={input}
         onChange={(e) => setInput(e.target.value)}
         placeholder="Tulis pertanyaanmu di sini..."
-        className="border rounded-lg p-2 w-80 h-24"
+        className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-200 rounded-lg p-4 w-full max-w-[500px] h-[240px]"
       />
 
       <button
-        onClick={handleSubmit}
-        className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg"
-      >
-        Kirim
-      </button>
+  onClick={handleSubmit}
+  className="mt-4 bg-blue-500 hover:bg-blue-600 active:bg-blue-700 transition text-white px-5 dark:shadow-none
+ py-3 rounded-xl text-lg shadow w-full max-w-[200px]"
+>
+  Kirim
+</button>
 
+
+    <div className="animate-fade-in">
       {output && (
-        <div className="mt-6 bg-gray-100 p-4 rounded-lg w-80 whitespace-pre-wrap">
-          <strong>Jawaban AI:</strong>
+        <div className="animate-fade-in mt-6 bg-gray-100 dark:bg-gray-800 p-6 rounded-xl text-gray-800 dark:text-gray-200 w-full max-w-[500px] text-base sm:text-lg whitespace-pre-wrap shadow-md">
+          <strong className="font-semibold text-xl text-gray-900 dark:text-gray-100">Jawaban AI:</strong>
           <p>{output}</p>
         </div>
       )}
+      </div>
+      </div>
     </main>
   );
 }
