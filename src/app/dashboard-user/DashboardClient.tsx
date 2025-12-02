@@ -270,7 +270,7 @@ useEffect(() => {
                 : "bg-white dark:bg-neutral-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-neutral-700"
             }`}
           >
-            All Time
+            Semua
           </button>
         </div>
       </div>
@@ -326,8 +326,8 @@ useEffect(() => {
     <table className="w-full text-sm">
       <thead>
         <tr className="border-b border-gray-200 dark:border-gray-700 text-left">
-          <th className="py-2">Income Name</th>
-          <th className="py-2">Amount</th>
+          <th className="py-2">Nama Item</th>
+          <th className="py-2">Jumlah</th>
         </tr>
       </thead>
       <tbody>

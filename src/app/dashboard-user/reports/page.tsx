@@ -758,7 +758,7 @@ const handleGroupChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
                 required
               >
                 <option value="">-Type- *</option>
-                <option value="Keluarga">Keluarga</option>
+                <option value="Personal">Personal</option>
                 <option value="Bisnis">Bisnis</option>
               </select>
               

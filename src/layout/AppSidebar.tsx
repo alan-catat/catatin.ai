@@ -36,7 +36,7 @@ const AppSidebar: React.FC<Props> = ({ role, appLogo }) => {
     if (!path) return false;
 
     // Untuk Overview → harus exact match
-    if (name === "Overview") return pathname === path;
+    if (name === "Beranda Pengguna") return pathname === path;
 
     // Untuk menu lain → boleh startsWith
     return pathname.startsWith(path);
