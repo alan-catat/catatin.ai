@@ -10,7 +10,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Item } from "@radix-ui/react-dropdown-menu";
 
-interface Category {
+interface kategori {
   id: string;
   name: string;
 }
@@ -21,10 +21,12 @@ interface CashFlow {
   flow_amount: number;
   created_at: string;
   user_id: string;
-  category: Category;
+  category: kategori;  // ← string, bukan object
   group_name?: string;
   item: string;
+  merchant?: string; // <- tambahan
 }
+
 
 function getLargestIncome(cashflows: CashFlow[]) {
   if (!cashflows.length) return [];
@@ -148,17 +150,19 @@ const [groups, setGroups] = useState<string[]>([]);
     const result = await res.json();
 
       const formatted: CashFlow[] = (Array.isArray(result) ? result : result.data || []).map(
-        (r: any, i: number) => ({
-          id: String(i),
-          flow_type: r.flow_type || (Number(r.flow_amount) >= 0 ? "income" : "expense"),
-          flow_amount: Math.abs(Number(r.flow_amount)) || 0,
-          created_at: r.flow_date ? new Date(r.flow_date).toISOString() : new Date().toISOString(),
-          user_id: storedEmail,
-          category: { id: r.flow_category, name: r.flow_category || "Unknown" },
-          group_name: r.group_name || "Unknown",
-          item: r.flow_items,
-        })
-      );
+  (r: any, i: number) => ({
+    id: String(i),
+    flow_type: r.type,
+    flow_amount: Math.abs(Number(r.amount)) || 0,
+    created_at: new Date(r.transaction_date).toISOString(),
+    user_id: storedEmail,
+    category: r.kategori || "Unknown",
+    group_name: r.group_name || "Unknown",
+    item: r.items,
+    merchant: r.merchant || "",
+  })
+);
+
 
       setCashFlows(formatted);
       const uniqueGroups = Array.from(new Set(formatted.map(f => f.group_name).filter(Boolean)));

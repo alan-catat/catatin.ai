@@ -3,7 +3,7 @@ import { Metadata } from "next";
 import React from "react";
 
 export const metadata: Metadata = {
-  title: "FINANCIAL-EXTRACTOR | DASHBOARD",
+  title: "catatin.ai | DASHBOARD",
 };
 
 export default async function Users() {

@@ -3,7 +3,7 @@ import { Metadata } from "next";
 import GroupClient from "./GroupClient";
 
 export const metadata: Metadata = {
-  title: "FINANCIAL-EXTRACTOR | DASHBOARD",
+  title: "catatin.ai | DASHBOARD",
 };
 
 export default async function Groups() {

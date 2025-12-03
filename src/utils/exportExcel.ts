@@ -28,7 +28,7 @@ export async function exportToExcel<T extends Record<string, any>>(
       "id",
       "group_name",
       "channel",
-      "date",
+      "transaction_date",
       "type",
       "category",
       "items",

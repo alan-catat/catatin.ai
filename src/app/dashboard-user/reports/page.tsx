@@ -204,12 +204,12 @@ const fetchReports = async (filters: any = {}) => {
       if (Array.isArray(data)) {
         const mappedReports = data.map((r: any) => ({
           id: r.id || "",
-          date: r.flow_date || "",
-          type: r.flow_type || "",
-          category: r.flow_category || "-",
-          merchant: r.flow_merchant || "",
-          item: r.flow_items || "",
-          amount: Number(r.flow_amount) || 0,
+          date: r.transaction_date || "",
+          type: r.type || "",
+          category: r.category || "-",
+          merchant: r.merchant || "",
+          item: r.items || "",
+          amount: Number(r.amount) || 0,
           group_name: r.group_name || "", // Ambil dari kolom group_name
         }));
 

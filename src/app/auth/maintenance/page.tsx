@@ -5,7 +5,7 @@ import Link from "next/link";
 import React from "react";
 
 export const metadata: Metadata = {
-    title: "FINANCIAL-EXTRACTOR | MAINTENANCE",
+    title: "catatin.ai | MAINTENANCE",
 };
 
 export default function Error404() {
