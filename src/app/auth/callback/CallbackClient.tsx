@@ -110,6 +110,13 @@ export default function CallbackClient() {
           >
             Lanjut ke Pembayaran →
           </Link>
+        
+        <Link
+            href={`/dashboard-user`}
+            className="px-6 py-3 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition"
+          >
+            Lanjut ke Dashboard →
+          </Link>
         </div>
       )}
 
