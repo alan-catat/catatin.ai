@@ -6,7 +6,7 @@ import CategoryActions from "./CategoryActions";
 import AddCategoryButton from "./AddCategoryButton";
 
 export const metadata: Metadata = {
-  title: "FINANCIAL-EXTRACTOR | DASHBOARD",
+  title: "catatin.ai | DASHBOARD",
 };
 
 

@@ -3,7 +3,7 @@ import { Metadata } from "next";
 import ChannelClient from "./ChannelClient";
 
 export const metadata: Metadata = {
-  title: "FINANCIAL-EXTRACTOR | DASHBOARD",
+  title: "catatin.ai | DASHBOARD",
 };
 
 export default async function Channels() {

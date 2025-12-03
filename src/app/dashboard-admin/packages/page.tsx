@@ -4,7 +4,7 @@ import React from "react";
 import PackageClient from "./PackageClient";
 
 export const metadata: Metadata = {
-  title: "FINANCIAL-EXTRACTOR | DASHBOARD",
+  title: "catatin.ai | DASHBOARD",
 };
 
 export default function PackagesPage() {

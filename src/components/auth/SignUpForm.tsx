@@ -110,10 +110,10 @@ export default function SignUpForm() {
       <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
         <div className="mb-5 sm:mb-8">
           <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
-            Sign Up
+            Daftar
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            Enter your details to create your account
+            Isi dengan benar untuk mendaftar.
           </p>
         </div>
 
@@ -123,23 +123,23 @@ export default function SignUpForm() {
             <div className="space-y-5">
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                 <div>
-                  <Label>First Name*</Label>
+                  <Label>Nama Depan*</Label>
                   <Input
                     type="text"
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
-                    placeholder="Enter your first name"
+                    placeholder="Nama Depan"
                     required
                     className={!firstName && errorMsg ? "border-red-500" : ""}
                   />
                 </div>
                 <div>
-                  <Label>Last Name</Label>
+                  <Label>Nama Belakang</Label>
                   <Input
                     type="text"
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
-                    placeholder="Enter your last name"
+                    placeholder="Nama Belakang"
                   />
                 </div>
               </div>
@@ -150,7 +150,7 @@ export default function SignUpForm() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email"
+                  placeholder="Masukan email"
                   required
                   className={!email && errorMsg ? "border-red-500" : ""}
                 />
@@ -160,7 +160,7 @@ export default function SignUpForm() {
                 <Label>Password*</Label>
                 <div className="relative">
                   <Input
-                    placeholder="Enter your password"
+                    placeholder="Masukan password"
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -181,10 +181,10 @@ export default function SignUpForm() {
               </div>
 
               <div>
-                <Label>Confirm Password*</Label>
+                <Label>Pastikan Password*</Label>
                 <div className="relative">
                   <Input
-                    placeholder="Enter your password"
+                    placeholder="Masukan password-2"
                     type={showPassword ? "text" : "password"}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
@@ -214,13 +214,13 @@ export default function SignUpForm() {
                   onChange={setIsChecked}
                 />
                 <p className="text-gray-500 dark:text-gray-400 text-sm">
-                  By creating an account you agree to the{" "}
+                  Dengan ini kamu setuju dengan {" "}
                   <span className="text-gray-800 dark:text-white/90">
-                    <Link href="/T&C"> Terms and Conditions </Link>
+                    <Link href="/T&C"> Syarat dan Ketentuan </Link>
                   </span>{" "}
-                  and our{" "}
+                  dan{" "}
                   <span className="text-gray-800 dark:text-white">
-                    <Link href="/PrivacyPolicy"> Privacy Policy </Link>
+                    <Link href="/PrivacyPolicy"> Kebijakan Privasi </Link>
                   </span>
                 </p>
               </div>
@@ -238,7 +238,7 @@ export default function SignUpForm() {
                   !confirmPassword
                 }
               >
-                {loading ? "Signing up..." : "Sign Up"}
+                {loading ? "Mendaftarkan..." : "Daftar"}
               </Button>
 
               <p className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
