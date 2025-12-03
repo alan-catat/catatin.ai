@@ -168,32 +168,32 @@ export default function UserInfoCard({ profile }: { profile: any }) {
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90 lg:mb-6">
-            Personal Information
+            Informasi Pribadi
           </h4>
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-7 2xl:gap-x-32">
             <div>
-              <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">First Name</p>
+              <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">Nama Depan</p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">{firstName}</p>
             </div>
 
             <div>
-              <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">Last Name</p>
+              <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">Nama Belakang</p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">{lastName}</p>
             </div>
 
             <div>
-              <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">Email address</p>
+              <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">Alamat Email</p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">{userEmail || "-"}</p>
             </div>
 
             <div>
-              <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">Phone</p>
+              <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">HP</p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">{formData.phone_number || "-"}</p>
             </div>
 
             <div>
-              <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">Gender</p>
+              <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">Jenis Kelamin</p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
                 {formData.gender === "L"
                   ? "male"
@@ -204,7 +204,7 @@ export default function UserInfoCard({ profile }: { profile: any }) {
             </div>
 
             <div>
-              <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">Date of Birth</p>
+              <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">Tanggal Lahir</p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
                 {formData.date_of_birth || "-"}
               </p>

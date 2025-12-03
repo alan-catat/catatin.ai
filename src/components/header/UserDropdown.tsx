@@ -138,7 +138,7 @@ export default function UserDropdown() {
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
           <LogOut size={16} className="mr-2" />
-          <span>Sign Out</span>
+          <span></span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
