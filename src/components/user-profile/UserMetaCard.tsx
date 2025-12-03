@@ -210,8 +210,8 @@ const formatPhone = (phone?: string) => {
       <Modal isOpen={isOpen} onClose={closeModal} className="max-w-[700px] m-4">
         <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
           <div className="px-2 pr-14">
-            <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">Edit Personal Information</h4>
-            <p className="mb-6 text-sm text-gray-500 dark:text-gray-400">Update your details to keep your profile up-to-date.</p>
+            <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">Edit Profil</h4>
+            <p className="mb-6 text-sm text-gray-500 dark:text-gray-400">Ubah data pribadi menjadi yang terbaru.</p>
           </div>
 
           <form
@@ -223,27 +223,27 @@ const formatPhone = (phone?: string) => {
           >
             <div className="custom-scrollbar h-[70vh] overflow-y-auto px-3 pb-6 space-y-6">
               <div className="mt-7">
-                <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90">Personal Information</h5>
+                <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90">Informasi Pribadi</h5>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 w-full">
 
                   <div className="col-span-2 sm:col-span-1">
-                    <Label>First Name</Label>
+                    <Label>Nama Depan</Label>
                     <Input name="firstName" type="text" defaultValue={firstNameDisplay} placeholder="Enter first name" />
                   </div>
 
                   <div className="col-span-2 sm:col-span-1">
-                    <Label>Last Name</Label>
+                    <Label>Nama Belakang</Label>
                     <Input name="lastName" type="text" defaultValue={lastNameDisplay} placeholder="Enter last name" />
                   </div>
 
                   <div className="col-span-2">
-                    <Label>Email Address</Label>
+                    <Label>Alamat Email</Label>
                     <Input type="email" name="email" value={userEmail || ""} readOnly disabled />
                   </div>
 
                   <div className="col-span-2">
-                    <Label>Phone</Label>
+                    <Label>HP</Label>
                     <div className="grid grid-cols-3 gap-2">
                       <div className="col-span-1 flex">
                         <span className="inline-flex items-center px-3 rounded-l-lg border border-gray-300 bg-gray-100 text-gray-600 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400">+</span>
@@ -256,20 +256,20 @@ const formatPhone = (phone?: string) => {
                   </div>
 
                   <div className="col-span-2 sm:col-span-1">
-                    <Label>Gender</Label>
+                    <Label>Jenis Kelamin</Label>
                     <select name="gender" className="w-full rounded-md border border-gray-300 p-2 dark:border-gray-600 dark:bg-gray-800" defaultValue={formData.gender}>
-                      <option value="">Select gender</option>
-                      <option value="L">Male</option>
-                      <option value="P">Female</option>
+                      <option value="">Pilih Jenis Kelamin</option>
+                      <option value="L">Pria</option>
+                      <option value="P">Wanita</option>
                     </select>
                   </div>
 
                   <div className="col-span-2 sm:col-span-1">
                     <DatePicker
                       id="date_of_birth"
-                      label="Date of Birth"
+                      label="Tanggal Lahir"
                       defaultDate={formData.date_of_birth}
-                      placeholder="Select your birth date"
+                      placeholder="Masukan tanggal lahir"
                       onChange={([selectedDate]: any) => {
                         if (selectedDate) {
                           const formatted = selectedDate.toLocaleDateString("en-CA");
@@ -280,7 +280,7 @@ const formatPhone = (phone?: string) => {
                   </div>
 
                       <div className="col-span-2">
-                    <Label>Profile Photo</Label>
+                    <Label>Foto Profil</Label>
                     <input
                       type="file"
                       name="profile_photo"

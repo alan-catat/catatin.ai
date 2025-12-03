@@ -99,11 +99,13 @@ export default function Home() {
             catatin.ai
           </span> dengan cepat di <b>Telegram</b>:
                 <br /><br />
-                1. Buat grup Telegram dan tambahkan akun "catatin.ai".
-                <br />2. Klik tombol "Add Group" untuk dapatkan kode aktivasi.
-                <br />3. Kirim kode aktivasi ke dalam grup.
-                <br />4. Setelah konfirmasi "berhasil", undang anggota lain.
-                <br />5. Semua transaksi akan dicatat otomatis.
+                1. Buat grup Telegram dan undang "catatinaibot" (jadikan admin).
+                <br />2. Klik tombol "Add Group (Telegram)" untuk dapatkan kode aktivasi.
+                <br />3. Cek email terdaftar, copy kode aktivasi yang ada di email.
+                <br />4. Kirim kode aktivasi ke dalam grup, dengan format "/aktivasi xxxx".
+                <br />5. Setelah terkonfirmasi, akunmu sudah aktif dan bisa untuk mencatat.
+                <br />6. Undang siapapun yang kamu mau ke dalam group.
+                <br />7. Semua transaksi siap dicatat otomatis.
               </p>
 
               <button
