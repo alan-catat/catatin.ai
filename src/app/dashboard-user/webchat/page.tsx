@@ -8,6 +8,7 @@ export default function Page() {
   const [imageBase64, setImageBase64] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -25,6 +26,7 @@ export default function Page() {
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
       }
+      setIsCameraOpen(true);
     } catch (error) {
       console.error("Error mengakses kamera:", error);
       alert("Tidak dapat mengakses kamera. Pastikan Anda memberikan izin.");
@@ -51,10 +53,17 @@ export default function Page() {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
       }
+      setIsCameraOpen(false);
     }
   };
 
-  // Fungsi untuk merekam suara
+  // Fungsi untuk menutup kamera tanpa mengambil foto
+  const handleCloseCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+    }
+    setIsCameraOpen(false);
+  };
   const handleStartRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -185,12 +194,30 @@ export default function Page() {
 
         {/* Video Preview untuk Kamera */}
         <div className="mt-4 w-full max-w-[500px]">
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 hidden"
-          />
+          {isCameraOpen && (
+            <div className="relative">
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                className="w-full rounded-lg border-4 border-blue-500 shadow-lg"
+              />
+              <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-3">
+                <button
+                  onClick={handleTakePhoto}
+                  className="bg-white text-blue-600 px-6 py-3 rounded-full text-lg font-bold shadow-lg hover:bg-blue-50 transition"
+                >
+                  📸 Ambil Foto
+                </button>
+                <button
+                  onClick={handleCloseCamera}
+                  className="bg-red-500 text-white px-6 py-3 rounded-full text-lg font-bold shadow-lg hover:bg-red-600 transition"
+                >
+                  ✕ Tutup
+                </button>
+              </div>
+            </div>
+          )}
           <canvas ref={canvasRef} className="hidden" />
           
           {imageBase64 && (
@@ -225,21 +252,13 @@ export default function Page() {
 
         {/* Tombol-tombol kontrol */}
         <div className="mt-4 flex gap-2 flex-wrap justify-center w-full max-w-[500px]">
-          {!imageBase64 && (
-            <>
-              <button
-                onClick={handleOpenCamera}
-                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg shadow"
-              >
-                📷 Buka Kamera
-              </button>
-              <button
-                onClick={handleTakePhoto}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow"
-              >
-                📸 Ambil Foto
-              </button>
-            </>
+          {!imageBase64 && !isCameraOpen && (
+            <button
+              onClick={handleOpenCamera}
+              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg shadow"
+            >
+              📷 Buka Kamera
+            </button>
           )}
 
           {!isRecording && !audioBlob && (
