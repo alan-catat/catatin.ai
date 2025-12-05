@@ -100,7 +100,7 @@ export default function UserSocialCard({ profile }: { profile: any }) {
                 {/* Instagram */}
                 {formData.instagram && (
                   <a
-                    href={`https://instagram.com/${formData.instagram}`}
+                    href={`${formData.instagram}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex h-12 min-w-[120px] items-center justify-center gap-2 rounded-lg border transition hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800"
@@ -115,7 +115,7 @@ export default function UserSocialCard({ profile }: { profile: any }) {
                 {/* Facebook */}
                 {formData.facebook && (
                   <a
-                    href={`https://facebook.com/${formData.facebook}`}
+                    href={`${formData.facebook}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex h-12 min-w-[120px] items-center justify-center gap-2 rounded-lg border transition hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800"
@@ -130,7 +130,7 @@ export default function UserSocialCard({ profile }: { profile: any }) {
                 {/* TikTok */}
                 {formData.tiktok && (
                   <a
-                    href={`https://tiktok.com/@${formData.tiktok}`}
+                    href={`${formData.tiktok}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex h-12 min-w-[120px] items-center justify-center gap-2 rounded-lg border transition hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800"

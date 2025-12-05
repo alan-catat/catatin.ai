@@ -230,9 +230,6 @@ const AppHeader = ({ userRole }: Props) => {
 
             
           </div>
-          {/* <!-- User Area --> */}
-          <UserDropdown />
-
         </div>
       </div>
     </header>

@@ -2,7 +2,7 @@ import Image from "next/image";
 
 export default function WhatsAppPage() {
   return (
-    <main className="mx-auto max-w-3xl p-6">
+    <main className="text-left max-w-3xl p-6">
       <h1 className="text-3xl font-semibold mb-6">
         Cara Membuat Group WhatsApp
         <p className="text-xl text-gray-700 leading-relaxed">
