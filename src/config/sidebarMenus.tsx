@@ -11,7 +11,7 @@ import { GroupIcon } from "lucide-react";
     subItems?: NavItem[];
   };
   
-  export const sidebarMenus: Record<"admin" | "user", NavItem[]> = {
+  export const sidebarMenus: Record<"admin" | "user" | "Tutorial", NavItem[]> = {
     admin: [
       { name: "Overview", path: "/dashboard-admin", icon: <GridIcon /> },
       { name: "User Management", path: "/dashboard-admin/user-management", icon: <UserCircleIcon /> },
@@ -35,6 +35,14 @@ import { GroupIcon } from "lucide-react";
       { name: "Profil", path: "/dashboard-user/profile", icon: <UserCircleIcon /> },
       { name: "Tambah channel", path: "/dashboard-user/add-channel", icon: <GroupIcon /> },
       { name: "Laporan", path: "/dashboard-user/reports", icon: <CalenderIcon /> },
+      
+      
+    ],
+    Tutorial: [
+      { name: "Beranda Tutorial", path: "/Tutorial", icon: <GridIcon /> },
+      { name: "Telegram", path: "/Tutorial/Telegram", icon: <ChatIcon /> },
+      { name: "WhatsApp", path: "/Tutorial/WhatsApp", icon: <UserCircleIcon /> },
+      
       
       
     ],

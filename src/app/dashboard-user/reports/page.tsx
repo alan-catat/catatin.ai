@@ -52,6 +52,7 @@ export default function ReportPage() {
   const [loading, setLoading] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingReport, setEditingReport] = useState<Report | null>(null);
+const [exportLoading, setExportLoading] = useState(false); 
 
   const [modalDate, setModalDate] = useState<string>("");
   const [modalType, setModalType] = useState<string>("");
@@ -293,7 +294,7 @@ const handleGroupChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         return;
       }
 
-      setLoading(true);
+      setExportLoading(true);
 
       // Payload sesuai dengan Export workflow
       const payload: any = {
@@ -333,7 +334,7 @@ const handleGroupChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
       console.error("Export error:", err);
       alert("Export gagal: " + (err as Error).message);
     } finally {
-      setLoading(false);
+     setExportLoading(false);
     }
   };
 
@@ -575,10 +576,10 @@ const handleGroupChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
           </button>
           <button
             onClick={handleFetchExport}
-            disabled={loading}
+            disabled={exportLoading}
             className="flex items-center justify-center gap-2 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 w-full sm:w-auto disabled:opacity-50"
           >
-            {loading ? "Exporting..." : "Export"}
+            {exportLoading ? "Exporting..." : "Export"}
           </button>
         </div>
       </div>
