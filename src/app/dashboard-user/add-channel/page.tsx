@@ -3,30 +3,81 @@
 import { motion } from "framer-motion";
 import React, { useState, useEffect } from "react";
 import DatePicker from "@/components/form/date-picker";
+import Link from "next/link";
+import { TelegramIcon, WhatsAppIcon } from "@/components/icons/icons";
 
+
+import {
+  MessageCircle,
+  Bot,
+  BarChart3,
+  Shield,
+  Zap,
+  Calculator,
+  ArrowBigRight,
+  
+} from "lucide-react";
+
+  
 export default function Home() {
+  const channel = [
+  {
+    icon: TelegramIcon,
+    title: "Telegram",
+    description: "Kamu bisa memulai dengan membuat group telegram bersama catatin.ai ,kamu bisa undang siapapun yang kamu mau untuk mencatat bersama keuangan personal dan bisnismu tanpa repot lagi ...",
+    color: "text-success",
+    button: (
+      <div className="flex space-x-4">
+        <button
+          onClick={() => setcreategroups(true)}
+          className="px-3 py-2 rounded-lg bg-cyan-700 text-white text-sm hover:bg-cyan-800 transition"
+        >
+          Tambah
+        </button>
+
+        <Link
+          href="/Tutorial"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="px-2 py-2 rounded-lg bg-cyan-700 text-white text-sm text-center hover:bg-cyan-800 transition"
+        >
+          Cara Pakai
+        </Link>
+      </div>
+    )
+  },
+
+  {
+    icon: WhatsAppIcon,
+    title: "WhatsApp",
+    description: "Terhubung dengan nomor WhatsApp catatin.ai, membuat setiap chat kamu lebih berarti lagi, untuk setiap transaksi atau pencatatan keuanganmu ...",
+    color: "text-success",
+    button: (
+      <div className="flex space-x-4">
+        <button
+          onClick={() => setcreategroups(true)}
+          className="px-2 py-2 rounded-lg bg-emerald-700 text-white text-sm hover:bg-emerald-800 transition"
+        >
+          Tambah
+        </button>
+
+        <Link
+          href="/Tutorial"
+          className="px-2 py-2 rounded-lg bg-emerald-700 text-white text-sm text-center hover:bg-emerald-800 transition"
+        >
+          Cara Pakai
+        </Link>
+      </div>
+    )
+  }
+];
+
   // ⬇️ Semua state HARUS berada di dalam komponen
   const [creategroups, setcreategroups] = useState(false);
   const [modalgroupType, setmodalgroupType] = useState<string>("");
   const [modalgroupName, setmodalgroupName] = useState<string>("");
   const [ModalChannel, setModalChannel] = useState<string>("");
   const [modalDate, setModalDate] = useState<string>("");
-
-  /** Helper: format YYYY-MM-DD */
-  function formatDateLocal(d: Date) {
-    const y = d.getFullYear();
-    const m = `${d.getMonth() + 1}`.padStart(2, "0");
-    const day = `${d.getDate()}`.padStart(2, "0");
-    return `${y}-${m}-${day}`;
-  }
-
-  /** Helper: parse YYYY-MM-DD → Date */
-  function parseYMDToDate(ymd?: string | null) {
-    if (!ymd) return undefined;
-    const [y, m, d] = ymd.split("-").map(Number);
-    if (!y || !m || !d) return undefined;
-    return new Date(y, m - 1, d);
-  }
 
   const submitAddGroup = async (e: any) => {
     e.preventDefault();
@@ -40,7 +91,7 @@ export default function Home() {
         alert("Email pengguna tidak ditemukan. Silakan login ulang.");
         return;
       }
-
+  
       const payload = {
         date: modalDate,
         group_type: modalgroupType,
@@ -70,86 +121,58 @@ export default function Home() {
   const openEditModal = () => setcreategroups(true);
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-white via-cyan-50 to-cyan-100 text-slate-800 antialiased">
+    <main className="min-h-screen bg-gradient-to-b from-white via-cyan-50 to-cyan-100 text-slate-800 antialiased
+    dark:bg-[#2e2e2e] dark:from-[#2e2e2e] dark:via-[#2e2e2e] dark:to-[#2e2e2e]">
       <section className="pt-16 w-full">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          
-          {/* HEADER - Full Width di atas semua konten */}
-          <div className="flex items-center gap-4 justify-center md:justify-start mb-16">
-            <motion.img
-              src="/buku.png"
-              alt="Book illustration"
-              className="w-[130px] drop-shadow-xl flex-shrink-0"
-              animate={{ y: [0, -12, 0] }}
-              transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
-            />
-        
-            <h2 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-tight">
-              Catat transaksi tanpa ribet, otomatis & simpel. ✨
-            </h2>
-          </div>
-
-          {/* GRID CONTENT - Text Left & Video Right */}
-          <div className="grid md:grid-cols-[2fr_1fr] gap-16 items-center">
-            
-            {/* LEFT TEXT AREA */}
-            <div className="space-y-8">
+      {/* GRID CONTENT - Text Left & Video Right */}
+          <div className="grid md:grid-cols-[4fr_1fr] gap-16 items-center">
+            <div className="space-y-15">
               <p className="text-lg text-slate-600 leading-relaxed max-w-xl">
-                Mulai menggunakan <span className="font-bold bg-gradient-to-r from-[#0566BD] to-[#A8E063] bg-clip-text text-transparent">
+                Mulai <span className="font-bold bg-gradient-to-r from-[#0566BD] to-[#A8E063] bg-clip-text text-transparent">
             catatin.ai
-          </span> dengan cepat di <b>Telegram</b>:
-                <br /><br />
-                1. Buat grup Telegram dan undang "catatinaibot" (jadikan admin).
-                <br />2. Klik tombol "Add Group (Telegram)" untuk dapatkan kode aktivasi.
-                <br />3. Cek email terdaftar, copy kode aktivasi yang ada di email.
-                <br />4. Kirim kode aktivasi ke dalam grup, dengan format "/aktivasi xxxx".
-                <br />5. Setelah terkonfirmasi, akunmu sudah aktif dan bisa untuk mencatat.
-                <br />6. Undang siapapun yang kamu mau ke dalam group.
-                <br />7. Semua transaksi siap dicatat otomatis.
-              </p>
+          </span> dengan <b>Channel pilihan</b>:
+               </p>
 
-              <button
-                onClick={() => setcreategroups(true)}
-                className="px-6 py-3 rounded-full bg-cyan-700 text-white font-medium shadow-md hover:bg-cyan-800 transition"
-              >
-                Add Group (Telegram)
-              </button>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-6xl mx-auto px-4">
 
-              <p className="text-lg text-slate-600 leading-relaxed max-w-xl pt-6">
-                Mulai dengan <b>WhatsApp</b>:
-                <br /><br />
-                1. Chat CS catatin.ai melalui WhatsApp.
-                <br />2. Klik "Add Channel" untuk mendapatkan kode.
-                <br />3. Kirim kode tersebut ke AI.
-                <br />4. Setelah konfirmasi "berhasil", layanan siap digunakan.
-              </p>
+  {channel.map((item, index) => (
+    <div
+      key={index}
+      className="group p-8 rounded-2xl bg-white dark:bg-[#2e2e2e] border-l-8 border-l-success 
+                 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
+      style={{ animationDelay: `${index * 0.1}s` }}
+    >
+      <div className="flex items-start gap-5">
+        
+        <div className="flex items-start gap-6">
+  
+  <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-gray-100">
+    <item.icon className={`w-7 h-7 ${item.color}`} />
+  </div>
 
-              <button
-                onClick={() => setcreategroups(true)}
-                className="px-6 py-3 rounded-full bg-emerald-700 text-white font-medium shadow-md hover:bg-emerald-800 transition"
-              >
-                Add Channel (WhatsApp)
-              </button>
+  <div className="flex-1">   {/* ⬅ kuncinya di sini */}
+    <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
+
+    <p className="text-[15px] text-muted-foreground leading-relaxed">
+      {item.description}
+    </p>
+
+    <div className="mt-6 flex gap-3 flex-wrap">
+      {item.button}
+    </div>
+  </div>
+
+</div>
+
+      </div>
+    </div>
+  ))}
+</div>
+
+
+            
             </div>
-
-            {/* RIGHT VIDEO AREA */}
-            <div className="flex-1 flex justify-center md:justify-end">
-              <div className="relative mx-auto md:mx-0 w-[220px] sm:w-[260px] md:w-[1800px] lg:w-[280px] rounded-[1.5rem] border-[6px] border-black overflow-hidden shadow-2xl">
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-20 h-4 bg-black rounded-b-xl z-10"></div>
-                <video
-                  className="w-full h-full"
-                  autoPlay
-                  muted
-                  playsInline
-                  controls
-                >
-                  <source src="/cerah.mp4" type="video/mp4" />
-                </video>
-              </div>
-            </div>
-
           </div>
-        </div>
 
         {/* MODAL */}
         {creategroups && (
@@ -176,16 +199,6 @@ export default function Home() {
                   <option value="Bisnis">Bisnis</option>
                 </select>
 
-                <select
-                  value={ModalChannel}
-                  onChange={(e) => setModalChannel(e.target.value)}
-                  className="border border-slate-300 rounded-xl px-4 py-2 focus:ring-2 focus:ring-cyan-400"
-                >
-                  <option value="">Pilih Channel</option>
-                  <option value="Telegram">Telegram</option>
-                  <option value="Whatsapp">Whatsapp</option>
-                </select>
-
                 <div className="flex justify-end gap-3 pt-4">
                   <button
                     type="button"
@@ -207,5 +220,6 @@ export default function Home() {
         )}
       </section>
     </main>
+    
   );
 }

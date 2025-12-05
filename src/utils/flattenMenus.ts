@@ -4,13 +4,13 @@ import { sidebarMenus, NavItem } from "@/config/sidebarMenus";
 export type FlatMenuItem = {
   name: string;
   path: string;
-  role: "admin" | "user";
+  role: "admin" | "user" | "Tutorial";
   breadcrumb: string; // contoh "Master Data → Kategori"
 };
 
 function flatten(
   items: NavItem[],
-  role: "admin" | "user",
+  role: "admin" | "user" | "Tutorial",
   parentName?: string
 ): FlatMenuItem[] {
   return items.flatMap((item) => {
@@ -31,6 +31,6 @@ function flatten(
 }
 
 // ambil menu sesuai role
-export function getMenusByRole(role: "admin" | "user"): FlatMenuItem[] {
+export function getMenusByRole(role: "admin" | "user" | "Tutorial"): FlatMenuItem[] {
   return flatten(sidebarMenus[role], role);
 }

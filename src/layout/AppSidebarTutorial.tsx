@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronDownIcon, HorizontaLDots } from "@/icons";
 import { sidebarMenus, NavItem } from "@/config/sidebarMenus";
-import { useSidebar } from "@/context/SidebarContext";
+import { useSidebarTutorial } from "@/context/SidebarTutorial";
 
 type AppLogoType = {
   light: string;
@@ -28,7 +28,7 @@ const AppSidebar: React.FC<Props> = ({ role, appLogo }) => {
     toggleMobileSidebar,
     openSubmenu,
     toggleSubmenu
-  } = useSidebar();
+  } = useSidebarTutorial();
 
   const menus = sidebarMenus[role];
 

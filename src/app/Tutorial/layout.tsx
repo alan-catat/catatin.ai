@@ -1,20 +1,20 @@
 "use client";
 
-import { SidebarProvider } from "@/context/SidebarContext";
+import { SidebarProviderTutorial, useSidebarTutorial } from "@/context/SidebarTutorial";
 import { ThemeProvider } from "@/context/ThemeContext";
-import AdminLayout from "./AdminLayout"; 
 import { UserProvider } from "@/context/UserContext";
+import AdminLayout from "./AdminLayoutTutorial"; 
 
-export default function DashboardUserLayout({
+export default function TutorialLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
     <ThemeProvider>
-      <SidebarProvider>
+      <SidebarProviderTutorial>
         <AdminLayout>{children}</AdminLayout>
-      </SidebarProvider>
+      </SidebarProviderTutorial>
     </ThemeProvider>
   );
 }
