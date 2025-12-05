@@ -6,18 +6,6 @@ import DatePicker from "@/components/form/date-picker";
 import Link from "next/link";
 import { TelegramIcon, WhatsAppIcon } from "@/components/icons/icons";
 
-
-import {
-  MessageCircle,
-  Bot,
-  BarChart3,
-  Shield,
-  Zap,
-  Calculator,
-  ArrowBigRight,
-  
-} from "lucide-react";
-
   
 export default function Home() {
   const channel = [
@@ -36,7 +24,7 @@ export default function Home() {
         </button>
 
         <Link
-          href="/Tutorial"
+          href="/Tutorial/Telegram"
           target="_blank"
           rel="noopener noreferrer"
           className="px-2 py-2 rounded-lg bg-cyan-700 text-white text-sm text-center hover:bg-cyan-800 transition"
@@ -62,7 +50,7 @@ export default function Home() {
         </button>
 
         <Link
-          href="/Tutorial"
+          href="/Tutorial/WhatsApp"
           className="px-2 py-2 rounded-lg bg-emerald-700 text-white text-sm text-center hover:bg-emerald-800 transition"
         >
           Cara Pakai
@@ -128,9 +116,7 @@ export default function Home() {
           <div className="grid md:grid-cols-[4fr_1fr] gap-16 items-center">
             <div className="space-y-15">
               <p className="text-lg text-slate-600 leading-relaxed max-w-xl">
-                Mulai <span className="font-bold bg-gradient-to-r from-[#0566BD] to-[#A8E063] bg-clip-text text-transparent">
-            catatin.ai
-          </span> dengan <b>Channel pilihan</b>:
+                Aktivasi segera Channel kamu:
                </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-6xl mx-auto px-4">
@@ -150,7 +136,7 @@ export default function Home() {
     <item.icon className={`w-7 h-7 ${item.color}`} />
   </div>
 
-  <div className="flex-1">   {/* ⬅ kuncinya di sini */}
+  <div className="flex-1 ">   {/* ⬅ kuncinya di sini */}
     <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
 
     <p className="text-[15px] text-muted-foreground leading-relaxed">

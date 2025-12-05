@@ -2,7 +2,7 @@ import Image from "next/image";
 
 export default function TelegramPage() {
   return (
-    <main className="mx-auto max-w-3xl p-6">
+    <main className="max-w-3xl p-6 text-left">
       <h1 className="text-3xl font-semibold mb-6">
         Cara Membuat Group Telegram
       </h1>

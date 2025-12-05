@@ -39,7 +39,7 @@ import { GroupIcon } from "lucide-react";
       
     ],
     Tutorial: [
-      { name: "Beranda Tutorial", path: "/Tutorial", icon: <GridIcon /> },
+      
       { name: "Telegram", path: "/Tutorial/Telegram", icon: <ChatIcon /> },
       { name: "WhatsApp", path: "/Tutorial/WhatsApp", icon: <UserCircleIcon /> },
       

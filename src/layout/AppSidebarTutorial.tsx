@@ -115,14 +115,14 @@ const AppSidebar: React.FC<Props> = ({ role, appLogo }) => {
       onMouseLeave={() => setIsHovered(false)}
     >
       <div className="flex items-center justify-between h-16 px-4 border-b">
-        <Link href="#">
+        <Link href="/home">
           {isExpanded || isHovered || isMobileOpen ? (
             <>
               {appLogo.light && (
                 <img
                   src={appLogo.light}
                   alt="Logo"
-                  className="h-8 dark:hidden"
+                  className="h-25 dark:hidden"
                 />
               )}
               {appLogo.dark && (
