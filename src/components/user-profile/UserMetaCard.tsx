@@ -168,7 +168,7 @@ export default function UserMetaCard({ profile }: { profile: any }) {
   };
 const formatPhone = (phone?: string) => {
   if (!phone) return "-";
-  return phone.replace(/^62/, "0");
+  return phone.replace(/^62/, "+62");
 };
 
   return (
@@ -226,6 +226,15 @@ const formatPhone = (phone?: string) => {
                 <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90">Informasi Pribadi</h5>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 w-full">
+                  <div className="col-span-2">
+                    <Label>Foto Profil</Label>
+                    <input
+                      type="file"
+                      name="profile_photo"
+                      accept="image/*"
+                      className="block w-full text-sm text-gray-500 file:mr-4 file:rounded-lg file:border-0 file:bg-gray-100 file:px-4 file:py-2 file:font-semibold hover:file:bg-gray-200 dark:file:bg-gray-700 dark:hover:file:bg-gray-600"
+                    />
+                  </div>
 
                   <div className="col-span-2 sm:col-span-1">
                     <Label>Nama Depan</Label>
@@ -247,10 +256,10 @@ const formatPhone = (phone?: string) => {
                     <div className="grid grid-cols-3 gap-2">
                       <div className="col-span-1 flex">
                         <span className="inline-flex items-center px-3 rounded-l-lg border border-gray-300 bg-gray-100 text-gray-600 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400">+</span>
-                        <Input name="country_code" type="number" placeholder="62" defaultValue="62" className="rounded-l-none" />
+                        <Input name="country_code" type="number" placeholder="+62" defaultValue="+62" className="rounded-l-none" />
                       </div>
                       <div className="col-span-2">
-                        <Input name="phone_number" type="tel" defaultValue={formData.phone_number} placeholder="81234567890" />
+                        <Input name="phone_number" type="tel" defaultValue="" placeholder="81234567890" />
                       </div>
                     </div>
                   </div>
@@ -279,15 +288,7 @@ const formatPhone = (phone?: string) => {
                     />
                   </div>
 
-                      <div className="col-span-2">
-                    <Label>Foto Profil</Label>
-                    <input
-                      type="file"
-                      name="profile_photo"
-                      accept="image/*"
-                      className="block w-full text-sm text-gray-500 file:mr-4 file:rounded-lg file:border-0 file:bg-gray-100 file:px-4 file:py-2 file:font-semibold hover:file:bg-gray-200 dark:file:bg-gray-700 dark:hover:file:bg-gray-600"
-                    />
-                  </div>
+                      
                   
                   <div className="col-span-2 sm:col-span-1">
                     <Label>Instagram</Label>

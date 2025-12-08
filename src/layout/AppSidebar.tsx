@@ -122,14 +122,14 @@ const AppSidebar: React.FC<Props> = ({ role, appLogo }) => {
                 <img
                   src={appLogo.light}
                   alt="Logo"
-                  className="h-8 dark:hidden"
+                  className="h-18 dark:hidden"
                 />
               )}
               {appLogo.dark && (
                 <img
                   src={appLogo.dark}
                   alt="Logo Dark"
-                  className="h-8 hidden dark:block"
+                  className="h-18 hidden dark:block"
                 />
               )}
             </>
@@ -137,7 +137,7 @@ const AppSidebar: React.FC<Props> = ({ role, appLogo }) => {
             <img
               src="/catatin.png"
               alt="Logo Icon"
-              className="h-8"
+              className="h-28"
             />
           )}
         </Link>

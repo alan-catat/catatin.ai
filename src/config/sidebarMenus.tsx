@@ -3,12 +3,15 @@ import {
     ChatIcon,
   } from "@/icons";
 import { GroupIcon } from "lucide-react";
+import { WhatsAppIcon } from "@/components/icons/icons";
+import { TelegramIcon } from "@/components/icons/icons";
   
   export type NavItem = {
     name: string;
     path?: string;
     icon?: React.ReactNode;
     subItems?: NavItem[];
+    alwaysExpanded?: boolean;
   };
   
   export const sidebarMenus: Record<"admin" | "user" | "Tutorial", NavItem[]> = {
@@ -39,9 +42,20 @@ import { GroupIcon } from "lucide-react";
       
     ],
     Tutorial: [
-      
-      { name: "Telegram", path: "/Tutorial/Telegram", icon: <ChatIcon /> },
-      { name: "WhatsApp", path: "/Tutorial/WhatsApp", icon: <UserCircleIcon /> },
+      { name: "Telegram", icon: <TelegramIcon />,
+        alwaysExpanded: true,
+        subItems: [
+          { name: "Cara Buat Group Telegram", path: "/Tutorial/Telegram" },
+          { name: "Cara Aktivasi Group Telegram", path: "/Tutorial/Telegram/caraaktivasitelegram" },
+          ],
+      },
+      { name: "WhatsApp", icon: <WhatsAppIcon />,
+        alwaysExpanded: true,
+        subItems: [
+          { name: "Cara Registrasi Channel WA ", path: "/Tutorial/WhatsApp" },
+          { name: "Cara Aktivasi WA", path: "/Tutorial/WhatsApp/caraaktivasiwa" },
+          ],
+      },
       
       
       

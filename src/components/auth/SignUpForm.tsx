@@ -160,7 +160,7 @@ export default function SignUpForm() {
                 <Label>Password*</Label>
                 <div className="relative">
                   <Input
-                    placeholder="Masukan password"
+                    placeholder="Konfirmasi Password"
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -184,7 +184,7 @@ export default function SignUpForm() {
                 <Label>Pastikan Password*</Label>
                 <div className="relative">
                   <Input
-                    placeholder="Masukan password-2"
+                    placeholder="Masukan Konfirmasi Password"
                     type={showPassword ? "text" : "password"}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
@@ -215,12 +215,12 @@ export default function SignUpForm() {
                 />
                 <p className="text-gray-500 dark:text-gray-400 text-sm">
                   Dengan ini kamu setuju dengan {" "}
-                  <span className="text-gray-800 dark:text-white/90">
-                    <Link href="/T&C"> Syarat dan Ketentuan </Link>
+                  <span className="text-brand-500 hover:text-brand-600 dark:text-brand-400">
+                    <Link href="/T&C"><b> S&K </b></Link>
                   </span>{" "}
                   dan{" "}
-                  <span className="text-gray-800 dark:text-white">
-                    <Link href="/PrivacyPolicy"> Kebijakan Privasi </Link>
+                  <span className="text-brand-500 hover:text-brand-600 dark:text-brand-400">
+                    <Link href="/PrivacyPolicy"><b> Kebijakan Privasi </b></Link>
                   </span>
                 </p>
               </div>

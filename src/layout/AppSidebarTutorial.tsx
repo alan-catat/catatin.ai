@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronDownIcon, HorizontaLDots } from "@/icons";
@@ -16,9 +16,11 @@ type Props = {
   appLogo: AppLogoType;
 };
 
-
 const AppSidebar: React.FC<Props> = ({ role, appLogo }) => {
   const pathname = usePathname() || "";
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [logoLink, setLogoLink] = useState("/home");
+
   const {
     isExpanded,
     isMobileOpen,
@@ -30,64 +32,99 @@ const AppSidebar: React.FC<Props> = ({ role, appLogo }) => {
     toggleSubmenu
   } = useSidebarTutorial();
 
+  // Cek status login dari localStorage
+  useEffect(() => {
+    const checkAuth = () => {
+      // Cek berbagai kemungkinan key yang menyimpan auth
+      const token = localStorage.getItem("authToken") || 
+                    localStorage.getItem("token") ||
+                    localStorage.getItem("accessToken") ||
+                    localStorage.getItem("user");
+      
+      const isAuthenticated = !!token;
+      setIsLoggedIn(isAuthenticated);
+      
+      // Set link berdasarkan status login
+      if (isAuthenticated) {
+        // Jika login, cek role untuk redirect yang sesuai
+        if (role === "admin") {
+          setLogoLink("/dashboard-admin");
+        } else {
+          setLogoLink("/dashboard-user");
+        }
+      } else {
+        setLogoLink("/home");
+      }
+    };
+
+    // Jalankan pengecekan saat component mount
+    checkAuth();
+
+    // Listen untuk perubahan localStorage (jika login/logout di tab lain)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "authToken" || e.key === "token" || e.key === "accessToken" || e.key === "user") {
+        checkAuth();
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, [role]);
+
   const menus = sidebarMenus[role];
 
   const isActive = (path?: string, name?: string) => {
     if (!path) return false;
 
-    // Untuk Overview → harus exact match
-    if (name === "Beranda Pengguna") return pathname === path;
+    // Exact match dulu
+    if (pathname === path) return true;
 
-    // Untuk menu lain → boleh startsWith
-    return pathname.startsWith(path);
+    // Untuk Overview → harus exact match saja
+    if (name === "Beranda Pengguna") return false;
+
+    // Untuk menu lain → cek nested path (harus ada / setelahnya)
+    return pathname.startsWith(path + "/");
   };
 
   const renderNavItem = (item: NavItem) => {
     const hasSub = item.subItems && item.subItems.length > 0;
-    const isOpen = openSubmenu === item.name;
 
     const baseClass = `flex items-center gap-2 w-full text-left px-3 py-2 rounded-lg transition`;
     const activeClass = item.path && isActive(item.path, item.name)
       ? "bg-indigo-100 text-indigo-700"
       : "text-gray-700 hover:bg-gray-100 dark:text-gray-400";
 
-
     return (
       <li key={item.name} className="mb-1">
         {hasSub ? (
-          // Kalau ada subItems → pakai button
-          <button
-            onClick={() => toggleSubmenu(item.name)}
-            className={`${baseClass} ${activeClass}`}
-          >
+          // Parent menu dengan submenu (tanpa toggle)
+          <div className={`${baseClass} ${activeClass} cursor-default`}>
             {item.icon}
             {(isExpanded || isHovered || isMobileOpen) && <span>{item.name}</span>}
-            {hasSub && (isExpanded || isHovered) && (
-              <ChevronDownIcon
-                className={`ml-auto h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""
-                  }`}
-              />
-            )}
-          </button>
+          </div>
         ) : (
-          // Kalau tidak ada subItems → pakai Link
+          // Menu tanpa submenu
           <Link href={item.path!} className={`${baseClass} ${activeClass}`}>
             {item.icon}
             {(isExpanded || isHovered || isMobileOpen) && <span>{item.name}</span>}
           </Link>
         )}
 
-        {/* submenu */}
-        {hasSub && isOpen && (
+        {/* Submenu - SELALU TAMPIL saat sidebar terbuka */}
+        {hasSub && (isExpanded || isHovered || isMobileOpen) && (
           <ul className="ml-6 mt-1 space-y-1">
             {item.subItems!.map((sub) => (
               <li key={sub.name}>
                 <Link
                   href={sub.path!}
-                  className={`block px-3 py-1.5 rounded-lg text-sm ${isActive(sub.path)
-                    ? "bg-indigo-50 text-indigo-600"
-                    : "text-gray-600 hover:bg-gray-50"
-                    }`}
+                  className={`block px-3 py-1.5 rounded-lg text-sm ${
+                    pathname === sub.path
+                      ? "bg-indigo-50 text-indigo-600"
+                      : "text-gray-600 hover:bg-gray-50 dark:text-gray-500 dark:hover:bg-gray-800"
+                  }`}
                 >
                   {sub.name}
                 </Link>
@@ -98,7 +135,6 @@ const AppSidebar: React.FC<Props> = ({ role, appLogo }) => {
       </li>
     );
   };
-
 
   return (
     <aside
@@ -114,22 +150,23 @@ const AppSidebar: React.FC<Props> = ({ role, appLogo }) => {
       onMouseEnter={() => !isExpanded && setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="flex items-center justify-between h-16 px-4 border-b">
-        <Link href="/home">
+      {/* Logo Header - Link berdasarkan status login */}
+      <div className="flex items-center justify-between h-16 px-4 border-b dark:border-gray-800">
+        <Link href={logoLink}>
           {isExpanded || isHovered || isMobileOpen ? (
             <>
               {appLogo.light && (
                 <img
                   src={appLogo.light}
                   alt="Logo"
-                  className="h-25 dark:hidden"
+                  className="h-28 dark:hidden"
                 />
               )}
               {appLogo.dark && (
                 <img
                   src={appLogo.dark}
                   alt="Logo Dark"
-                  className="h-8 hidden dark:block"
+                  className="h-28 hidden dark:block"
                 />
               )}
             </>
@@ -137,19 +174,16 @@ const AppSidebar: React.FC<Props> = ({ role, appLogo }) => {
             <img
               src="/catatin.png"
               alt="Logo Icon"
-              className="h-8"
+              className="h-28"
             />
           )}
         </Link>
       </div>
 
-
-
-      {/* nav */}
+      {/* Navigation Menu */}
       <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
-        <nav className="mb-6">
+        <nav className="mb-6 mt-5">
           <div className="flex flex-col gap-4">
-            {/* Group Menu */}
             <div>
               <ul>{menus.map(renderNavItem)}</ul>
             </div>
