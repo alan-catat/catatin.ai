@@ -191,9 +191,6 @@ const AppHeader = ({ userRole }: Props) => {
             <form onSubmit={(e) => e.preventDefault()}>
               <div className="relative">
                 {/* search icon */}
-                
-
-                
               </div>
             </form>
 
@@ -227,14 +224,9 @@ const AppHeader = ({ userRole }: Props) => {
             {/* <!-- Dark Mode Toggler --> */}
             <ThemeToggleButton />
             {/* <!-- Dark Mode Toggler --> */}
-
-            
           </div>
-          {/* <!-- User Area --> */}
-          <UserDropdown />
-
         </div>
-      </div>
+      </div><UserDropdown />
     </header>
   );
 };

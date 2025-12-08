@@ -109,7 +109,7 @@ export default function Home() {
   const openEditModal = () => setcreategroups(true);
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-white via-cyan-50 to-cyan-100 text-slate-800 antialiased
+    <main className="min-h-screen bg-white text-slate-800 antialiased
     dark:bg-[#2e2e2e] dark:from-[#2e2e2e] dark:via-[#2e2e2e] dark:to-[#2e2e2e]">
       <section className="pt-16 w-full">
       {/* GRID CONTENT - Text Left & Video Right */}

@@ -10,6 +10,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { LogOut, User as UserIcon } from "lucide-react";
+import Link from "next/link";
 
 export default function UserDropdown() {
   const [user, setUser] = useState<{
@@ -83,7 +84,7 @@ export default function UserDropdown() {
 
   const handleSignOut = () => {
     // hanya redirect, tanpa hapus localstorage
-    window.location.href = "/auth/dashboard-user/signin";
+    window.location.href = "/home";
   };
 
   if (loading) {
@@ -126,19 +127,19 @@ export default function UserDropdown() {
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" className="w-48">
-        <DropdownMenuItem disabled>
+        <DropdownMenuItem>
           <div className="flex items-center gap-2">
             <UserIcon size={16} />
-            <span>
+            <span><Link href="/dashboard-user/profile">
               {`${user?.firstName ?? ""} ${user?.lastName ?? ""}`.trim() ||
                 "User"}
-            </span>
+            </Link></span>
           </div>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
           <LogOut size={16} className="mr-2" />
-          <span></span>
+          <span>Keluar</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

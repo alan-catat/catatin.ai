@@ -47,7 +47,7 @@ const CTASection = () => {
 
             <Button asChild className="text-xl font-semibold bg-primary gap-2">
               <a
-                href="https://t.me/catatinaics"
+                href="https://t.me/catatinaibot"
                 target="_blank"
                 rel="noopener noreferrer"
               >

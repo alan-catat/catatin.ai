@@ -62,7 +62,7 @@ export default function Header() {
             </Link>
             <Link
               href="/auth/dashboard-user/signup"
-              className="px-4 py-2 rounded-lg bg-[#05668D] text-white font-medium hover:bg-[#04506c] transition"
+              className="px-4 py-2 rounded-lg bg-[#4EC722] text-white font-medium hover:bg-[#378C18] transition"
             >
               Daftar
             </Link>

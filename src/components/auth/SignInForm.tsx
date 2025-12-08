@@ -88,8 +88,8 @@ export default function SignInForm({ redirectTo }: SignInFormProps) {
     }
   };
 
- const handleGoogleSignIn = () => {
-  // Simpan redirect URL ke localStorage untuk digunakan setelah callback
+  const handleGoogleSignIn = () => {
+    // Simpan redirect URL ke localStorage untuk digunakan setelah callback
     localStorage.setItem("redirectAfterLogin", redirectTo);
     
     // Redirect ke n8n webhook untuk Google OAuth
@@ -98,113 +98,114 @@ export default function SignInForm({ redirectTo }: SignInFormProps) {
     
     // Redirect ke n8n dengan parameter callback
     window.location.href = `${n8nWebhookUrl}?callback=${encodeURIComponent(callbackUrl)}`;
-  
-};
+  };
+
   return (
     <div className="flex flex-col flex-1 lg:w-1/2 w-full">
       <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
-        <div>
-          <div className="mb-5 sm:mb-8">
-            <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
-              Masuk
-            </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Masukan email dan passwordmu dengan benar.
-            </p>
-          </div>
+        <div className="mb-5 sm:mb-8">
+          <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
+            Masuk
+          </h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Masukkan email dan passwordmu.
+          </p>
+        </div>
 
-          <div>
-         
-          <div className="relative py-3 sm:py-5">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200 dark:border-gray-800"></div>
+        {errorMsg && (
+          <div className="mb-4 p-3 text-red-500 text-sm bg-red-50 dark:bg-red-900/20 rounded-md">
+            {errorMsg}
+          </div>
+        )}
+
+        <form onSubmit={handleSignIn}>
+          <div className="space-y-6">
+            <div>
+              <Label>
+                Email <span className="text-error-500">*</span>
+              </Label>
+              <Input
+                placeholder="info@gmail.com"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
             </div>
+
+            <div>
+              <Label>
+                Password <span className="text-error-500">*</span>
+              </Label>
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="pr-12"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute z-50 -translate-y-1/2 cursor-pointer right-3 top-1/2 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                  tabIndex={-1}
+                >
+                  {showPassword ? (
+                    <EyeIcon className="fill-gray-500 dark:fill-gray-400 w-5 h-5" />
+                  ) : (
+                    <EyeCloseIcon className="fill-gray-500 dark:fill-gray-400 w-5 h-5" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Checkbox checked={isChecked} onChange={setIsChecked} />
+                <span className="block font-normal text-gray-700 text-theme-sm dark:text-gray-400">
+                  Tetap Masuk
+                </span>
+              </div>
+              <Link
+                href="/auth/reset-password"
+                className="text-sm text-brand-500 hover:text-brand-600 dark:text-brand-400"
+              >
+                Lupa password?
+              </Link>
+            </div>
+
+            <div>
+              <Button
+                className="w-full"
+                size="sm"
+                type="submit"
+                disabled={loading}
+              >
+                {loading ? "Mulai masuk..." : "Masuk"}
+              </Button>
+</div>
+            <div className="flex items-center gap-3">
+              <Link
+              href="/auth/dashboard-user/signup"
+              className="px-40.5 py-3 md:px-51 py-3 rounded-lg bg-[#4EC722] text-sm text-white font-medium hover:bg-[#378C18] transition"
+            >
+              Daftar
+            </Link></div>
+
+              <p className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                <Link
+                  href="/home"
+                  className="text-brand-500 hover:text-brand-600 dark:text-brand-400"
+                >
+                  ← Kembali ke halaman utama
+                </Link>
+              </p>
             
           </div>
-          
-          {errorMsg && (
-            <div className="mt-4 text-red-500 text-sm">{errorMsg}</div>
-          )}
-
-          <form onSubmit={handleSignIn}>
-            <div className="space-y-6">
-              <div>
-                <Label>
-                  Email <span className="text-error-500">*</span>
-                </Label>
-                <Input
-                  placeholder="info@gmail.com"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div>
-                <Label>
-                  Password <span className="text-error-500">*</span>
-                </Label>
-                <div className="relative">
-                  <Input
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Enter your password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                  <span
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2"
-                  >
-                    {showPassword ? (
-                      <EyeIcon className="fill-gray-500 dark:fill-gray-400" />
-                    ) : (
-                      <EyeCloseIcon className="fill-gray-500 dark:fill-gray-400" />
-                    )}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Checkbox checked={isChecked} onChange={setIsChecked} />
-                  <span className="block font-normal text-gray-700 text-theme-sm dark:text-gray-400">
-                    Tetap Masuk
-                  </span>
-                </div>
-                <Link
-                  href="/auth/reset-password"
-                  className="text-sm text-brand-500 hover:text-brand-600 dark:text-brand-400"
-                >
-                  Lupa password?
-                </Link>
-              </div>
-
-              <div>
-                <Button
-                  className="w-full"
-                  size="sm"
-                  type="submit"
-                  disabled={loading}
-                >
-                  {loading ? "Mulai masuk..." : "Masuk"}
-                </Button>
-
-                <p className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
-                  <Link
-                    href="/home"
-                    className="text-brand-500 hover:text-brand-600 dark:text-brand-400"
-                  >
-                    ← Kembali ke halaman utama
-                  </Link>
-                </p>
-              </div>
-            </div>
-          </form>
-        </div>
+        </form>
       </div>
-    </div>
     </div>
   );
 }
