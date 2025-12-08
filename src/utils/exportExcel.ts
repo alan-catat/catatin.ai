@@ -25,7 +25,7 @@ export async function exportToExcel<T extends Record<string, any>>(
 
     // HEADER - sesuaikan dengan struktur data yang ada
     const headers = [
-      "id",
+      "no",
       "group_name",
       "channel",
       "transaction_date",
