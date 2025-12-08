@@ -42,7 +42,7 @@
     "jotai": "^2.15.0",
     "lucide-react": "^0.536.0",
     "midtrans-client": "^1.4.3",
-    "next": "^15.5.5",
+    "next": "15.5.7",
     "next-auth": "^4.24.11",
     "next-i18next": "^15.4.2",
     "next-intl": "^4.4.0",
