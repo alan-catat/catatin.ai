@@ -24,7 +24,7 @@ export default function Home() {
         </button>
 
         <Link
-          href="/Tutorial/Telegram"
+          href="/Tutorial/Telegram/cara-membuat-group-telegram"
           target="_blank"
           rel="noopener noreferrer"
           className="px-2 py-2 rounded-lg bg-cyan-700 text-white text-sm text-center hover:bg-cyan-800 transition"
@@ -50,7 +50,7 @@ export default function Home() {
         </button>
 
         <Link
-          href="/Tutorial/WhatsApp"
+          href="/Tutorial/WhatsApp/cara-registrasi-whatsapp"
           className="px-2 py-2 rounded-lg bg-emerald-700 text-white text-sm text-center hover:bg-emerald-800 transition"
         >
           Cara Pakai
@@ -154,9 +154,6 @@ export default function Home() {
     </div>
   ))}
 </div>
-
-
-            
             </div>
           </div>
 

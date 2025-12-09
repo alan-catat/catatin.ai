@@ -37,7 +37,7 @@ export default function SignInForm({ redirectTo }: SignInFormProps) {
       const response = await fetch(N8N_SIGNIN_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: email.toLowerCase(), password }),
       });
 
       if (!response.ok) {
@@ -68,8 +68,8 @@ export default function SignInForm({ redirectTo }: SignInFormProps) {
 
       // ✅ LOGIN BERHASIL (respon plain text)
       if (typeof data === "string" && data.toLowerCase().includes("sukses")) {
-        localStorage.setItem("user_email", email);
-        localStorage.setItem("user", JSON.stringify({ email }));
+        localStorage.setItem("user_email", email.toLowerCase());
+        localStorage.setItem("user", JSON.stringify({ email: email.toLowerCase() }));
         setTimeout(() => router.push(redirectTo || "/dashboard-user/profile"), 200);
         return;
       }
@@ -185,7 +185,7 @@ export default function SignInForm({ redirectTo }: SignInFormProps) {
               >
                 {loading ? "Mulai masuk..." : "Masuk"}
               </Button>
-</div>
+            </div>
             <div className="flex items-center gap-3">
               <Link
               href="/auth/dashboard-user/signup"

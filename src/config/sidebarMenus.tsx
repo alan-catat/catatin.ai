@@ -45,15 +45,15 @@ import { TelegramIcon } from "@/components/icons/icons";
       { name: "Telegram", icon: <TelegramIcon />,
         alwaysExpanded: true,
         subItems: [
-          { name: "Cara Buat Group Telegram", path: "/Tutorial/Telegram" },
-          { name: "Cara Aktivasi Group Telegram", path: "/Tutorial/Telegram/caraaktivasitelegram" },
+          { name: "Cara Buat Group Telegram", path: "/Tutorial/Telegram/cara-membuat-group-telegram" },
+          { name: "Cara Aktivasi Group Telegram", path: "/Tutorial/Telegram/cara-aktivasi-group-telegram" },
           ],
       },
       { name: "WhatsApp", icon: <WhatsAppIcon />,
         alwaysExpanded: true,
         subItems: [
-          { name: "Cara Registrasi Channel WA ", path: "/Tutorial/WhatsApp" },
-          { name: "Cara Aktivasi WA", path: "/Tutorial/WhatsApp/caraaktivasiwa" },
+          { name: "Cara Registrasi Channel WA ", path: "/Tutorial/WhatsApp/cara-registrasi-whatsapp" },
+          { name: "Cara Aktivasi WA", path: "/Tutorial/WhatsApp/cara-aktivasi-whatsapp" },
           ],
       },
       

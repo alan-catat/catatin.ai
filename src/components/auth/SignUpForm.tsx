@@ -60,7 +60,7 @@ export default function SignUpForm() {
           Timestamp: new Date().toISOString(),
           FirstName: firstName,
           LastName: lastName,
-          Email: email,
+          Email: email.toLowerCase(),
           Password: password,
         }),
       });
@@ -83,7 +83,7 @@ export default function SignUpForm() {
         const userData = {
           firstName,
           lastName,
-          email,
+          email: email.toLowerCase(),
           createdAt: new Date().toISOString(),
         };
         localStorage.setItem("user", JSON.stringify(userData));
@@ -160,7 +160,7 @@ export default function SignUpForm() {
                 <Label>Password*</Label>
                 <div className="relative">
                   <Input
-                    placeholder="Konfirmasi Password"
+                    placeholder="Masukan Password"
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -181,7 +181,7 @@ export default function SignUpForm() {
               </div>
 
               <div>
-                <Label>Pastikan Password*</Label>
+                <Label>Konfirmasi Password*</Label>
                 <div className="relative">
                   <Input
                     placeholder="Masukan Konfirmasi Password"

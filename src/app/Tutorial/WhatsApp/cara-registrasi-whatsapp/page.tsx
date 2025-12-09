@@ -74,9 +74,10 @@ Masukkan channel group WhatsApp,<br />
 lalu klik tombol “simpan”. Kami akan mengirimkan kode verifikasi ke emailmu.<br />
 <br /><br />
         </p>
-        <div className="w-full h-px bg-gray-200 my-6" />
-        <Link href="/Tutorial/WhatsApp/caraaktivasiwa"><b>-Lanjut ke cara Aktivasi WA-</b></Link>
-        </div>
+        <span className="text-brand-500 hover:text-brand-600 dark:text-brand-400 text-bold">
+        <Link href="/Tutorial/WhatsApp/cara-aktivasi-whatsapp">
+        <b>-Lanjut ke cara Aktivasi WA-</b>
+        </Link></span></div>
       </section>
     </main>
   );

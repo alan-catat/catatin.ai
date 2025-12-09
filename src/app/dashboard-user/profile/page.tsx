@@ -59,7 +59,7 @@ export default function Profile() {
           className="mt-6 first:mt-0 rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] lg:p-6"
         >
           <h3 className="mb-5 text-lg font-semibold text-gray-800 dark:text-white/90 lg:mb-7">
-            Profile
+            Profil
           </h3>
           <div className="space-y-10">
             <div className="space-y-6 border-b border-gray-200 pb-6 last:border-none last:pb-0 dark:border-gray-800">
