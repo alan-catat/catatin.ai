@@ -189,7 +189,7 @@ export default function UserInfoCard({ profile }: { profile: any }) {
 
             <div>
               <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">HP</p>
-              <p className="text-sm font-medium text-gray-800 dark:text-white/90">{formData.phone_number || "-"}</p>
+              <p className="text-sm font-medium text-gray-800 dark:text-white/90">+{formData.phone_number || "-"}</p>
             </div>
 
             <div>

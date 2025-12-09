@@ -53,6 +53,9 @@ export default function ReportPage() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingReport, setEditingReport] = useState<Report | null>(null);
 const [exportLoading, setExportLoading] = useState(false); 
+const [isActivated, setIsActivated] = useState(false);
+const [activationCode, setActivationCode] = useState("");
+const [loadingActivation, setLoadingActivation] = useState(false);
 
   const [modalDate, setModalDate] = useState<string>("");
   const [modalType, setModalType] = useState<string>("");
@@ -400,6 +403,73 @@ const handleGroupChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     }
   };
 
+const checkAndGenerateActivation = async (email: string, channel: string) => {
+  if (!email || !channel) return;
+  
+  setLoadingActivation(true);
+  try {
+    const res = await fetch(N8N_ADDGROUP_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "check_activation",
+        email: email,
+        channel: channel,
+      }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      setIsActivated(data.isActivated || false);
+      setActivationCode(data.activationCode || "");
+    }
+  } catch (err) {
+    console.error("Error checking activation:", err);
+  } finally {
+    setLoadingActivation(false);
+  }
+};
+
+// useEffect untuk cek aktivasi saat modal dibuka atau channel berubah
+useEffect(() => {
+  if (creategroups && ModalChannel) {
+    const userEmail =
+      localStorage.getItem("user_email") ||
+      JSON.parse(localStorage.getItem("user") || "{}")?.email;
+    
+    if (userEmail) {
+      checkAndGenerateActivation(userEmail, ModalChannel);
+    }
+  }
+}, [creategroups, ModalChannel]);
+
+// Handler ketika channel berubah
+const handleChannelChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const selectedChannel = e.target.value;
+  setModalChannel(selectedChannel);
+  
+  // Reset nama grup dan tipe jika Whatsapp dipilih
+  if (selectedChannel === "Whatsapp") {
+    setmodalgroupName("");
+    setmodalgroupType("");
+  }
+
+  // Reset activation state
+  setIsActivated(false);
+  setActivationCode("");
+
+  // Cek aktivasi untuk channel baru
+  if (selectedChannel) {
+    const userEmail =
+      localStorage.getItem("user_email") ||
+      JSON.parse(localStorage.getItem("user") || "{}")?.email;
+    
+    if (userEmail) {
+      await checkAndGenerateActivation(userEmail, selectedChannel);
+    }
+  }
+};
+
   const submitAddGroup = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
@@ -413,13 +483,20 @@ const handleGroupChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         return;
       }
 
-      const payload = {
-        date: modalDate,
-        group_type: modalgroupType,
-        group_name: modalgroupName,
-        channel: ModalChannel,
-        email: userEmail,
-      };
+      if (!isActivated) {
+      alert("Silakan aktivasi channel terlebih dahulu menggunakan kode yang tersedia.");
+      return;
+    }
+
+    const payload = {
+      action: "add_group",
+      date: modalDate,
+      group_type: modalgroupType,
+      group_name: modalgroupName,
+      channel: ModalChannel,
+      email: userEmail,
+      activation_code: activationCode,
+    };
 
       console.log("Add group payload:", payload);
 
@@ -436,14 +513,18 @@ const handleGroupChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         return;
       }
 
-      alert("Group berhasil disimpan!");
-      setcreategroups(false);
-      
-      // Reset form
-      setModalDate("");
-      setmodalgroupType("");
-      setmodalgroupName("");
-      setModalChannel("");
+      const result = await res.json();
+    alert(result.message || "Group berhasil disimpan!");
+    
+    setcreategroups(false);
+    
+    // Reset form
+    setModalDate("");
+    setmodalgroupType("");
+    setmodalgroupName("");
+    setModalChannel("");
+    setActivationCode("");
+    setIsActivated(false);
       
       // Refresh groups
       fetchGroups();
@@ -520,7 +601,7 @@ const handleGroupChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
   value={selectedGroup}
   onChange={handleGroupChange}
 >
-  <option value="">All Groups</option>
+  <option value="">Semua Grup</option>
   {uniqueGroups.map((g, index) => {
     const groupName = typeof g === "string" ? g : g.group_name;
     return (
@@ -534,7 +615,7 @@ const handleGroupChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
             <DatePicker
               id="dateFrom"
-              placeholder="Start Date"
+              placeholder="Tanggal Awal"
               defaultDate={parseYMDToDate(tempDateFrom)}
               onChange={(dates: any[]) => {
                 const d = dates?.[0];
@@ -544,7 +625,7 @@ const handleGroupChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
 
             <DatePicker
               id="dateTo"
-              placeholder="End Date"
+              placeholder="Tanggal Akhir"
               defaultDate={parseYMDToDate(tempDateTo)}
               onChange={(dates: any[]) => {
                 const d = dates?.[0];
@@ -554,36 +635,35 @@ const handleGroupChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
 
             <button 
               onClick={handleApplyDates} 
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+              className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
             >
               Apply
             </button>
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
-          >
-            Add New Report
-          </button>
-          <button
-            onClick={() => setcreategroups(true)}
-            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
-          >
-            Add New Group
-          </button>
-          <button
-            onClick={handleFetchExport}
-            disabled={exportLoading}
-            className="flex items-center justify-center gap-2 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 w-full sm:w-auto disabled:opacity-50"
-          >
-            {exportLoading ? "Exporting..." : "Export"}
-          </button>
-        </div>
-      </div>
-
+        <div className="flex flex-col sm:flex-row sm:items-stretch gap-3 w-full md:w-auto">
+  <button
+    onClick={() => setShowAddModal(true)}
+    className="w-full sm:w-auto sm:flex-1 md:flex-none px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 whitespace-nowrap text-center"
+  >
+    Tambah Transaksi
+  </button>
+  <button
+    onClick={() => setcreategroups(true)}
+    className="w-full sm:w-auto sm:flex-1 md:flex-none px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 whitespace-nowrap text-center"
+  >
+    Tambah Channel
+  </button>
+  <button
+    onClick={handleFetchExport}
+    disabled={exportLoading}
+    className="w-full sm:w-auto sm:flex-1 md:flex-none flex items-center justify-center gap-2 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50 whitespace-nowrap"
+  >
+    {exportLoading ? "Proses..." : "Download"}
+  </button>
+</div>
+</div>
       <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-12">
@@ -594,13 +674,13 @@ const handleGroupChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
             <table className="min-w-[600px] w-full text-sm text-gray-800 dark:text-gray-200">
               <thead className="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
                 <tr>
-                  <th className="px-4 py-3 text-left">Date</th>
-                  <th className="px-4 py-3 text-left">Type</th>
-                  <th className="px-4 py-3 text-left">Category</th>
-                  <th className="px-4 py-3 text-left">Merchant</th>
-                  <th className="px-4 py-3 text-left">Item</th>
-                  <th className="px-4 py-3 text-left">Amount</th>
-                  <th className="px-4 py-3 text-left">Actions</th>
+                  <th className="px-4 py-3 text-left">Tanggal</th>
+                  <th className="px-4 py-3 text-left">Tipe</th>
+                  <th className="px-4 py-3 text-left">Kategori</th>
+                  <th className="px-4 py-3 text-left">Toko</th>
+                  <th className="px-4 py-3 text-left">Barang</th>
+                  <th className="px-4 py-3 text-left">Jumlah</th>
+                  <th className="px-4 py-3 text-left">Tindakan</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -643,7 +723,7 @@ const handleGroupChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
                 ) : (
                   <tr>
                     <td colSpan={7} className="text-center py-4 text-gray-500">
-                      No data available
+                      Tidak ada data tersedia
                     </td>
                   </tr>
                 )}
@@ -662,7 +742,7 @@ const handleGroupChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
             <form className="flex flex-col gap-4" onSubmit={submitModal}>
               <DatePicker
                 id="modal_flow_date"
-                placeholder="Flow Date"
+                placeholder="Tanggal Transaksi"
                 defaultDate={parseYMDToDate(modalDate)}
                 onChange={(dates: any[]) => {
                   const d = dates?.[0];
@@ -676,9 +756,9 @@ const handleGroupChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
                 className="border rounded-lg px-3 py-2"
                 required
               >
-                <option value="">Select Type *</option>
-                <option value="income">Income</option>
-                <option value="expense">Expense</option>
+                <option value="">Pilih Tipe *</option>
+                <option value="income">Pemasukan</option>
+                <option value="expense">Pengeluaran</option>
               </select>
 
               <input 
@@ -686,7 +766,7 @@ const handleGroupChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
                 onChange={(e) => setModalCategory(e.target.value)} 
                 type="text" 
                 className="border rounded-lg px-3 py-2" 
-                placeholder="Category *" 
+                placeholder="Kategori *" 
                 required
               />
               <input 
@@ -694,21 +774,21 @@ const handleGroupChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
                 onChange={(e) => setModalMerchant(e.target.value)} 
                 type="text" 
                 className="border rounded-lg px-3 py-2" 
-                placeholder="Merchant" 
+                placeholder="Toko" 
               />
               <input 
                 value={modalItem} 
                 onChange={(e) => setModalItem(e.target.value)} 
                 type="text" 
                 className="border rounded-lg px-3 py-2" 
-                placeholder="Item" 
+                placeholder="Barang" 
               />
               <input 
                 value={modalAmount} 
                 onChange={(e) => setModalAmount(e.target.value ? Number(e.target.value) : "")} 
                 type="number" 
                 className="border rounded-lg px-3 py-2" 
-                placeholder="Amount" 
+                placeholder="Jumlah Uang" 
               />
 
               <div className="flex justify-end gap-2 mt-4">
@@ -717,13 +797,13 @@ const handleGroupChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
                   className="px-4 py-2 border rounded-lg hover:bg-gray-100" 
                   onClick={() => setShowAddModal(false)}
                 >
-                  Close
+                  Tutup
                 </button>
                 <button 
                   type="submit" 
                   className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
                 >
-                  Save
+                  Simpan
                 </button>
               </div>
             </form>
@@ -733,65 +813,84 @@ const handleGroupChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
 
       {/* MODAL ADD GROUP */}
       {creategroups && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-          <div className="w-full max-w-lg bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">Add New Group</h2>
+  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+    <div className="w-full max-w-lg bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-6">
+      <h2 className="text-xl font-semibold mb-4">Tambah Channel</h2>
 
-            <form className="flex flex-col gap-4" onSubmit={submitAddGroup}>
-              <DatePicker
-                id="modal_group_date"
-                placeholder="Date"
-                defaultDate={parseYMDToDate(modalDate)}
-                onChange={(dates: any[]) => {
-                  const d = dates?.[0];
-                  if (d) setModalDate(formatDateLocal(d));
-                }}
-              />
-              <input 
-                value={modalgroupName} 
-                onChange={(e) => setmodalgroupName(e.target.value)} 
-                type="text" 
-                className="border rounded-lg px-3 py-2" 
-                placeholder="Group Name *" 
-                required
-              />
-              
-              <select 
-                value={modalgroupType} 
-                onChange={(e) => setmodalgroupType(e.target.value)} 
-                className="border rounded-lg px-3 py-2"
-                required
-              >
-                <option value="">-Type- *</option>
-                <option value="Personal">Personal</option>
-                <option value="Bisnis">Bisnis</option>
-              </select>
-              
-              <select 
-                value={ModalChannel} 
-                onChange={(e) => setModalChannel(e.target.value)} 
-                className="border rounded-lg px-3 py-2"
-                required
-              >
-                <option value="">-Channel- *</option>
-                <option value="Telegram">Telegram</option>
-              </select>
-              
-              <div className="flex justify-end gap-2 mt-4">
-                <button 
-                  type="button" 
-                  className="px-4 py-2 border rounded-lg hover:bg-gray-100" 
-                  onClick={() => setcreategroups(false)}
-                >
-                  Close
-                </button>
-                <button 
-                  type="submit" 
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-                >
-                  Save
-                </button>
-              </div>
+      <form className="flex flex-col gap-4" onSubmit={submitAddGroup}>
+        
+        <input 
+          value={modalgroupName} 
+          onChange={(e) => setmodalgroupName(e.target.value)} 
+          type="text" 
+          className="border rounded-lg px-3 py-2 disabled:bg-gray-100 disabled:cursor-not-allowed" 
+          placeholder="Nama Grup *" 
+          required={ModalChannel !== "Whatsapp"}
+          disabled={ModalChannel === "Whatsapp"}
+        />
+        
+        <select 
+          value={modalgroupType} 
+          onChange={(e) => setmodalgroupType(e.target.value)} 
+          className="border rounded-lg px-3 py-2 disabled:bg-gray-100 disabled:cursor-not-allowed"
+          required={ModalChannel !== "Whatsapp"}
+          disabled={ModalChannel === "Whatsapp"}
+        >
+          <option value="">-Tipe- *</option>
+          <option value="Personal">Personal</option>
+          <option value="Bisnis">Bisnis</option>
+        </select>
+        
+        <select 
+          value={ModalChannel} 
+          onChange={handleChannelChange} 
+          className="border rounded-lg px-3 py-2"
+          required
+        >
+          <option value="">-Channel- *</option>
+          <option value="Telegram">Telegram</option>
+          <option value="Whatsapp">Whatsapp</option>
+        </select>
+        
+        <div className="flex justify-end gap-2 mt-4">
+          <button 
+            type="button" 
+            className="px-4 py-2 border rounded-lg hover:bg-gray-100" 
+            onClick={() => setcreategroups(false)}
+          >
+            Tutup
+          </button>
+          <button 
+            type="submit" 
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+          >
+            Aktivasi
+          </button>
+        </div>
+
+              {/* Pop-up Aktivasi */}
+        <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+          {!isActivated ? (
+            <div className="text-sm">
+              <p className="font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                Kode Aktivasi:
+              </p>
+              <code className="block bg-white dark:bg-gray-900 p-3 rounded border border-gray-300 dark:border-gray-600 text-blue-600 dark:text-blue-400 font-mono">
+                /aktivasi {activationCode}
+              </code>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                Kirim kode ini untuk mengaktifkan channel
+              </p>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              <span className="text-sm font-semibold">Anda sudah aktivasi</span>
+            </div>
+          )}
+        </div>
             </form>
           </div>
         </div>
@@ -801,7 +900,7 @@ const handleGroupChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
       {showEditModal && editingReport && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
           <div className="w-full max-w-lg bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">Edit Report</h2>
+            <h2 className="text-xl font-semibold mb-4">Edit Laporan</h2>
             
             <form className="flex flex-col gap-4" onSubmit={submitEdit}>
               <input
@@ -819,7 +918,7 @@ const handleGroupChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
                   setEditingReport({ ...editingReport, category: e.target.value })
                 }
                 className="border rounded-lg px-3 py-2"
-                placeholder="Category"
+                placeholder="Kategori"
               />
 
               <input
@@ -829,7 +928,7 @@ const handleGroupChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
                   setEditingReport({ ...editingReport, merchant: e.target.value })
                 }
                 className="border rounded-lg px-3 py-2"
-                placeholder="Merchant"
+                placeholder="Toko"
               />
 
               <input
@@ -839,7 +938,7 @@ const handleGroupChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
                   setEditingReport({ ...editingReport, item: e.target.value })
                 }
                 className="border rounded-lg px-3 py-2"
-                placeholder="Item"
+                placeholder="Barang"
               />
 
               <input
@@ -852,7 +951,7 @@ const handleGroupChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
                   })
                 }
                 className="border rounded-lg px-3 py-2"
-                placeholder="Amount"
+                placeholder="Jumlah Uang"
               />
 
               <div className="flex justify-end gap-2 mt-4">
@@ -861,13 +960,13 @@ const handleGroupChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
                   className="px-4 py-2 border rounded-lg hover:bg-gray-100"
                   onClick={() => setShowEditModal(false)}
                 >
-                  Close
+                  Tutup
                 </button>
                 <button
                   type="submit"
                   className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
                 >
-                  Save Changes
+                  Simpan
                 </button>
               </div>
             </form>

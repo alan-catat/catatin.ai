@@ -138,12 +138,12 @@ const AppSidebar: React.FC<Props> = ({ role, appLogo }) => {
 
   return (
     <aside
-      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
+      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-15 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
         ${isExpanded || isMobileOpen
           ? "w-[290px]"
           : isHovered
             ? "w-[290px]"
-            : "w-[90px]"
+            : "w-[100px]"
         }
         ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}
         lg:translate-x-0`}
@@ -151,7 +151,7 @@ const AppSidebar: React.FC<Props> = ({ role, appLogo }) => {
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Logo Header - Link berdasarkan status login */}
-      <div className="flex items-center justify-between h-16 px-4 border-b dark:border-gray-800">
+      <div className="flex items-left justify-between h-26 px-14 border-b dark:border-gray-800">
         <Link href={logoLink}>
           {isExpanded || isHovered || isMobileOpen ? (
             <>
