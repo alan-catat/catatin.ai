@@ -43,6 +43,7 @@ export default function ReportPage() {
   const [reports, setReports] = useState<Report[]>([]);
   const [groups, setGroups] = useState<any[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<string>("");
+  const [appliedGroup, setAppliedGroup] = useState<string>("");
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
   const [tempDateFrom, setTempDateFrom] = useState<string>("");
@@ -266,19 +267,32 @@ useEffect(() => {
 useEffect(() => {
   if (userEmail && groups.length > 0 && !initialLoadDone) {
     console.log("Initial fetch reports");
-    fetchReports({ group: selectedGroup, from: dateFrom, to: dateTo });
+    const initialFilters = { group: selectedGroup, from: dateFrom, to: dateTo };
+    setAppliedFilters(initialFilters); // Set applied filters
+    fetchReports(initialFilters);
     setInitialLoadDone(true);
   }
 }, [userEmail, groups]);
 
+const [appliedFilters, setAppliedFilters] = useState({
+  group: "",
+  from: "",
+  to: "",
+});
+
   const handleApplyDates = () => {
   setDateFrom(tempDateFrom);
   setDateTo(tempDateTo);
-    fetchReports({ 
-    group: selectedGroup, 
-    from: tempDateFrom, 
-    to: tempDateTo 
-  });
+  
+  // Simpan filter yang di-apply
+  const newFilters = {
+    group: selectedGroup,
+    from: tempDateFrom,
+    to: tempDateTo,
+  };
+  setAppliedFilters(newFilters);
+  
+  fetchReports(newFilters);
 };
 
 const handleGroupChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -287,65 +301,94 @@ const handleGroupChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
   };
 
   const handleFetchExport = async () => {
-    try {
-      const userEmail =
-        localStorage.getItem("user_email") ||
-        JSON.parse(localStorage.getItem("user") || "{}")?.email;
-      
-      if (!userEmail) {
-        alert("Email tidak ditemukan. Silakan login ulang.");
-        return;
-      }
+  if (reports.length === 0) {
+    showToast("Tidak ada data untuk diexport", "error");
+    return;
+  }
 
-      setExportLoading(true);
+  try {
+    setExportLoading(true);
 
-      // Payload sesuai dengan Export workflow
-      const payload: any = {
-        userEmail,
-        group: selectedGroup || "", // Kirim empty string jika tidak ada
-        date_from: dateFrom || "",
-        date_to: dateTo || "",
-      };
+    const userEmail =
+      localStorage.getItem("user_email") ||
+      JSON.parse(localStorage.getItem("user") || "{}")?.email;
+    
+    if (!userEmail) {
+      showToast("Email tidak ditemukan. Silakan login ulang.", "error");
+      setExportLoading(false);
+      return;
+    }
 
-      console.log("Export payload:", payload);
+    // GUNAKAN appliedFilters yang sudah di-apply, BUKAN selectedGroup
+    const payload = {
+      email: userEmail,
+      groupName: appliedFilters.group || "",
+      date_from: appliedFilters.from || "",
+      date_to: appliedFilters.to || "",
+    };
 
-      const res = await fetch(N8N_EXPORT_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+    console.log("Export payload:", payload);
+
+    const res = await fetch(N8N_GETREPORTS_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      throw new Error(`Export failed with status ${res.status}`);
+    }
+
+    const result = await res.json();
+    console.log("Export result:", result);
+
+    if (Array.isArray(result) && result.length > 0) {
+      const exportData = result.map((r: any, index: number) => ({
+        no: index + 1,
+        group_name: r.group_name || "",
+        channel: r.channel || "",
+        transaction_date: r.transaction_date || "",
+        type: r.type || "",
+        category: r.category || "",
+        items: r.items || "",
+        qty: r.qty || 1,
+        unit: r.unit || "pcs",
+        merchant: r.merchant || "",
+        amount: Number(r.amount) || 0,
+        text_chat: r.text_chat || "",
+        file_url: r.file_url || "",
+        created_date: r.created_date || "",
+      }));
+
+      // Filter menggunakan appliedFilters
+      const filteredData = appliedFilters.group
+        ? exportData.filter(r => r.group_name === appliedFilters.group)
+        : exportData;
+
+      console.log("Filtered export data:", filteredData.length);
+
+      exportToExcel(filteredData, {
+        fileName: `export_${appliedFilters.group || 'all'}_${Date.now()}.xlsx`,
+        sheetName: appliedFilters.group || "All Data",
       });
 
-      if (!res.ok) {
-        throw new Error(`Export failed with status ${res.status}`);
-      }
-
-      const result = await res.json();
-      console.log("Export result:", result);
-
-      if (Array.isArray(result) && result.length > 0) {
-        // Download Excel
-        exportToExcel(result, {
-          fileName: `export_${selectedGroup || 'all'}_${Date.now()}.xlsx`,
-          sheetName: selectedGroup || "All Data",
-        });
-
-        alert("Export berhasil!");
-      } else {
-        alert("Tidak ada data untuk diexport");
-      }
-    } catch (err) {
-      console.error("Export error:", err);
-      alert("Export gagal: " + (err as Error).message);
-    } finally {
-     setExportLoading(false);
+      showToast("Export berhasil!", "success");
+    } else {
+      showToast("Tidak ada data untuk diexport", "error");
     }
-  };
+  } catch (err) {
+    console.error("Export error:", err);
+    showToast("Export gagal: " + (err as Error).message, "error");
+  } finally {
+    setExportLoading(false);
+  }
+};
 
   const submitModal = async (e: FormEvent) => {
     e.preventDefault();
     
     if (!modalDate || !modalType || !modalCategory) {
-      alert("Mohon isi semua field yang wajib");
+      showToast("Mohon isi semua field yang wajib");
       return;
     }
 
@@ -355,7 +398,7 @@ const handleGroupChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         JSON.parse(localStorage.getItem("user") || "{}")?.email;
       
       if (!userEmail) {
-        alert("Email tidak ditemukan. Silakan login ulang.");
+        showToast("Email tidak ditemukan. Silakan login ulang.");
         return;
       }
 
@@ -379,7 +422,7 @@ const handleGroupChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
       });
 
       if (res.ok) {
-        alert("Data berhasil disimpan!");
+        showToast("Data berhasil disimpan!");
         setShowAddModal(false);
         
         // Reset form
@@ -395,11 +438,11 @@ const handleGroupChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
       } else {
         const errorText = await res.text();
         console.error("Add report failed:", errorText);
-        alert("Gagal menyimpan data: " + errorText);
+        showToast("Gagal menyimpan data: " + errorText);
       }
     } catch (err) {
       console.error("Add report error:", err);
-      alert("Gagal menyimpan data: " + (err as Error).message);
+      showToast("Gagal menyimpan data: " + (err as Error).message);
     }
   };
 
@@ -591,6 +634,20 @@ const handleChannelChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
       alert("Gagal update data: " + (err as Error).message);
     }
   };
+
+  const [toast, setToast] = useState<{
+  show: boolean;
+  message: string;
+  type: 'success' | 'error' | 'info';
+}>({ show: false, message: '', type: 'success' });
+
+const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+  setToast({ show: true, message, type });
+  setTimeout(() => {
+    setToast({ show: false, message: '', type: 'success' });
+  }, 3000); // Hilang setelah 3 detik
+};
+
 
   return (
     <div className="p-6 space-y-6">
@@ -818,7 +875,16 @@ const handleChannelChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
       <h2 className="text-xl font-semibold mb-4">Tambah Channel</h2>
 
       <form className="flex flex-col gap-4" onSubmit={submitAddGroup}>
-        
+        <select 
+          value={ModalChannel} 
+          onChange={handleChannelChange} 
+          className="border rounded-lg px-3 py-2"
+          required
+        >
+          <option value="">-Channel- *</option>
+          <option value="Telegram">Telegram</option>
+          <option value="Whatsapp">Whatsapp</option>
+        </select>
         <input 
           value={modalgroupName} 
           onChange={(e) => setmodalgroupName(e.target.value)} 
@@ -839,17 +905,6 @@ const handleChannelChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
           <option value="">-Tipe- *</option>
           <option value="Personal">Personal</option>
           <option value="Bisnis">Bisnis</option>
-        </select>
-        
-        <select 
-          value={ModalChannel} 
-          onChange={handleChannelChange} 
-          className="border rounded-lg px-3 py-2"
-          required
-        >
-          <option value="">-Channel- *</option>
-          <option value="Telegram">Telegram</option>
-          <option value="Whatsapp">Whatsapp</option>
         </select>
         
         <div className="flex justify-end gap-2 mt-4">
@@ -973,6 +1028,34 @@ const handleChannelChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
           </div>
         </div>
       )}
+      {/* Toast Notification */}
+{toast.show && (
+  <div
+    className={`fixed bottom-6 right-6 z-50 px-6 py-4 rounded-lg shadow-lg transform transition-all duration-300 ease-in-out ${
+      toast.show ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
+    } ${
+      toast.type === 'success'
+        ? 'bg-green-500 text-white'
+        : toast.type === 'error'
+        ? 'bg-red-500 text-white'
+        : 'bg-blue-500 text-white'
+    }`}
+  >
+    <div className="flex items-center gap-3">
+      {toast.type === 'success' && (
+        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+        </svg>
+      )}
+      {toast.type === 'error' && (
+        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+        </svg>
+      )}
+      <span className="font-medium">{toast.message}</span>
+    </div>
+  </div>
+)}
     </div>
   );
 }

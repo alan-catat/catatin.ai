@@ -41,7 +41,7 @@ import Image from "next/image";
       </section>
 
 <section className="mb-10">
-        <h2 className="text-xl font-medium mb-2"><b>Step 4. Undang @catatinaibot</b></h2>
+        <h2 className="text-xl font-medium mb-2"><b>Step 4. Undang @catatinaibot dan jadikan bot sebagai Admin Grup</b></h2>
         <p className="text-gray-700 leading-relaxed">
           Setelah kamu pilih <strong>new group</strong> kamu akan diminta invite member, cari <strong>catatinaibot</strong>.
         </p>

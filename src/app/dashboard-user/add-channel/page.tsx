@@ -12,7 +12,7 @@ export default function Home() {
   {
     icon: TelegramIcon,
     title: "Telegram",
-    description: "Kamu bisa memulai dengan membuat group telegram bersama catatin.ai ,kamu bisa undang siapapun yang kamu mau untuk mencatat bersama keuangan personal dan bisnismu tanpa repot lagi ...",
+    description: "Silakan buat dan aktifkan grup Telegram Anda untuk memulai berbagi struk belanja, teks, maupun audio dengan para anggota. Buat grup baru di Telegram, tambahkan anggota yang diperlukan, dan gunakan grup tersebut sesuai kebutuhan komunikasi Anda.",
     color: "text-success",
     button: (
       <div className="flex space-x-4">
@@ -22,38 +22,35 @@ export default function Home() {
         >
           Tambah
         </button>
-
         <Link
-          href="/Tutorial/Telegram/cara-membuat-group-telegram"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="px-2 py-2 rounded-lg bg-cyan-700 text-white text-sm text-center hover:bg-cyan-800 transition"
+          href="/Tutorial/WhatsApp/cara-registrasi-whatsapp"
+          className="px-12 py-2 text-brand-500 hover:text-brand-600 dark:text-brand-400 transition"
         >
-          Cara Pakai
+          Petunjuk
         </Link>
       </div>
+      
     )
   },
 
   {
     icon: WhatsAppIcon,
     title: "WhatsApp",
-    description: "Terhubung dengan nomor WhatsApp catatin.ai, membuat setiap chat kamu lebih berarti lagi, untuk setiap transaksi atau pencatatan keuanganmu ...",
+    description: "Silakan aktifkan nomor WhatsApp Anda untuk mulai berbagi struk belanja, teks, maupun audio sesuai kebutuhan pribadi, keluarga, atau bisnis.",
     color: "text-success",
     button: (
       <div className="flex space-x-4">
         <button
           onClick={() => setcreategroups(true)}
-          className="px-2 py-2 rounded-lg bg-emerald-700 text-white text-sm hover:bg-emerald-800 transition"
+          className="px-3 py-2 rounded-lg bg-emerald-700 text-white text-sm hover:bg-emerald-800 transition"
         >
           Tambah
         </button>
-
         <Link
           href="/Tutorial/WhatsApp/cara-registrasi-whatsapp"
-          className="px-2 py-2 rounded-lg bg-emerald-700 text-white text-sm text-center hover:bg-emerald-800 transition"
+          className="px-12 py-2 text-brand-500 hover:text-brand-600 dark:text-brand-400 transition"
         >
-          Cara Pakai
+          Petunjuk
         </Link>
       </div>
     )
@@ -112,14 +109,13 @@ export default function Home() {
     <main className="min-h-screen bg-white text-slate-800 antialiased
     dark:bg-[#2e2e2e] dark:from-[#2e2e2e] dark:via-[#2e2e2e] dark:to-[#2e2e2e]">
       <section className="pt-16 w-full">
-      {/* GRID CONTENT - Text Left & Video Right */}
-          <div className="grid md:grid-cols-[4fr_1fr] gap-16 items-center">
+          
             <div className="space-y-15">
               <p className="text-lg text-slate-600 leading-relaxed max-w-xl">
                 Aktivasi segera Channel kamu:
                </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-6xl mx-auto px-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch sm:max-w-5xl">
 
   {channel.map((item, index) => (
     <div
@@ -130,33 +126,31 @@ export default function Home() {
     >
       <div className="flex items-start gap-5">
         
-        <div className="flex items-start gap-6">
+        <div className="flex items-start gap-6 w-full">
   
-  <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-gray-100">
-    <item.icon className={`w-7 h-7 ${item.color}`} />
-  </div>
+          <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-gray-100">
+            <item.icon className={`w-7 h-7 ${item.color}`} />
+          </div>
 
-  <div className="flex-1 ">   {/* ⬅ kuncinya di sini */}
-    <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
+          <div className="flex-1 grid grid-rows-[auto_1fr_auto] gap-2">
+  <h3 className="text-xl font-semibold">{item.title}</h3>
 
-    <p className="text-[15px] text-muted-foreground leading-relaxed">
-      {item.description}
-    </p>
+            <p className="text-sm sm:text-[15px] text-muted-foreground leading-relaxed 
+   min-h-[80px] sm:min-h-[100px] md:min-h-[140px] lg:min-h-[140px]">
+     {item.description}
+            </p>
 
-    <div className="mt-6 flex gap-3 flex-wrap">
-      {item.button}
-    </div>
-  </div>
-
-</div>
-
+            <div className="mt-6 flex gap-3 flex-wrap">
+              <b>{item.button}</b>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   ))}
 </div>
             </div>
-          </div>
-
+          
         {/* MODAL */}
         {creategroups && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">

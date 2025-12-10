@@ -36,7 +36,7 @@ import { TelegramIcon } from "@/components/icons/icons";
       { name: "Beranda Pengguna", path: "/dashboard-user", icon: <GridIcon /> },
       { name: "Obrolan Web", path: "/dashboard-user/webchat", icon: <ChatIcon /> },
       { name: "Profil", path: "/dashboard-user/profile", icon: <UserCircleIcon /> },
-      { name: "Tambah channel", path: "/dashboard-user/add-channel", icon: <GroupIcon /> },
+      { name: "Channel", path: "/dashboard-user/add-channel", icon: <GroupIcon /> },
       { name: "Laporan", path: "/dashboard-user/reports", icon: <CalenderIcon /> },
       
       

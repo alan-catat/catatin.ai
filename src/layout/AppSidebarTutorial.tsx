@@ -138,7 +138,7 @@ const AppSidebar: React.FC<Props> = ({ role, appLogo }) => {
 
   return (
     <aside
-      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-15 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
+      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-6 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
         ${isExpanded || isMobileOpen
           ? "w-[290px]"
           : isHovered
@@ -151,7 +151,8 @@ const AppSidebar: React.FC<Props> = ({ role, appLogo }) => {
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Logo Header - Link berdasarkan status login */}
-      <div className="flex items-left justify-between h-26 px-14 border-b dark:border-gray-800">
+      <div className="border-b dark:border-gray-800">
+  <div className="flex items-center justify-center h-19 px-14">
         <Link href={logoLink}>
           {isExpanded || isHovered || isMobileOpen ? (
             <>
@@ -159,14 +160,14 @@ const AppSidebar: React.FC<Props> = ({ role, appLogo }) => {
                 <img
                   src={appLogo.light}
                   alt="Logo"
-                  className="h-28 dark:hidden"
+                  className="h-40 dark:hidden"
                 />
               )}
               {appLogo.dark && (
                 <img
                   src={appLogo.dark}
                   alt="Logo Dark"
-                  className="h-28 hidden dark:block"
+                  className="h-40 hidden dark:block"
                 />
               )}
             </>
@@ -174,11 +175,11 @@ const AppSidebar: React.FC<Props> = ({ role, appLogo }) => {
             <img
               src="/catatin.png"
               alt="Logo Icon"
-              className="h-28"
+              className="h-40"
             />
           )}
         </Link>
-      </div>
+      </div></div>
 
       {/* Navigation Menu */}
       <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
