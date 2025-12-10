@@ -23,7 +23,7 @@ export default function Home() {
           Tambah
         </button>
         <Link
-          href="/Tutorial/WhatsApp/cara-registrasi-whatsapp"
+          href="/Tutorial/Telegram/cara-membuat-group-telegram"
           className="px-12 py-2 text-brand-500 hover:text-brand-600 dark:text-brand-400 transition"
         >
           Petunjuk

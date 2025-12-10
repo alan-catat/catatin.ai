@@ -5,7 +5,7 @@ import { createClient } from '@/utils/supabase/server';
 import { redirect } from 'next/navigation'
 
 export const metadata: Metadata = {
-  title: "catatin.ai | DASHBOARD",
+  title: "catatin.ai",
 }
 
 export default async  function DashboardPage() {
