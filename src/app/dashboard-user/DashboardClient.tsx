@@ -68,6 +68,10 @@ export default function DashboardUser() {
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  
+  // ✅ State untuk temporary filter (belum apply)
+  const [tempPeriod, setTempPeriod] = useState<string>("");
+  const [tempGroups, setTempGroups] = useState<string[]>([]);
 
   const colors = ["text-blue-500", "text-green-500", "text-purple-500", "text-orange-500", "text-pink-500"];
   const icons = [Wallet, ShoppingBag, Briefcase, CreditCard, DollarSign];
@@ -78,7 +82,7 @@ export default function DashboardUser() {
       ref={ref}
       className="border rounded-lg px-3 py-2 dark:text-gray-400 w-full sm:w-auto text-left"
     >
-      {value || "Select period"}
+      {value || "Pilih periode"}
     </button>
   ));
   CustomInput.displayName = "CustomInput";
@@ -192,7 +196,7 @@ export default function DashboardUser() {
 
   // ✅ Multi-select functions
   const toggleGroup = (group: string) => {
-    setSelectedGroups(prev =>
+    setTempGroups(prev =>
       prev.includes(group)
         ? prev.filter(g => g !== group)
         : [...prev, group]
@@ -200,11 +204,17 @@ export default function DashboardUser() {
   };
 
   const removeGroup = (group: string) => {
-    setSelectedGroups(prev => prev.filter(g => g !== group));
+    setTempGroups(prev => prev.filter(g => g !== group));
   };
 
   const clearAllGroups = () => {
-    setSelectedGroups([]);
+    setTempGroups([]);
+  };
+  
+  // ✅ Function untuk Apply filter
+  const handleApplyFilter = () => {
+    setSelectedPeriod(tempPeriod);
+    setSelectedGroups(tempGroups);
   };
 
   useEffect(() => {
@@ -214,7 +224,9 @@ export default function DashboardUser() {
       // ✅ Kirim "All Groups" saat init
       const flows = await fetchCashFlows(p[p.length - 1], "All Groups");
       setSelectedPeriod(p[p.length - 1]);
+      setTempPeriod(p[p.length - 1]); // ✅ Set temp juga
       setSelectedGroups([]);
+      setTempGroups([]); // ✅ Set temp juga
       setStats(calculateStats(flows));
       setMostExpensive(getMostExpensive(flows));
       setLargestIncome(getLargestIncome(flows));
@@ -272,9 +284,9 @@ export default function DashboardUser() {
                        hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
             >
               <span className="text-gray-600 dark:text-gray-400 truncate">
-                {selectedGroups.length === 0
-                  ? 'All Groups'
-                  : `${selectedGroups.length} group${selectedGroups.length > 1 ? 's' : ''} selected`}
+                {tempGroups.length === 0
+                  ? 'Semua Group'
+                  : `${tempGroups.length} group dipilih`}
               </span>
               <ChevronDown
                 className={`w-5 h-5 text-gray-500 transition-transform flex-shrink-0 ml-2 ${isDropdownOpen ? 'rotate-180' : ''}`}
@@ -287,7 +299,7 @@ export default function DashboardUser() {
                             dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-auto">
                 {groups.length === 0 ? (
                   <div className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
-                    No groups available
+                    Tidak ada group tersedia
                   </div>
                 ) : (
                   groups.map((group) => (
@@ -298,7 +310,7 @@ export default function DashboardUser() {
                     >
                       <input
                         type="checkbox"
-                        checked={selectedGroups.includes(group)}
+                        checked={tempGroups.includes(group)}
                         onChange={() => toggleGroup(group)}
                         className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 
                                  dark:border-gray-600 dark:bg-neutral-700 cursor-pointer"
@@ -306,7 +318,7 @@ export default function DashboardUser() {
                       <span className="ml-3 text-gray-700 dark:text-gray-300 flex-1">
                         {group}
                       </span>
-                      {selectedGroups.includes(group) && (
+                      {tempGroups.includes(group) && (
                         <Check className="w-4 h-4 text-green-600 dark:text-green-400" />
                       )}
                     </label>
@@ -318,50 +330,50 @@ export default function DashboardUser() {
 
           <DatePicker
             selected={
-              selectedPeriod === "All Time" || !selectedPeriod
+              tempPeriod === "All Time" || !tempPeriod
                 ? null
-                : new Date(`${selectedPeriod.split(" ")[0]} 1, ${selectedPeriod.split(" ")[1]}`)
+                : new Date(`${tempPeriod.split(" ")[0]} 1, ${tempPeriod.split(" ")[1]}`)
             }
             onChange={(date) => {
               if (!date) return;
               const month = date.toLocaleString("en-US", { month: "long" });
               const year = date.getFullYear();
-              setSelectedPeriod(`${month} ${year}`);
+              setTempPeriod(`${month} ${year}`);
             }}
             dateFormat="MMMM yyyy"
             showMonthYearPicker
             customInput={<CustomInput />}
-            placeholderText="Select period or All Time"
+            placeholderText="Pilih periode"
           />
+          
+          
+          {/* ✅ Tombol Apply */}
           <button
-            onClick={() => setSelectedPeriod("All Time")}
-            className={`px-4 py-2 rounded-lg border transition-colors ${
-              selectedPeriod === "All Time"
-                ? "bg-blue-500 text-white border-blue-500"
-                : "bg-white dark:bg-neutral-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-neutral-700"
-            }`}
+            onClick={handleApplyFilter}
+            className="px-6 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium 
+                     transition-colors shadow-sm"
           >
-            Semua
+            Terapkan
           </button>
         </div>
       </div>
 
       {/* Selected Groups Tags */}
-      {selectedGroups.length > 0 && (
+      {tempGroups.length > 0 && (
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm text-gray-600 dark:text-gray-400">
-            Filtered by:
+            Dipilih (belum diterapkan):
           </span>
-          {selectedGroups.map((group) => (
+          {tempGroups.map((group) => (
             <div
               key={group}
-              className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-100 dark:bg-blue-900 
-                       text-blue-800 dark:text-blue-200 rounded-full text-sm font-medium"
+              className="inline-flex items-center gap-1.5 px-3 py-1 bg-orange-100 dark:bg-orange-900 
+                       text-orange-800 dark:text-orange-200 rounded-full text-sm font-medium"
             >
               {group}
               <button
                 onClick={() => removeGroup(group)}
-                className="hover:bg-blue-200 dark:hover:bg-blue-800 rounded-full p-0.5 transition-colors"
+                className="hover:bg-orange-200 dark:hover:bg-orange-800 rounded-full p-0.5 transition-colors"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -371,13 +383,13 @@ export default function DashboardUser() {
             onClick={clearAllGroups}
             className="text-xs text-red-600 dark:text-red-400 hover:underline ml-2"
           >
-            Clear all
+            Hapus semua
           </button>
         </div>
       )}
 
       <div className="text-sm text-gray-600 dark:text-gray-400">
-        Showing data for: <span className="font-semibold">{selectedGroups.length === 0 ? 'All Groups' : selectedGroups.join(', ')}</span> • <span className="font-semibold">{selectedPeriod}</span>
+        Menampilkan data untuk: <span className="font-semibold">{selectedGroups.length === 0 ? 'Semua Group' : selectedGroups.join(', ')}</span> • <span className="font-semibold">{selectedPeriod}</span>
       </div>
 
       {/* Summary Cards */}
@@ -396,7 +408,7 @@ export default function DashboardUser() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {chartLoading ? (
           <div className="bg-white dark:bg-neutral-900 shadow rounded-lg p-4 flex items-center justify-center h-64">
-            <p className="text-gray-500">Loading chart...</p>
+            <p className="text-gray-500">Memuat grafik...</p>
           </div>
         ) : (
           <PieCart
@@ -409,7 +421,7 @@ export default function DashboardUser() {
 
         {chartLoading ? (
           <div className="bg-white dark:bg-neutral-900 shadow rounded-lg p-4 flex items-center justify-center h-64">
-            <p className="text-gray-500">Loading chart...</p>
+            <p className="text-gray-500">Memuat grafik...</p>
           </div>
         ) : (
           <PieCart
@@ -422,7 +434,7 @@ export default function DashboardUser() {
 
         {/* Largest Income Table */}
         <div className="bg-white dark:bg-neutral-900 shadow rounded-lg p-4">
-          <h2 className="font-semibold text-lg mb-3">Largest Income Sources</h2>
+          <h2 className="font-semibold text-lg mb-3">Sumber Pendapatan Terbesar</h2>
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200 dark:border-gray-700 text-left">
@@ -443,12 +455,12 @@ export default function DashboardUser() {
 
         {/* Most Expensive Purchases */}
         <div className="bg-white dark:bg-neutral-900 shadow rounded-lg p-4">
-          <h2 className="font-semibold text-lg mb-3">Most Expensive Purchases</h2>
+          <h2 className="font-semibold text-lg mb-3">Pengeluaran Termahal</h2>
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200 dark:border-gray-700 text-left">
-                <th className="py-2">Item Name</th>
-                <th className="py-2">Amount</th>
+                <th className="py-2">Nama Item</th>
+                <th className="py-2">Jumlah</th>
               </tr>
             </thead>
             <tbody>

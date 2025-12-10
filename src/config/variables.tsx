@@ -68,19 +68,19 @@ export const defaultSystemKeys = {
 export const USER_OVERVIEWS = {
   // Stat Cards
   totalBalance: {
-    title: "Balance",
+    title: "Saldo",
     compare: "vs last month",
   },
   totalIncome: {
-    title: "Income",
+    title: "Uang Masuk",
     compare: "vs last month",
   },
   totalExpense: {
-    title: "Expense",
+    title: "Uang Keluar",
     compare: "vs last month",
   },
   entries: {
-    title: "Total Entry this month",
+    title: "Total Transaksi",
     compare: "vs last month",
   },
 
@@ -93,9 +93,9 @@ export const USER_OVERVIEWS = {
   },
   // Charts
   incomeChartBreakdown: {
-    title: "Income Category Breakdown",
+    title: "Rincian Kategori Pendapatan",
   },
   expenseChartBreakdown: {
-    title: "Expense Category Breakdown",
+    title: "Rincian Kategori Pengeluaran",
   },
 };

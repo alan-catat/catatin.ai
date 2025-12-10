@@ -37,7 +37,7 @@ export async function exportToExcel<T extends Record<string, any>>(
       "merchant",
       "amount",
       "file_url",
-      "created_date",
+      "tanggal_input",
     ];
 
     worksheet.addRow(headers);

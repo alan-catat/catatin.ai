@@ -900,7 +900,6 @@ const showToast = (message: string, type: 'success' | 'error' | 'info' = 'succes
           onChange={(e) => setmodalgroupType(e.target.value)} 
           className="border rounded-lg px-3 py-2 disabled:bg-gray-100 disabled:cursor-not-allowed"
           required={ModalChannel !== "Whatsapp"}
-          disabled={ModalChannel === "Whatsapp"}
         >
           <option value="">-Tipe- *</option>
           <option value="Personal">Personal</option>
