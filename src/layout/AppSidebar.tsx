@@ -114,22 +114,24 @@ const AppSidebar: React.FC<Props> = ({ role, appLogo }) => {
       onMouseEnter={() => !isExpanded && setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="flex items-center justify-between h-16 px-4 border-b">
-        <Link href="#">
+
+      <div className="border-b dark:border-gray-800">
+  <div className="flex items-center justify-center h-19 px-14">
+        <Link href="/dashboard-user">
           {isExpanded || isHovered || isMobileOpen ? (
             <>
               {appLogo.light && (
                 <img
                   src={appLogo.light}
                   alt="Logo"
-                  className="h-18 dark:hidden"
+                  className="h-15 dark:hidden"
                 />
               )}
               {appLogo.dark && (
                 <img
                   src={appLogo.dark}
                   alt="Logo Dark"
-                  className="h-18 hidden dark:block"
+                  className="h-15 hidden dark:block"
                 />
               )}
             </>
@@ -137,12 +139,12 @@ const AppSidebar: React.FC<Props> = ({ role, appLogo }) => {
             <img
               src="/catatin.png"
               alt="Logo Icon"
-              className="h-28"
+              className="h-15"
             />
           )}
         </Link>
       </div>
-
+</div>
 
 
       {/* nav */}
