@@ -6,8 +6,22 @@ import { StatCard } from "@/components/dashboard/StatCard";
 import { PieCart } from "@/components/charts/pie/PieCart";
 import { Wallet, ShoppingBag, Briefcase, CreditCard, DollarSign, ChevronDown, X, Check } from "lucide-react";
 import { USER_OVERVIEWS } from "@/config/variables";
-import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import DatePicker from "@/components/form/date-picker";
+
+function formatDateLocal(d: Date) {
+  const y = d.getFullYear();
+  const m = `${d.getMonth() + 1}`.padStart(2, "0");
+  const day = `${d.getDate()}`.padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function parseYMDToDate(ymd?: string | null) {
+  if (!ymd) return undefined;
+  const [y, m, d] = ymd.split("-").map(Number);
+  if (!y || !m || !d) return undefined;
+  return new Date(y, m - 1, d);
+}
 
 interface kategori {
   id: string;
@@ -63,6 +77,10 @@ export default function DashboardUser() {
   const [periods, setPeriods] = useState<string[]>([]);
   const [selectedPeriod, setSelectedPeriod] = useState<string>("");
   const [groups, setGroups] = useState<string[]>([]);
+  const [tempDateFrom, setTempDateFrom] = useState<string>("");
+      const [tempDateTo, setTempDateTo] = useState<string>("");
+      const [dateFrom, setDateFrom] = useState<string>("");
+const [dateTo, setDateTo] = useState<string>("");
   
   // ✅ PERUBAHAN: Tambah state untuk multi-select (nama variable baru agar tidak bentrok)
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
@@ -136,8 +154,9 @@ export default function DashboardUser() {
       // ✅ SELALU kirim groupName, default "All Groups"
       const requestBody: any = {
         email: storedEmail,
-        period: period === "All Time" ? null : (period || null),
-        groupName: groupName || "All Groups"
+        groupName: groupName || "All Groups",
+        date_from: dateFrom || "",
+      date_to: dateTo || "",
       };
 
       console.log('=== SENDING TO N8N ===');
@@ -187,7 +206,7 @@ export default function DashboardUser() {
     const totalIncome = data.filter((f) => f.flow_type === "income").reduce((a, b) => a + b.flow_amount, 0);
     const totalExpense = data.filter((f) => f.flow_type === "expense").reduce((a, b) => a + b.flow_amount, 0);
     const balance = totalIncome - totalExpense;
-
+      
     const incomeData = groupByCategory(data, "income");
     const expenseData = groupByCategory(data, "expense");
 
@@ -215,6 +234,8 @@ export default function DashboardUser() {
   const handleApplyFilter = () => {
     setSelectedPeriod(tempPeriod);
     setSelectedGroups(tempGroups);
+    setDateFrom(tempDateFrom);
+  setDateTo(tempDateTo);
   };
 
   useEffect(() => {
@@ -234,7 +255,44 @@ export default function DashboardUser() {
     };
     init();
   }, []);
+useEffect(() => {
+    if (!selectedPeriod) return;
 
+    (async () => {
+      try {
+        setChartLoading(true);
+        
+        const flows = await fetchCashFlows(selectedPeriod, "All Groups");
+        
+        // Filter by groups
+        let filteredFlows = selectedGroups.length === 0 
+          ? flows 
+          : flows.filter(f => selectedGroups.includes(f.group_name || ''));
+        
+        // ✅ Tambahkan filter by date range
+        if (dateFrom || dateTo) {
+          filteredFlows = filteredFlows.filter(f => {
+            const flowDate = new Date(f.created_at);
+            const fromDate = dateFrom ? new Date(dateFrom) : null;
+            const toDate = dateTo ? new Date(dateTo) : null;
+            
+            if (fromDate && flowDate < fromDate) return false;
+            if (toDate && flowDate > toDate) return false;
+            return true;
+          });
+        }
+        
+        const newStats = calculateStats(filteredFlows);
+        setStats(newStats);
+        setMostExpensive(getMostExpensive(filteredFlows));
+        setLargestIncome(getLargestIncome(filteredFlows));
+      } catch (error) {
+        console.error('Error loading data:', error);
+      } finally {
+        setChartLoading(false);
+      }
+    })();
+  }, [selectedPeriod, selectedGroups, dateFrom, dateTo]); // ✅ Tambahkan dependencies
   // ✅ FILTER DI FRONTEND - tapi tetap kirim "All Groups" ke backend
   useEffect(() => {
     if (!selectedPeriod) return;
@@ -268,6 +326,8 @@ export default function DashboardUser() {
   }, [selectedPeriod, selectedGroups]);
 
   if (loading) return <div className="text-center mt-10">Memuat dashboard...</div>;
+
+  
 
   return (
     <div className="p-6 space-y-6">
@@ -329,22 +389,24 @@ export default function DashboardUser() {
           </div>
 
           <DatePicker
-            selected={
-              tempPeriod === "All Time" || !tempPeriod
-                ? null
-                : new Date(`${tempPeriod.split(" ")[0]} 1, ${tempPeriod.split(" ")[1]}`)
-            }
-            onChange={(date) => {
-              if (!date) return;
-              const month = date.toLocaleString("en-US", { month: "long" });
-              const year = date.getFullYear();
-              setTempPeriod(`${month} ${year}`);
-            }}
-            dateFormat="MMMM yyyy"
-            showMonthYearPicker
-            customInput={<CustomInput />}
-            placeholderText="Pilih periode"
-          />
+                        id="dateFrom"
+                        placeholder="Tanggal Awal"
+                        defaultDate={parseYMDToDate(tempDateFrom)}
+                        onChange={(dates: any[]) => {
+                          const d = dates?.[0];
+                          if (d) setTempDateFrom(formatDateLocal(d));
+                        }}
+                      />
+          
+                      <DatePicker
+                        id="dateTo"
+                        placeholder="Tanggal Akhir"
+                        defaultDate={parseYMDToDate(tempDateTo)}
+                        onChange={(dates: any[]) => {
+                          const d = dates?.[0];
+                          if (d) setTempDateTo(formatDateLocal(d));
+                        }}
+                      />
           
           
           {/* ✅ Tombol Apply */}
@@ -353,7 +415,7 @@ export default function DashboardUser() {
             className="px-6 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium 
                      transition-colors shadow-sm"
           >
-            Terapkan
+            Apply
           </button>
         </div>
       </div>

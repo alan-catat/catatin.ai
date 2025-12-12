@@ -46,12 +46,12 @@ export default function Header() {
           <a href="#how" className="hover:text-primary transition-colors">
             Cara Kerja
           </a>
-        <a
-          href="#paket"
+        <Link
+          href="/home/Convert"
           className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#05668D] text-white font-medium shadow-sm hover:bg-[#04506c] hover:scale-105 active:scale-95 transition"
         >
-          Coba Gratis
-        </a>
+          Coba Convert
+        </Link>
         </nav>
         <div className="flex items-center gap-3">
             <Link
