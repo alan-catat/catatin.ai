@@ -3,12 +3,15 @@ import {
     ChatIcon,
   } from "@/icons";
 import { GroupIcon } from "lucide-react";
+import { WhatsAppIcon } from "@/components/icons/icons";
+import { TelegramIcon } from "@/components/icons/icons";
   
   export type NavItem = {
     name: string;
     path?: string;
     icon?: React.ReactNode;
     subItems?: NavItem[];
+    alwaysExpanded?: boolean;
   };
   
   export const sidebarMenus: Record<"admin" | "user" | "Tutorial", NavItem[]> = {
@@ -31,17 +34,27 @@ import { GroupIcon } from "lucide-react";
     ],
     user: [
       { name: "Beranda Pengguna", path: "/dashboard-user", icon: <GridIcon /> },
-      { name: "Obrolan Web", path: "/dashboard-user/webchat", icon: <ChatIcon /> },
       { name: "Profil", path: "/dashboard-user/profile", icon: <UserCircleIcon /> },
-      { name: "Tambah channel", path: "/dashboard-user/add-channel", icon: <GroupIcon /> },
+      { name: "Channel", path: "/dashboard-user/add-channel", icon: <GroupIcon /> },
       { name: "Laporan", path: "/dashboard-user/reports", icon: <CalenderIcon /> },
       
       
     ],
     Tutorial: [
-      
-      { name: "Telegram", path: "/Tutorial/Telegram", icon: <ChatIcon /> },
-      { name: "WhatsApp", path: "/Tutorial/WhatsApp", icon: <UserCircleIcon /> },
+      { name: "Telegram", icon: <TelegramIcon />,
+        alwaysExpanded: true,
+        subItems: [
+          { name: "Cara Buat Group Telegram", path: "/Tutorial/Telegram/cara-membuat-group-telegram" },
+          { name: "Cara Aktivasi Group Telegram", path: "/Tutorial/Telegram/cara-aktivasi-group-telegram" },
+          ],
+      },
+      { name: "WhatsApp", icon: <WhatsAppIcon />,
+        alwaysExpanded: true,
+        subItems: [
+          { name: "Cara Registrasi Channel WA ", path: "/Tutorial/WhatsApp/cara-registrasi-whatsapp" },
+          { name: "Cara Aktivasi WA", path: "/Tutorial/WhatsApp/cara-aktivasi-whatsapp" },
+          ],
+      },
       
       
       

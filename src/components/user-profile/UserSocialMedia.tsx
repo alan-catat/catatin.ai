@@ -91,7 +91,7 @@ export default function UserSocialCard({ profile }: { profile: any }) {
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90 lg:mb-6">
-              Sosial Media
+              Media Sosial
             </h4>
 
             {(phoneNumber || formData.instagram || formData.facebook || formData.tiktok) && (
