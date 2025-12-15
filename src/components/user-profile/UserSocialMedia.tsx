@@ -13,7 +13,6 @@ export default function UserSocialCard({ profile }: { profile: any }) {
   const { setAlertData } = useAlert()
 
   const [formData, setFormData] = useState({
-    phone_number: profile?.phone_number || "",
     instagram: profile?.instagram || "",
     facebook: profile?.facebook || "",
     tiktok: profile?.tiktok || "",
@@ -38,9 +37,14 @@ export default function UserSocialCard({ profile }: { profile: any }) {
 
       if (!res.ok) throw new Error("Gagal ambil data user dari n8n");
         const data = await res.json()
+
+        console.log("Raw data dari n8n:", data);
+      console.log("Instagram:", data.instagram);
+      console.log("Facebook:", data.facebook);
+      console.log("TikTok:", data.tiktok);
+
         if (data) {
           setFormData({
-            phone_number: data.phone_number || "",
             instagram: data.instagram || "",
             facebook: data.facebook || "",
             tiktok: data.tiktok || "",
@@ -53,6 +57,9 @@ export default function UserSocialCard({ profile }: { profile: any }) {
 
     if (userEmail) fetchProfile()
   }, [userEmail])
+
+  console.log("FormData state:", formData);
+console.log("Condition check:", formData.instagram || formData.facebook || formData.tiktok);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -83,7 +90,7 @@ export default function UserSocialCard({ profile }: { profile: any }) {
     }
   }
 
-  const phoneNumber = formData.phone_number?.trim()
+  
 
   return (
     <>
@@ -94,7 +101,7 @@ export default function UserSocialCard({ profile }: { profile: any }) {
               Media Sosial
             </h4>
 
-            {(phoneNumber || formData.instagram || formData.facebook || formData.tiktok) && (
+            {(formData.instagram || formData.facebook || formData.tiktok) && (
               <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
 
                 {/* Instagram */}
@@ -156,29 +163,7 @@ export default function UserSocialCard({ profile }: { profile: any }) {
         </div>
       </div>
 
-      {/* Modal edit */}
-      <Modal isOpen={isOpen} onClose={closeModal} title="Edit Social Media">
-        <div className="flex flex-col gap-4 p-4">
-          <Label htmlFor="phone_number">Nomor Telepon</Label>
-          <Input name="phone_number" value={formData.phone_number} onChange={handleChange} />
-
-          <Label htmlFor="instagram">Instagram</Label>
-          <Input name="instagram" value={formData.instagram} onChange={handleChange} />
-
-          <Label htmlFor="facebook">Facebook</Label>
-          <Input name="facebook" value={formData.facebook} onChange={handleChange} />
-
-          <Label htmlFor="tiktok">TikTok</Label>
-          <Input name="tiktok" value={formData.tiktok} onChange={handleChange} />
-
-          <div className="flex justify-end gap-3 mt-4">
-            <Button variant="outline" onClick={closeModal}>
-              Batal
-            </Button>
-            <Button onClick={handleSave}>Simpan</Button>
-          </div>
-        </div>
-      </Modal>
+      
     </>
   )
 }

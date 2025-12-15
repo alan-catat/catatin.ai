@@ -1,78 +1,101 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import UserInfoCard from "@/components/user-profile/UserInfoCard";
 import UserMetaCard from "@/components/user-profile/UserMetaCard";
-import UserSocialCard from "@/components/user-profile/UserSocialMedia";
+import SocialMediaCard from "@/components/user-profile/UserSocialMedia";
+import PersonalInfoCard from "@/components/user-profile/UserInfoCard";
 
 export default function Profile() {
-  const [profiles, setProfiles] = useState<any[]>([]);
+  const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchProfiles = async () => {
+    const fetchProfile = async () => {
       try {
+        // Ambil email dari localStorage
         const userLocal = JSON.parse(localStorage.getItem("user") || "{}");
-      if (!userLocal.email) {
-        console.warn("Email user tidak ditemukan di localStorage");
-        return;
-      }
-        const res = await fetch(`${process.env.NEXT_PUBLIC_N8N_GETPROFILE_URL}`, {
+        
+        if (!userLocal.email) {
+          console.error("Email tidak ditemukan di localStorage");
+          setLoading(false);
+          return;
+        }
+
+        // Fetch profile dari n8n
+        const res = await fetch(process.env.NEXT_PUBLIC_N8N_GETPROFILE_URL!, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        body: JSON.stringify({ email: userLocal.email }),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: userLocal.email }),
         });
 
-        if (!res.ok) throw new Error("Gagal ambil data dari n8n");
+        if (!res.ok) {
+          throw new Error("Gagal mengambil data profil");
+        }
 
-        const data = await res.json();
-        console.log("Hasil dari n8n:", data);
+        const text = await res.text();
+        console.log("Raw response from n8n:", text); // Debug
+        
+        if (!text) {
+          console.error("Response kosong dari n8n");
+          setLoading(false);
+          return;
+        }
 
-        const formatted = Array.isArray(data) ? data : [data];
-        setProfiles(formatted);
+        // Parse response
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch (parseError) {
+          console.error("Error parsing JSON:", parseError);
+          console.log("Text yang gagal di-parse:", text);
+          setLoading(false);
+          return;
+        }
+
+        console.log("Parsed profile data:", data); // Debug
+
+        // ✅ Set profile data
+        setProfile(data);
+
       } catch (error) {
-        console.error("Error loading profile:", error);
+        console.error("Error fetching profile:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProfiles();
+    fetchProfile();
   }, []);
 
-  if (loading) return <div>Memuat...</div>;
-
-  // fungsi untuk memperbarui satu profile di dalam array
-  const handleProfileUpdate = (index: number, updatedProfile: any) => {
-    setProfiles((prev) =>
-      prev.map((p, i) => (i === index ? { ...p, ...updatedProfile } : p))
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+          <p className="text-gray-600">Memuat profil...</p>
+        </div>
+      </div>
     );
-  };
+  }
+
+  if (!profile) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <p className="text-red-600 font-semibold mb-2">Gagal memuat profil</p>
+          <p className="text-gray-600 text-sm">Silakan refresh halaman atau login ulang</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div>
-      {profiles.map((profile, index) => (
-        <div
-          key={index}
-          className="mt-6 first:mt-0 rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] lg:p-6"
-        >
-          <h3 className="mb-5 text-lg font-semibold text-gray-800 dark:text-white/90 lg:mb-7">
-            Profil
-          </h3>
-          <div className="space-y-10">
-            <div className="space-y-6 border-b border-gray-200 pb-6 last:border-none last:pb-0 dark:border-gray-800">
-              {/* Semua card pakai data dari profile yang sama */}
-              <UserMetaCard profile={profile} />
-              <UserSocialCard profile={profile} />
-              <UserInfoCard
-                profile={profile}
-              />
-            </div>
-          </div>
-        </div>
-      ))}
+    <div className="space-y-6 p-4 lg:p-6">
+      <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Profil</h1>
+      
+      <UserMetaCard profile={profile} />
+      <SocialMediaCard profile={profile} />
+      <PersonalInfoCard profile={profile} />
     </div>
   );
 }

@@ -26,15 +26,15 @@ export default function UserDropdown() {
     const fetchUserFromN8N = async () => {
       try {
         const userLocal = JSON.parse(localStorage.getItem("user") || "{}");
-      if (!userLocal.email) {
-        console.warn("Email user tidak ditemukan di localStorage");
-        return;
-      }
+        if (!userLocal.email) {
+          console.warn("Email user tidak ditemukan di localStorage");
+          return;
+        }
       
         const res = await fetch(process.env.NEXT_PUBLIC_N8N_GETPROFILE_URL!, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: userLocal.email }),
+          body: JSON.stringify({ email: userLocal.email }),
         });
 
         if (!res.ok) throw new Error("Gagal ambil data user dari n8n");
@@ -61,9 +61,9 @@ export default function UserDropdown() {
     fetchUserFromN8N();
   }, []);
 
-  const getInitials = (firstname?: string, lastname?: string) => {
-    const first = firstname?.charAt(0)?.toUpperCase() ?? "";
-    const last = lastname?.charAt(0)?.toUpperCase() ?? "";
+  const getInitials = (firstName?: string, lastName?: string) => {
+    const first = firstName?.charAt(0)?.toUpperCase() ?? "";
+    const last = lastName?.charAt(0)?.toUpperCase() ?? "";
     return (first + last) || "U";
   };
 
@@ -76,11 +76,21 @@ export default function UserDropdown() {
     return url;
   };
 
-  const avatarUrl = user?.avatar
-    ? getDriveUrl(user.avatar)
-    : `https://ui-avatars.com/api/?name=${encodeURIComponent(
-        `${user?.firstName ?? ""} ${user?.lastName ?? ""}`.trim() || "User"
-      )}&background=random&color=fff&bold=true`;
+  const isValidUrl = (url: string) => {
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  // Pastikan avatarUrl valid
+  const avatarUrl = getDriveUrl(user?.avatar || '');
+  const hasValidAvatar = avatarUrl && isValidUrl(avatarUrl);
+  
+  // Perbaikan: gunakan firstName dan lastName, bukan full_name
+  const initials = getInitials(user?.firstName, user?.lastName);
 
   const handleSignOut = () => {
     // hanya redirect, tanpa hapus localstorage
@@ -100,17 +110,18 @@ export default function UserDropdown() {
       <DropdownMenuTrigger asChild>
         <button className="flex items-center space-x-3 focus:outline-none">
           <div className="relative h-11 w-11 rounded-full overflow-hidden bg-gray-300 flex items-center justify-center text-white font-semibold">
-            {user?.avatar ? (
+            {hasValidAvatar ? (
               <Image
                 src={avatarUrl}
                 alt="User Avatar"
                 width={44}
                 height={44}
-                className="object-cover rounded-full"
-                onError={() => console.warn("Gagal load avatar")}
+                className="object-cover"
               />
             ) : (
-              <span>{getInitials(user?.firstName, user?.lastName)}</span>
+              <span className="text-lg">
+                {initials}
+              </span>
             )}
           </div>
 
@@ -130,10 +141,12 @@ export default function UserDropdown() {
         <DropdownMenuItem>
           <div className="flex items-center gap-2">
             <UserIcon size={16} />
-            <span><Link href="/dashboard-user/profile">
-              {`${user?.firstName ?? ""} ${user?.lastName ?? ""}`.trim() ||
-                "User"}
-            </Link></span>
+            <span>
+              <Link href="/dashboard-user/profile">
+                {`${user?.firstName ?? ""} ${user?.lastName ?? ""}`.trim() ||
+                  "User"}
+              </Link>
+            </span>
           </div>
         </DropdownMenuItem>
         <DropdownMenuSeparator />

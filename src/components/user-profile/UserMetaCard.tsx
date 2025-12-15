@@ -10,6 +10,7 @@ import { useAlert } from "../ui/alert/Alert";
 import Image from "next/image";
 import DatePicker from "@/components/form/date-picker";
 
+// ✅ PINDAHKAN SEMUA HELPER FUNCTIONS KE LUAR COMPONENT
 const convertDriveUrl = (url?: string) => {
   if (!url) return "/images/user/edit.png";
   if (url.includes("drive.google.com")) {
@@ -19,6 +20,38 @@ const convertDriveUrl = (url?: string) => {
   return url;
 };
 
+const getDriveUrl = (url?: string) => {
+  if (!url) return "";
+  if (url.includes("drive.google.com")) {
+    const match = url.match(/[-\w]{25,}/);
+    if (match) return `https://drive.google.com/uc?export=view&id=${match[0]}`;
+  }
+  return url;
+};
+
+const isValidUrl = (url: string) => {
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const getInitials = (fullName?: string) => {
+  if (!fullName) return "U";
+  const names = fullName.trim().split(" ");
+  const first = names[0]?.charAt(0)?.toUpperCase() ?? "";
+  const last = names[names.length - 1]?.charAt(0)?.toUpperCase() ?? "";
+  return names.length > 1 ? (first + last) : first || "U";
+};
+
+const formatPhone = (phone?: string | number) => {
+  if (!phone) return "-";
+  return String(phone).replace(/^62/, "+62");
+};
+
+// ✅ COMPONENT UTAMA
 export default function UserMetaCard({ profile }: { profile: any }) {
   const { isOpen, openModal, closeModal } = useModal();
   const { setAlertData } = useAlert();
@@ -36,11 +69,14 @@ export default function UserMetaCard({ profile }: { profile: any }) {
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // ✨ NEW: State untuk custom file input
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // ✅ Process photo URL dengan validasi
+  const processedPhotoUrl = getDriveUrl(profile?.photo_url);
+  const hasValidPhoto = processedPhotoUrl && isValidUrl(processedPhotoUrl);
+  
   // Derived name parts
   const fullName = (formData.full_name || profile?.full_name || "").trim();
   const nameParts = fullName.split(" ");
@@ -63,11 +99,9 @@ export default function UserMetaCard({ profile }: { profile: any }) {
     setIsSuperAdmin(profile.role === "super_admin");
   }, [profile]);
 
-  // ✨ NEW: Handle file selection
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Validasi ukuran file (maks 5MB)
       if (file.size > 5 * 1024 * 1024) {
         setAlertData({
           variant: "error",
@@ -77,7 +111,6 @@ export default function UserMetaCard({ profile }: { profile: any }) {
         return;
       }
 
-      // Validasi tipe file
       if (!file.type.startsWith("image/")) {
         setAlertData({
           variant: "error",
@@ -89,7 +122,6 @@ export default function UserMetaCard({ profile }: { profile: any }) {
 
       setSelectedFile(file);
 
-      // Create preview
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreviewUrl(reader.result as string);
@@ -98,7 +130,6 @@ export default function UserMetaCard({ profile }: { profile: any }) {
     }
   };
 
-  // ✨ NEW: Handle remove file
   const handleRemoveFile = () => {
     setSelectedFile(null);
     setPreviewUrl("");
@@ -111,7 +142,6 @@ export default function UserMetaCard({ profile }: { profile: any }) {
     setSaving(true);
 
     try {
-      // ambil value input manual (defaultValue = uncontrolled)
       const firstName = (document.querySelector<HTMLInputElement>('input[name="firstName"]')?.value || "").trim();
       const lastName = (document.querySelector<HTMLInputElement>('input[name="lastName"]')?.value || "").trim();
       const countryCode = (document.querySelector<HTMLInputElement>('input[name="country_code"]')?.value || "").trim();
@@ -124,7 +154,6 @@ export default function UserMetaCard({ profile }: { profile: any }) {
       const facebook = (document.querySelector<HTMLInputElement>('input[name="facebook"]')?.value || "").trim();
       const tiktok = (document.querySelector<HTMLInputElement>('input[name="tiktok"]')?.value || "").trim();
 
-      // Validation nama
       const effectiveFullName = (formData.full_name || `${firstName} ${lastName}`).trim();
       if (!effectiveFullName) {
         setAlertData({ variant: "error", title: "Validasi Gagal", message: "Nama lengkap wajib diisi." });
@@ -132,13 +161,19 @@ export default function UserMetaCard({ profile }: { profile: any }) {
         return;
       }
 
-      // final phone
       let finalPhone = phoneNumberInput || formData.phone_number || profile?.phone_number || null;
-      if (countryCode && finalPhone && !finalPhone.startsWith(countryCode)) {
-        finalPhone = `${countryCode}${finalPhone}`;
+
+      if (finalPhone) {
+        const phoneStr = String(finalPhone).trim();
+        if (countryCode && phoneStr && !phoneStr.startsWith(countryCode)) {
+          finalPhone = `${countryCode}${phoneStr}`;
+        } else {
+          finalPhone = phoneStr;
+        }
+      } else {
+        finalPhone = null;
       }
 
-      // ✅ UPDATED: Upload file menggunakan selectedFile dari state
       let uploadedUrl = profile?.photo_url || null;
 
       if (selectedFile) {
@@ -165,7 +200,6 @@ export default function UserMetaCard({ profile }: { profile: any }) {
         uploadedUrl = uploadData?.fileUrl || uploadedUrl;
       }
 
-      // payload update
       const payload = {
         email: userEmail || profile?.email || "",
         first_name: firstName || nameParts[0] || "",
@@ -189,14 +223,12 @@ export default function UserMetaCard({ profile }: { profile: any }) {
 
       if (!res.ok) throw new Error("Gagal update profil");
 
-      // SUCCESS → tampilkan alert
       setAlertData({
         variant: "success",
         title: "Berhasil",
         message: "Profil berhasil diperbarui",
       });
 
-      // REFRESH HANYA SEKALI
       setTimeout(() => {
         window.location.reload();
       }, 500);
@@ -214,24 +246,25 @@ export default function UserMetaCard({ profile }: { profile: any }) {
     }
   };
 
-  const formatPhone = (phone?: string) => {
-    if (!phone) return "-";
-    return phone.replace(/^62/, "+62");
-  };
-
   return (
     <div className="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
       <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
         <div className="flex flex-col items-center w-full gap-6 xl:flex-row">
-          <div className="w-20 h-20 overflow-hidden border border-gray-200 rounded-full dark:border-gray-800">
-            <Image
-              width={80}
-              height={80}
-              src={photoUrl}
-              alt={profile?.full_name || "user"}
-              className="w-full h-full object-cover"
-              onError={() => setPhotoUrl("/images/user/edit.png")}
-            />
+          <div className="w-20 h-20 overflow-hidden border border-gray-200 rounded-full dark:border-gray-800 flex items-center justify-center bg-gray-300">
+            {hasValidPhoto ? (
+              <Image
+                width={80}
+                height={80}
+                src={processedPhotoUrl}
+                alt={profile?.full_name || "user"}
+                className="w-full h-full object-cover"
+                onError={() => setPhotoUrl("/images/user/edit.png")}
+              />
+            ) : (
+              <span className="text-2xl font-semibold text-white">
+                {getInitials(fullName)}
+              </span>
+            )}
           </div>
 
           <div className="order-3 xl:order-2">
@@ -274,11 +307,9 @@ export default function UserMetaCard({ profile }: { profile: any }) {
                 <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90">Informasi Pribadi</h5>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 w-full">
-                  {/* ✨ NEW: Custom File Input */}
                   <div className="col-span-2">
                     <Label>Foto Profil</Label>
                     
-                    {/* Hidden native input */}
                     <input
                       ref={fileInputRef}
                       type="file"
@@ -288,9 +319,7 @@ export default function UserMetaCard({ profile }: { profile: any }) {
                       className="hidden"
                     />
 
-                    {/* Custom UI */}
                     <div className="mt-2">
-                      {/* Preview Image */}
                       {previewUrl && (
                         <div className="mb-4">
                           <img
@@ -301,7 +330,6 @@ export default function UserMetaCard({ profile }: { profile: any }) {
                         </div>
                       )}
 
-                      {/* File info or button */}
                       {selectedFile ? (
                         <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                           <div className="flex-1">

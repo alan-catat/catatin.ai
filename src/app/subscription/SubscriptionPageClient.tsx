@@ -3,314 +3,315 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearchParams, useRouter } from "next/navigation";
-import { createClient } from "@/utils/supabase/client";
 import Input from "@/components/form/input/InputField";
 import Button from "@/components/ui/button/Button";
 import { Eye, EyeOff } from "lucide-react";
 
 const steps = ["Registrasi Akun", "Validasi Akun", "Pembayaran", "Selesai"];
 
+// URL N8N Webhooks - GANTI DENGAN URL N8N ANDA
+const N8N_BASE_URL = "https://n8n.srv1074739.hstgr.cloud/webhook";
+
 export default function SubscriptionPageClient() {
     const searchParams = useSearchParams();
-    const stepParam = searchParams.get("step");
-
-    // set default step dari URL, kalau tidak ada -> 0
-    const [step, setStep] = useState(stepParam ? parseInt(stepParam, 10) : 0);
-
     const router = useRouter();
-    const supabase = createClient();
 
-    const planName = searchParams.get("plan") || "free";
-    const [plan, setPlan] = useState<any>(null);
-    const [billingCycle, setBillingCycle] = useState<"monthly" | "annually">("monthly");
+    // Ambil data dari URL
+    const packageId = searchParams.get("package");
+    const planName = searchParams.get("plan") || "Biar Kebiasa";
+    const billingCycle = searchParams.get("billing") || "monthly";
+    const price = searchParams.get("price") || "0";
 
+    const [step, setStep] = useState(0);
     const [fullName, setFullName] = useState("");
-    const [email, setEmail] = useState("");
+    const [Email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState<string | null>(null);
     const [proof, setProof] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
     const [userId, setUserId] = useState<string | null>(null);
-    const [showPassword, setShowPassword] = useState(false)
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-    // Accordion state
-    const [showQRIS, setShowQRIS] = useState(false);
-    const [showBank, setShowBank] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [verificationCode, setVerificationCode] = useState("");
+    const [virtualAccount, setVirtualAccount] = useState<string>("");
+const [selectedBank, setSelectedBank] = useState<string>("");
 
+    // Load progress dari localStorage
     useEffect(() => {
-        const stepFromUrl = searchParams.get("step");
-        if (stepFromUrl) {
-            setStep(parseInt(stepFromUrl, 10));
+        const saved = localStorage.getItem("subscription_progress");
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            if (parsed.step) setStep(parsed.step);
+            if (parsed.fullName) setFullName(parsed.fullName);
+            if (parsed.Email) setEmail(parsed.Email);
+            if (parsed.userId) setUserId(parsed.userId);
         }
-    }, [searchParams]);
+    }, []);
 
-    useEffect(() => {
-        const fetchPlan = async () => {
-            const { data, error } = await supabase
-                .from("packages")
-                .select(
-                    `id, name, price, token_limit, 
-           billing_plans (id, billing_cycle, price, duration_days)`
-                )
-                .eq("name", planName.charAt(0).toUpperCase() + planName.slice(1))
-                .single();
+    const saveProgress = (stepNumber: number) => {
+    setStep(stepNumber);
 
-            if (!error) setPlan(data);
-        };
-        fetchPlan();
-    }, [planName, supabase]);
+    const nameParts = fullName.trim().split(/\s+/);
+    const firstName = nameParts[0] || "";
+    const lastName = nameParts.slice(1).join(" "); // bisa kosong kalau cuma 1 kata
 
-    const nextStep = () => setStep((s) => Math.min(s + 1, steps.length - 1));
+    localStorage.setItem(
+        "subscription_progress",
+        JSON.stringify({
+            Timestamp: new Date().toISOString(),
+            step: stepNumber,
+            plan: planName,
+            firstName,
+            lastName,
+            Email,
+            userId,
+        })
+    );
+};
+
+
+    const nextStep = () => {
+        const newStep = Math.min(step + 1, steps.length - 1);
+        saveProgress(newStep);
+    };
+
     const prevStep = () => {
         const newStep = Math.max(step - 1, 0);
-        setStep(newStep);
-        localStorage.setItem(
-            "subscription_progress",
-            JSON.stringify({
-                step: newStep,
-                plan: planName,
-                fullName,
-                email,
-            })
-        );
+        saveProgress(newStep);
     };
 
-    // ganti saveProgress agar simpan step + plan
-    const saveProgress = (stepNumber: number) => {
-        setStep(stepNumber);
-        localStorage.setItem(
-            "subscription_progress",
-            JSON.stringify({
-                step: stepNumber,
-                plan: planName,
-                fullName,
-                email,
-            })
-        );
-    };
-
-    useEffect(() => {
-        const restoreProgress = async () => {
-            const { data, error } = await supabase.auth.getUser();
-
-            const saved = localStorage.getItem("subscription_progress");
-            const parsed = saved ? JSON.parse(saved) : null;
-
-            if (!error && data?.user) {
-                setUserId(data.user.id);
-
-                // isi ulang nama & email dari localStorage kalau ada
-                if (parsed) {
-                    if (parsed.fullName) setFullName(parsed.fullName);
-                    if (parsed.email) setEmail(parsed.email);
-                }
-
-                if (!data.user.email_confirmed_at) {
-                    setStep(1); // validasi
-                } else {
-                    setStep(parsed?.step ?? 2); // kalau ada progress lanjut, kalau nggak default ke pembayaran
-                }
-            } else {
-                setStep(0); // registrasi ulang
-            }
-        };
-
-        restoreProgress();
-    }, [supabase]);
-    // state tambahan
-    const [activePaymentMethod, setActivePaymentMethod] = useState<string | null>(null);
-    const [paymentConfig, setPaymentConfig] = useState<any>({});
-
-    // ambil dari system_settings + payment_methods
-    useEffect(() => {
-        const loadPaymentSettings = async () => {
-            // cek setting aktif
-            const { data: sys } = await supabase
-                .from("system_settings")
-                .select("value")
-                .eq("key", "PAYMENT_METHOD")
-                .single();
-
-            if (sys?.value) {
-                setActivePaymentMethod(sys.value);
-
-                // ambil config payment_methods sesuai type
-                const { data: pm } = await supabase
-                    .from("payment_methods")
-                    .select("config")
-                    .eq("type", sys.value)
-                    .maybeSingle();
-
-                if (pm?.config) {
-                    setPaymentConfig(pm.config);
-                }
-            }
-        };
-
-        loadPaymentSettings();
-    }, [supabase]);
     // Step 0: Registrasi
     const handleSignup = async () => {
+        const nameParts = fullName.trim().split(/\s+/);
+const firstName = nameParts[0] || "";
+const lastName = nameParts.slice(1).join(" ");
+
         if (!termsAccepted) {
             alert("Harap centang Terms & Conditions sebelum mendaftar.");
             return;
         }
 
-        setLoading(true);
-        const { error } = await supabase.auth.signUp({
-            email,
-            password,
-            options: { emailRedirectTo: `${location.origin}/auth/callback` },
-        });
-
-        if (error) {
-            let friendlyMessage = "Terjadi kesalahan. Silakan coba lagi.";
-
-            if (error.message.includes("invalid email")) {
-                friendlyMessage = "Format email tidak valid. Mohon periksa kembali.";
-            } else if (error.message.includes("already registered")) {
-                friendlyMessage = "Email ini sudah terdaftar. Silakan login atau gunakan email lain.";
-            } else if (error.message.includes("password")) {
-                friendlyMessage = "Password terlalu lemah. Gunakan minimal 8 karakter dengan huruf & angka.";
-            }
-
-            alert(friendlyMessage);
-            setLoading(false);
+        if (password !== confirmPassword) {
+            alert("Password dan konfirmasi password tidak sama.");
             return;
         }
 
-        alert("Registrasi berhasil 🎉 Silakan cek email Anda untuk konfirmasi.");
-        saveProgress(1);
-        nextStep(); // -> step 1 validasi akun
-        setLoading(false);
-    };
-
-
-    // Step 1: Validasi Akun
-    const handleValidate = async () => {
-        const { data, error } = await supabase.auth.getUser();
-        if (error || !data.user) {
-            alert("Belum ada konfirmasi email. Cek inbox/spam email Anda.");
+        if (password.length < 8) {
+            alert("Password minimal 8 karakter.");
             return;
         }
-        setUserId(data.user.id);
-
-        // update nama di user_profiles
-        await supabase.from("user_profiles").update({
-            full_name: fullName,
-            terms_accepted: termsAccepted,
-            activated_at: new Date().toISOString(),
-        }).eq("user_id", data.user.id);
-        saveProgress(2);
-        nextStep(); // -> step 2 pembayaran
-    };
-
-    // Step 2: Pembayaran
-    const handlePayment = async () => {
-        if (!paymentMethod) return alert("Pilih metode pembayaran");
-        if (!plan || !userId) return;
 
         setLoading(true);
         try {
-            const billingPlan = plan.billing_plans.find(
-                (bp: any) => bp.billing_cycle === billingCycle
-            );
+    const response = await fetch(`${N8N_BASE_URL}/SignUp`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            Timestamp: new Date().toISOString(),
+            FirstName: firstName,
+            LastName: lastName,
+            Email,
+            password,
+            plan: planName,
+            packageId,
+        }),
+    });
 
-            // Step 1: Insert payment
-            const { data: payment } = await supabase
-                .from("payments")
-                .insert({
-                    user_id: userId,
-                    amount_payment: billingPlan.price,
-                    payment_method: paymentMethod,
-                    payment_status: paymentMethod.includes("manual") ? "paid" : "pending",
-                    paid_at: paymentMethod.includes("manual") ? new Date().toISOString() : null,
-                })
-                .select()
-                .single();
+            const data = await response.json();
 
-            // Step 2: Insert transaction
-            const { data: transaction } = await supabase
-                .from("transactions")
-                .insert({
-                    billing_plan_id: billingPlan.id,
-                    notes: `Transaction for user ${userId}`,
-                })
-                .select()
-                .single();
-
-            // Step 3: Insert transaction_details
-            let orderId = `ORD-${Math.floor(Math.random() * 10000) + 1}`;
-            let invoiceUrl = "";
-            let paymentCode = "";
-
-            if (paymentMethod.includes("manual")) {
-                // Manual → generate invoice_url & payment_code dummy
-                invoiceUrl = `https://example.com/invoice${orderId}`;
-                paymentCode = `PAY${orderId}`;
-            } else if (paymentMethod === "gateway") {
-                // Gateway → redirect Midtrans, token di-handle di API
-                const res = await fetch("/api/midtrans/checkout", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        userId,
-                        amount: billingPlan.price,
-                        items: [
-                            {
-                                id: billingPlan.id,
-                                price: billingPlan.price,
-                                quantity: 1,
-                                name: plan.name,
-                            },
-                        ],
-                    }),
-                });
-                const data = await res.json();
-                if (data?.redirect_url) {
-                    window.location.href = data.redirect_url;
-                    return; // langsung redirect ke Midtrans
-                } else {
-                    throw new Error("Gagal membuat transaksi gateway");
-                }
+            if (!response.ok) {
+                alert(data.message || "Registrasi gagal. Silakan coba lagi.");
+                return;
             }
 
-            await supabase.from("transaction_details").insert({
-                order_id: orderId,
-                gateway: paymentMethod.includes("manual") ? "manual" : "gateway",
-                response_payload: JSON.stringify({}),
-                invoice_url: invoiceUrl,
-                payment_code: paymentCode,
-                transaction_id: transaction?.id,
-            });
-
-            // Step 4: Insert subscription
-            const startDate = new Date();
-            const endDate = new Date();
-            endDate.setDate(startDate.getDate() + billingPlan.duration_days);
-
-            await supabase.from("user_subscriptions").insert({
-                user_id: userId,
-                payment_id: payment?.id,
-                status: paymentMethod.includes("manual") ? "active" : "pending",
-                start_date: startDate.toISOString(),
-                end_date: endDate.toISOString(),
-            });
-
-            saveProgress(3);
-            nextStep(); // -> step 3 selesai
-        } catch (err) {
-            console.error("Payment error:", err);
-            alert("Terjadi kesalahan saat memproses pembayaran");
+            setUserId(data.userId);
+            alert("Registrasi berhasil 🎉 Kode verifikasi telah dikirim ke Email Anda.");
+            nextStep();
+        } catch (error) {
+            console.error("Signup error:", error);
+            alert("Terjadi kesalahan. Silakan coba lagi.");
         } finally {
             setLoading(false);
         }
     };
 
+    // Step 1: Validasi Akun
+    const handleValidate = async () => {
+        if (!verificationCode) {
+            alert("Masukkan kode verifikasi dari Email Anda.");
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const response = await fetch(`${N8N_BASE_URL}/verify-account`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    Email,
+                    token: verificationCode,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                alert(data.message || "Kode verifikasi salah.");
+                return;
+            }
+
+            alert("Email berhasil diverifikasi! ✅");
+            nextStep();
+        } catch (error) {
+            console.error("Validation error:", error);
+            alert("Terjadi kesalahan. Silakan coba lagi.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Step 2: Pembayaran
+    const handlePayment = async () => {
+        if (!paymentMethod) {
+            alert("Pilih metode pembayaran");
+            return;
+        }
+        if (paymentMethod === 'va' && !virtualAccount) {
+        alert("Pilih bank untuk generate Virtual Account");
+        return;
+    }
+
+    // Validasi bukti transfer
+    if (!proof) {
+        alert("Upload bukti transfer terlebih dahulu");
+        return;
+    }
+
+        setLoading(true);
+        try {
+            const formData = new FormData();
+            formData.append("userId", userId || "");
+            formData.append("Email", Email);
+            formData.append("plan", planName);
+            formData.append("billingCycle", billingCycle);
+            formData.append("amount", price);
+            formData.append("paymentMethod", paymentMethod);
+            if (paymentMethod === 'va') {
+            formData.append("virtualAccount", virtualAccount);
+            formData.append("bankCode", selectedBank);
+        }
+        
+        if (proof) formData.append("proof", proof);
+
+            const response = await fetch(`${N8N_BASE_URL}/payment`, {
+                method: "POST",
+                body: formData,
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                alert(data.message || "Pembayaran gagal.");
+                return;
+            }
+
+            alert("Pembayaran berhasil diproses! 💳");
+            nextStep();
+        } catch (error) {
+            console.error("Payment error:", error);
+            alert("Terjadi kesalahan saat memproses pembayaran.");
+        } finally {
+            setLoading(false);
+        }
+    };
+const [paymentDetails, setPaymentDetails] = useState({
+    bank: {
+        name: "Bank BCA",
+        accountNumber: "1234567890",
+        accountName: "PT. Monivo Global Teknologi",
+        instructions: "Transfer sesuai nominal yang tertera dan upload bukti transfer"
+    },
+    qris: {
+        qrImage: "/path/to/qris-code.png", // Ganti dengan path QR code Anda
+        instructions: "Scan QR code menggunakan aplikasi mobile banking atau e-wallet"
+    },
+    ewallet: {
+        options: [
+            { name: "GoPay", number: "081234567890" },
+            { name: "OVO", number: "081234567890" },
+            { name: "Dana", number: "081234567890" }
+        ],
+        instructions: "Transfer ke nomor e-wallet yang dipilih"
+    }
+});
+
+// Fungsi untuk generate VA number (bisa dipanggil di backend/N8N)
+const generateVirtualAccount = (bankCode: string, userId: string) => {
+    // Format: [Bank Code 3 digit][Company Code 4 digit][User ID hash 6 digit]
+    const companyCode = "1001"; // Kode perusahaan Anda
+    
+    // Hash userId menjadi 6 digit
+    const userHash = Math.abs(hashCode(userId)).toString().padStart(6, '0').slice(0, 6);
+    
+    return `${bankCode}${companyCode}${userHash}`;
+};
+
+// Simple hash function
+const hashCode = (str: string): number => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
+    }
+    return hash;
+};
+
+const bankVAOptions = [
+    { 
+        code: "014", 
+        name: "BCA", 
+        logo: "🏦",
+        ownerAccount: "1234567890",
+        ownerName: "PT. Monivo Global Teknologi"
+    },
+    { 
+        code: "008", 
+        name: "Mandiri", 
+        logo: "🏦",
+        ownerAccount: "9876543210",
+        ownerName: "PT. Monivo Global Teknologi"
+    },
+    { 
+        code: "009", 
+        name: "BNI", 
+        logo: "🏦",
+        ownerAccount: "5555666677",
+        ownerName: "PT. Monivo Global Teknologi"
+    },
+    { 
+        code: "002", 
+        name: "BRI", 
+        logo: "🏦",
+        ownerAccount: "3333444455",
+        ownerName: "PT. Monivo Global Teknologi"
+    },
+];
+
+// Fungsi untuk generate VA saat user pilih bank
+const handleBankSelect = (bankCode: string) => {
+    setSelectedBank(bankCode);
+    const va = generateVirtualAccount(bankCode, userId || "");
+    setVirtualAccount(va);
+};
+
 
     return (
-        <div className="min-h-screen flex flex-col bg-gray-50">
+        <div className="min-h-screen flex flex-col bg-gradient-to-b from-blue-50 to-cyan-50">
             <div className="flex flex-col items-center justify-center flex-1 px-6 py-12">
                 {/* Stepper */}
                 <div className="w-full max-w-3xl mb-12">
@@ -318,16 +319,18 @@ export default function SubscriptionPageClient() {
                         {steps.map((label, idx) => (
                             <div key={idx} className="flex-1 flex flex-col items-center">
                                 <div
-                                    className={`w-10 h-10 flex items-center justify-center rounded-full text-sm font-bold transition-all ${idx <= step
-                                        ? "bg-indigo-600 text-white shadow-lg"
-                                        : "bg-gray-300 text-gray-600"
-                                        }`}
+                                    className={`w-10 h-10 flex items-center justify-center rounded-full text-sm font-bold transition-all ${
+                                        idx <= step
+                                            ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg"
+                                            : "bg-gray-300 text-gray-600"
+                                    }`}
                                 >
                                     {idx + 1}
                                 </div>
                                 <span
-                                    className={`mt-2 text-xs sm:text-sm ${idx === step ? "text-indigo-600 font-semibold" : "text-gray-500"
-                                        }`}
+                                    className={`mt-2 text-xs sm:text-sm ${
+                                        idx === step ? "text-blue-600 font-semibold" : "text-gray-500"
+                                    }`}
                                 >
                                     {label}
                                 </span>
@@ -335,10 +338,22 @@ export default function SubscriptionPageClient() {
                         ))}
                         <div className="absolute top-5 left-5 right-5 h-0.5 bg-gray-200 -z-10">
                             <div
-                                className="h-0.5 bg-indigo-600 transition-all duration-500"
+                                className="h-0.5 bg-gradient-to-r from-blue-600 to-cyan-600 transition-all duration-500"
                                 style={{ width: `${(step / (steps.length - 1)) * 100}%` }}
                             />
                         </div>
+                    </div>
+                </div>
+
+                {/* Paket Info */}
+                <div className="bg-white rounded-xl shadow-md p-4 mb-6 max-w-xl w-full">
+                    <h3 className="font-semibold text-gray-700 mb-2">Paket Dipilih:</h3>
+                    <div className="flex justify-between items-center">
+                        <span className="text-lg font-bold text-blue-600">{planName}</span>
+                        <span className="text-xl font-bold text-gray-900">
+                            Rp{parseInt(price).toLocaleString("id-ID")}
+                            <span className="text-sm text-gray-500">/{billingCycle === "monthly" ? "bulan" : "tahun"}</span>
+                        </span>
                     </div>
                 </div>
 
@@ -355,15 +370,23 @@ export default function SubscriptionPageClient() {
                                 className="space-y-5"
                             >
                                 <h2 className="text-2xl font-bold text-gray-800">Registrasi Akun</h2>
-                                <Input placeholder="Nama Lengkap" value={fullName} onChange={e => setFullName(e.target.value)} />
-                                <Input placeholder="Email" type="email" value={email} onChange={e => setEmail(e.target.value)} />
-                                {/* Password input dengan icon mata */}
+                                <Input
+                                    placeholder="Nama Lengkap"
+                                    value={fullName}
+                                    onChange={(e) => setFullName(e.target.value)}
+                                />
+                                <Input
+                                    placeholder="Email"
+                                    type="Email"
+                                    value={Email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                />
                                 <div className="relative">
                                     <Input
                                         type={showPassword ? "text" : "password"}
                                         placeholder="Password"
                                         value={password}
-                                        onChange={e => setPassword(e.target.value)}
+                                        onChange={(e) => setPassword(e.target.value)}
                                         className="pr-10"
                                     />
                                     <button
@@ -374,7 +397,22 @@ export default function SubscriptionPageClient() {
                                         {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                     </button>
                                 </div>
-                                {/* Validasi password */}
+                                <div className="relative">
+                                    <Input
+                                        type={showConfirmPassword ? "text" : "password"}
+                                        placeholder="Konfirmasi Password"
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                        className="pr-10"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                                    >
+                                        {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
+                                </div>
                                 {password && (
                                     <ul className="text-xs text-gray-500 space-y-1">
                                         <li className={password.length >= 8 ? "text-green-600" : "text-red-500"}>
@@ -386,11 +424,20 @@ export default function SubscriptionPageClient() {
                                         <li className={/[0-9]/.test(password) ? "text-green-600" : "text-red-500"}>
                                             • Ada angka
                                         </li>
+                                        <li className={password === confirmPassword && password ? "text-green-600" : "text-red-500"}>
+                                            • Password cocok
+                                        </li>
                                     </ul>
                                 )}
                                 <div className="flex items-center gap-2">
-                                    <input type="checkbox" checked={termsAccepted} onChange={e => setTermsAccepted(e.target.checked)} />
-                                    <span className="text-sm text-gray-600">Saya menyetujui Terms & Conditions</span>
+                                    <input
+                                        type="checkbox"
+                                        checked={termsAccepted}
+                                        onChange={(e) => setTermsAccepted(e.target.checked)}
+                                    />
+                                    <span className="text-sm text-gray-600">
+                                        Saya menyetujui Terms & Conditions
+                                    </span>
                                 </div>
                                 <Button className="w-full mt-4" onClick={handleSignup} disabled={loading}>
                                     {loading ? "Loading..." : "Daftar & Cek Email →"}
@@ -409,138 +456,378 @@ export default function SubscriptionPageClient() {
                             >
                                 <h2 className="text-2xl font-bold text-gray-800">Validasi Akun</h2>
                                 <p className="text-gray-500">
-                                    Kami telah mengirim link konfirmasi ke:
+                                    Kami telah mengirim kode verifikasi ke:
                                     <br />
-                                    <span className="font-semibold text-gray-800">{email}</span>
+                                    <span className="font-semibold text-gray-800">{Email}</span>
                                 </p>
-                                <p className="text-sm text-gray-400">
-                                    Jika email salah, silakan kembali dan perbaiki.
-                                </p>
-
+                                <Input
+                                    placeholder="Masukkan Kode Verifikasi"
+                                    value={verificationCode}
+                                    onChange={(e) => setVerificationCode(e.target.value)}
+                                    className="text-center text-2xl tracking-widest"
+                                />
                                 <div className="flex flex-col sm:flex-row gap-3 justify-center mt-4">
-                                    <Button variant="outline" onClick={() => prevStep()}>
+                                    <Button variant="outline" onClick={prevStep}>
                                         ← Kembali
                                     </Button>
-                                    <Button onClick={handleValidate}>Saya Sudah Konfirmasi Email</Button>
+                                    <Button onClick={handleValidate} disabled={loading}>
+                                        {loading ? "Memverifikasi..." : "Verifikasi Email"}
+                                    </Button>
                                 </div>
                             </motion.div>
                         )}
 
+                        {/* Step 2: Pembayaran */}
+                        {step === 2 && (
+    <motion.div
+        key="step2"
+        initial={{ opacity: 0, x: 50 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -50 }}
+        className="space-y-5"
+    >
+        <h2 className="text-2xl font-bold text-gray-800">Pembayaran</h2>
+        
+        {/* Ringkasan Pembayaran */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h3 className="font-semibold text-gray-800 mb-2">Ringkasan Pembayaran</h3>
+            <div className="space-y-1 text-sm">
+                <p><span className="font-medium">Paket:</span> {planName}</p>
+                <p><span className="font-medium">Periode:</span> {billingCycle === 'monthly' ? 'Bulanan' : 'Tahunan'}</p>
+                <p className="text-lg font-bold text-blue-600 mt-2">
+                    Total: Rp {parseInt(price).toLocaleString('id-ID')}
+                </p>
+            </div>
+        </div>
 
-                        {/* Step 2: Payment */}
-                        {step === 2 && plan && (
-                            <motion.div
-                                key="step2"
-                                initial={{ opacity: 0, x: 50 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -50 }}
-                                transition={{ duration: 0.3 }}
-                                className="space-y-5"
-                            >
-                                <h2 className="text-2xl font-bold text-gray-800">Pembayaran</h2>
+        {/* Pilihan Metode Pembayaran */}
+        <div className="space-y-3">
+            <h3 className="font-semibold text-gray-800">Pilih Metode Pembayaran</h3>
+            
+            {/* Transfer Bank */}
+            <label className="block">
+                <div className="border rounded-lg p-4 cursor-pointer hover:border-blue-500 transition-colors">
+                    <div className="flex items-center">
+                        <input
+                            type="radio"
+                            name="payment"
+                            value="bank"
+                            checked={paymentMethod === 'bank'}
+                            onChange={(e) => setPaymentMethod(e.target.value)}
+                            className="mr-3"
+                        />
+                        <div className="flex-1">
+                            <span className="font-medium">Transfer Bank</span>
+                            <p className="text-sm text-gray-500">Transfer melalui ATM, Internet Banking, atau Mobile Banking</p>
+                        </div>
+                    </div>
+                </div>
+            </label>
 
-                                {activePaymentMethod === "manual" && (
-                                    <>
-                                        {/* QRIS */}
-                                        {paymentConfig.QRIS && (
-                                            <div className="border rounded-lg">
-                                                <button
-                                                    className="w-full text-left px-4 py-2 font-medium"
-                                                    onClick={() => setShowQRIS(!showQRIS)}
-                                                >
-                                                    QRIS
-                                                </button>
-                                                {showQRIS && (
-                                                    <div className="p-4">
-                                                        <img
-                                                            src={paymentConfig.QRIS}
-                                                            alt="QRIS"
-                                                            className="w-40 mx-auto"
-                                                        />
-                                                        <button
-                                                            className="mt-2 bg-indigo-600 text-white px-4 py-2 rounded w-full"
-                                                            onClick={() => setPaymentMethod("manual_qris")}
-                                                        >
-                                                            Pilih QRIS
-                                                        </button>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
+            {/* QRIS */}
+            <label className="block">
+                <div className="border rounded-lg p-4 cursor-pointer hover:border-blue-500 transition-colors">
+                    <div className="flex items-center">
+                        <input
+                            type="radio"
+                            name="payment"
+                            value="qris"
+                            checked={paymentMethod === 'qris'}
+                            onChange={(e) => setPaymentMethod(e.target.value)}
+                            className="mr-3"
+                        />
+                        <div className="flex-1">
+                            <span className="font-medium">QRIS</span>
+                            <p className="text-sm text-gray-500">Scan & bayar dengan semua aplikasi pembayaran</p>
+                        </div>
+                    </div>
+                </div>
+            </label>
 
-                                        {/* Upload bukti transfer */}
-                                        <input
-                                            type="file"
-                                            className="w-full border rounded p-2"
-                                            onChange={(e) =>
-                                                setProof(e.target.files ? e.target.files[0] : null)
-                                            }
-                                        />
-                                    </>
-                                )}
+            {/* E-Wallet */}
+            <label className="block">
+                <div className="border rounded-lg p-4 cursor-pointer hover:border-blue-500 transition-colors">
+                    <div className="flex items-center">
+                        <input
+                            type="radio"
+                            name="payment"
+                            value="ewallet"
+                            checked={paymentMethod === 'ewallet'}
+                            onChange={(e) => setPaymentMethod(e.target.value)}
+                            className="mr-3"
+                        />
+                        <div className="flex-1">
+                            <span className="font-medium">E-Wallet</span>
+                            <p className="text-sm text-gray-500">GoPay, OVO, Dana, dan lainnya</p>
+                        </div>
+                    </div>
+                </div>
+            </label>
+        </div>
 
-                                {activePaymentMethod === "gateway" && (
-                                    <div className="border rounded-lg p-4">
-                                        <h3 className="font-semibold">Payment Gateway</h3>
-                                        <p className="text-sm text-gray-500 mb-3">
-                                            Metode pembayaran otomatis melalui Midtrans
-                                        </p>
-                                        <button
-                                            className="bg-indigo-600 text-white px-4 py-2 rounded w-full"
-                                            onClick={async () => {
-                                                try {
-                                                    setLoading(true);
+        <label className="block">
+    <div className="border rounded-lg p-4 cursor-pointer hover:border-blue-500 transition-colors">
+        <div className="flex items-center">
+            <input
+                type="radio"
+                name="payment"
+                value="va"
+                checked={paymentMethod === 'va'}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+                className="mr-3"
+            />
+            <div className="flex-1">
+                <span className="font-medium">Virtual Account</span>
+                <p className="text-sm text-gray-500">Nomor rekening virtual khusus untuk Anda</p>
+            </div>
+        </div>
+    </div>
+</label>
 
-                                                    const res = await fetch("/api/midtrans/checkout", {
-                                                        method: "POST",
-                                                        headers: { "Content-Type": "application/json" },
-                                                        body: JSON.stringify({
-                                                            userId,
-                                                            amount: plan.price,
-                                                            items: [
-                                                                {
-                                                                    id: plan.id,
-                                                                    price: plan.price,
-                                                                    quantity: 1,
-                                                                    name: plan.name,
-                                                                },
-                                                            ],
-                                                        }),
-                                                    });
+        {/* Detail Pembayaran berdasarkan metode yang dipilih */}
+        {paymentMethod && (
+            <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                className="bg-gray-50 border rounded-lg p-4 space-y-3"
+            >
+                <h3 className="font-semibold text-gray-800">Pilih Bank untuk Virtual Account</h3>
+                
+                {/* Transfer Bank */}
+                {paymentMethod === 'bank' && (
+                    <div className="space-y-3">
+                        <div className="bg-white rounded p-3 space-y-2">
+                            <div className="flex justify-between">
+                                <span className="text-gray-600">Bank:</span>
+                                <span className="font-semibold">{paymentDetails.bank.name}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-gray-600">No. Rekening:</span>
+                                <span className="font-semibold font-mono">{paymentDetails.bank.accountNumber}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-gray-600">Atas Nama:</span>
+                                <span className="font-semibold">{paymentDetails.bank.accountName}</span>
+                            </div>
+                        </div>
+                        <p className="text-sm text-gray-600 bg-yellow-50 border border-yellow-200 rounded p-2">
+                            ⚠️ {paymentDetails.bank.instructions}
+                        </p>
+                    </div>
+                )}
 
-                                                    const data = await res.json();
+                {/* QRIS */}
+                {paymentMethod === 'qris' && (
+                    <div className="space-y-3">
+                        <div className="bg-white rounded p-4 flex flex-col items-center">
+                            {/* Placeholder untuk QR Code - ganti dengan gambar asli */}
+                            <div className="w-64 h-64 bg-gray-200 flex items-center justify-center rounded">
+                                <div className="text-center">
+                                    <p className="text-gray-500 mb-2">QR Code</p>
+                                    <p className="text-xs text-gray-400">Scan untuk membayar</p>
+                                </div>
+                            </div>
+                            {/* Jika Anda punya gambar QR:
+                            <img 
+                                src={paymentDetails.qris.qrImage} 
+                                alt="QRIS Code" 
+                                className="w-64 h-64"
+                            />
+                            */}
+                        </div>
+                        <p className="text-sm text-gray-600 bg-yellow-50 border border-yellow-200 rounded p-2">
+                            ℹ️ {paymentDetails.qris.instructions}
+                        </p>
+                    </div>
+                )}
 
-                                                    if (data?.redirect_url) {
-                                                        window.location.href = data.redirect_url; // langsung redirect ke Snap
-                                                    } else {
-                                                        alert("Gagal memproses pembayaran");
-                                                    }
-                                                } catch (err) {
-                                                    console.error("Midtrans checkout error:", err);
-                                                    alert("Terjadi kesalahan saat membuat transaksi");
-                                                } finally {
-                                                    setLoading(false);
-                                                }
-                                            }}
-                                        >
-                                            Bayar dengan Gateway
-                                        </button>
-                                    </div>
-                                )}
+                {/* E-Wallet */}
+                {paymentMethod === 'ewallet' && (
+                    <div className="space-y-3">
+                        <div className="bg-white rounded p-3 space-y-2">
+                            {paymentDetails.ewallet.options.map((wallet, idx) => (
+                                <div key={idx} className="flex justify-between items-center py-2 border-b last:border-0">
+                                    <span className="font-medium">{wallet.name}</span>
+                                    <span className="font-mono text-sm">{wallet.number}</span>
+                                </div>
+                            ))}
+                        </div>
+                        <p className="text-sm text-gray-600 bg-yellow-50 border border-yellow-200 rounded p-2">
+                            ℹ️ {paymentDetails.ewallet.instructions}
+                        </p>
+                    </div>
+                )}
+            </motion.div>
+        )}
 
+        
 
-                                {!activePaymentMethod && (
-                                    <p className="text-gray-500 text-sm">
-                                        Tidak ada metode pembayaran yang aktif. Hubungi admin.
-                                    </p>
-                                )}
+        {/* Upload Bukti Transfer */}
+        {paymentMethod && (
+            <div>
+                <label className="block text-sm font-medium mb-2">
+                    Upload Bukti Transfer *
+                </label>
+                <input
+                    type="file"
+                    accept="image/*"
+                    className="w-full border rounded p-2"
+                    onChange={(e) => setProof(e.target.files ? e.target.files[0] : null)}
+                />
+                {proof && (
+                    <p className="text-sm text-green-600 mt-1">
+                        ✓ File terpilih: {proof.name}
+                    </p>
+                )}
+            </div>
+        )}
 
-                                <Button className="w-full mt-4" onClick={handlePayment} disabled={loading}>
-                                    {loading ? "Processing..." : "Konfirmasi & Bayar →"}
-                                </Button>
-                            </motion.div>
-                        )}
+{/* Detail untuk Virtual Account */}
+{paymentMethod === 'va' && (
+    <motion.div
+        initial={{ opacity: 0, height: 0 }}
+        animate={{ opacity: 1, height: "auto" }}
+        className="bg-gray-50 border rounded-lg p-4 space-y-4"
+    >
+        <h3 className="font-semibold text-gray-800">Pilih Bank untuk Virtual Account</h3>
+        
+        {/* Pilihan Bank */}
+        <div className="grid grid-cols-2 gap-3">
+            {bankVAOptions.map((bank) => (
+                <button
+                    key={bank.code}
+                    onClick={() => handleBankSelect(bank.code)}
+                    className={`p-4 border rounded-lg text-left hover:border-blue-500 transition-colors ${
+                        selectedBank === bank.code ? 'border-blue-500 bg-blue-50' : 'bg-white'
+                    }`}
+                >
+                    <div className="text-2xl mb-1">{bank.logo}</div>
+                    <div className="font-medium">{bank.name}</div>
+                </button>
+            ))}
+        </div>
 
+        {/* Tampilkan VA setelah bank dipilih */}
+        {virtualAccount && (
+            <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white border-2 border-blue-500 rounded-lg p-4 space-y-4"
+            >
+                <div className="flex items-center justify-between">
+                    <h4 className="font-semibold text-gray-800">Nomor Virtual Account Anda</h4>
+                    <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                        Aktif 24 Jam
+                    </span>
+                </div>
+                
+                {/* Info Rekening Tujuan Owner */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2">
+                    <div className="flex items-center gap-2 text-blue-800 font-semibold">
+                        <span className="text-xl">🏦</span>
+                        <span>Rekening Tujuan Transfer</span>
+                    </div>
+                    <div className="grid grid-cols-[120px_1fr] gap-2 text-sm">
+                        <div className="text-gray-600">Bank:</div>
+                        <div className="font-semibold">{bankVAOptions.find(b => b.code === selectedBank)?.name}</div>
+                        
+                        <div className="text-gray-600">No. Rekening:</div>
+                        <div className="font-mono font-bold text-lg">
+                            {bankVAOptions.find(b => b.code === selectedBank)?.ownerAccount}
+                        </div>
+                        
+                        <div className="text-gray-600">Atas Nama:</div>
+                        <div className="font-semibold">{bankVAOptions.find(b => b.code === selectedBank)?.ownerName}</div>
+                    </div>
+                </div>
+
+                {/* Virtual Account Number */}
+                <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                    <div className="text-sm text-gray-600">
+                        Gunakan Virtual Account ini sebagai referensi:
+                    </div>
+                    <div className="flex items-center justify-between bg-white border-2 border-dashed border-gray-300 rounded p-3">
+                        <div>
+                            <div className="text-xs text-gray-500 mb-1">Virtual Account Number</div>
+                            <span className="text-xl font-mono font-bold text-gray-800">
+                                {virtualAccount}
+                            </span>
+                        </div>
+                        <button
+                            onClick={() => {
+                                navigator.clipboard.writeText(virtualAccount);
+                                alert("Nomor VA disalin!");
+                            }}
+                            className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+                        >
+                            📋 Salin
+                        </button>
+                    </div>
+                    <p className="text-xs text-gray-500 italic">
+                        * Cantumkan nomor VA ini pada berita transfer atau keterangan
+                    </p>
+                </div>
+
+                <div className="space-y-3 text-sm">
+                    <p className="font-medium text-gray-800">📝 Cara Pembayaran:</p>
+                    <ol className="list-decimal list-inside space-y-2 text-gray-600 bg-gray-50 rounded p-3">
+                        <li>
+                            Buka aplikasi mobile banking atau ATM <strong>{bankVAOptions.find(b => b.code === selectedBank)?.name}</strong>
+                        </li>
+                        <li>
+                            Pilih menu <strong>Transfer ke Rekening {bankVAOptions.find(b => b.code === selectedBank)?.name}</strong>
+                        </li>
+                        <li>
+                            Masukkan nomor rekening: <strong className="font-mono">{bankVAOptions.find(b => b.code === selectedBank)?.ownerAccount}</strong>
+                        </li>
+                        <li>
+                            Nominal transfer: <span className="font-semibold text-blue-600">Rp {parseInt(price).toLocaleString('id-ID')}</span>
+                        </li>
+                        <li>
+                            Pada <strong>Berita/Keterangan Transfer</strong>, masukkan: <strong className="font-mono">{virtualAccount}</strong>
+                        </li>
+                        <li>Konfirmasi dan selesaikan pembayaran</li>
+                        <li>Simpan bukti transfer dan upload di bawah</li>
+                    </ol>
+                </div>
+
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm space-y-1">
+                    <div className="flex items-start gap-2">
+                        <span className="text-yellow-600 mt-0.5">⚠️</span>
+                        <div className="flex-1 text-gray-700">
+                            <strong>Penting:</strong>
+                            <ul className="mt-1 space-y-1 text-xs">
+                                <li>• Transfer ke rekening <strong>{bankVAOptions.find(b => b.code === selectedBank)?.name}</strong> di atas</li>
+                                <li>• Jumlah transfer harus <strong>TEPAT Rp {parseInt(price).toLocaleString('id-ID')}</strong></li>
+                                <li>• Wajib mencantumkan VA <strong>{virtualAccount}</strong> pada berita transfer</li>
+                                <li>• VA berlaku selama <strong>24 jam</strong></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </motion.div>
+        )}
+    </motion.div>
+)}
+
+        {/* Tombol Navigasi */}
+        <div className="flex gap-3">
+            <button
+                onClick={prevStep}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+                ← Kembali
+            </button>
+            <button
+                onClick={handlePayment}
+                disabled={loading || !paymentMethod || !proof}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+            >
+                {loading ? "Processing..." : "Konfirmasi Pembayaran"}
+            </button>
+        </div>
+    </motion.div>
+)}
 
                         {/* Step 3: Selesai */}
                         {step === 3 && (
@@ -551,12 +838,16 @@ export default function SubscriptionPageClient() {
                                 exit={{ opacity: 0 }}
                                 className="space-y-5 text-center"
                             >
-                                <h2 className="text-2xl font-bold text-green-600">🎉 Selesai!</h2>
+                                <div className="text-6xl">🎉</div>
+                                <h2 className="text-2xl font-bold text-green-600">Selesai!</h2>
                                 <p className="text-gray-600">
                                     Akun Anda aktif & pembayaran berhasil. Silakan login ke dashboard.
                                 </p>
-                                <Button onClick={() => router.push("/dashboard-user")}>
-                                    Login ke Dashboard
+                                <Button onClick={() => {
+                                    localStorage.removeItem("subscription_progress");
+                                    router.push("/dashboard-user");
+                                }}>
+                                    Login ke Dashboard →
                                 </Button>
                             </motion.div>
                         )}

@@ -5,9 +5,9 @@ import Footer from "./Footer";
 import CTASection from "./CTASection";
 import FeaturesSection from "./FeaturesSection";
 import HowItWorksSection from "./HowItWorksSection";
+import Paket from "./paket";
 import { motion } from "framer-motion";
 import React, { useState, useEffect } from "react";
-import Paket from "./paket";
 
 export default function Home() {
   
@@ -86,6 +86,7 @@ export default function Home() {
 
       <FeaturesSection />
       <HowItWorksSection />
+      <Paket />
       <CTASection />
       <Footer />
     </main>
