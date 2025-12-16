@@ -50,6 +50,11 @@ export default function SignUpForm() {
       return;
     }
 
+    if (password.length < 8) {
+            alert("Password minimal 8 karakter.");
+            return;
+        }
+
     setLoading(true);
 
     try {

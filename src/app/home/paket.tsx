@@ -22,6 +22,7 @@ type Package = {
   name: string;
   harga: number;
   channels: string[];
+  input: string[];
   chat: number;
   is_paid: boolean;
   billing_plans: BillingPlan[];
@@ -31,6 +32,8 @@ export default function Paket() {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annually">("monthly");
   const [packages, setPackages] = useState<Package[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedCards, setExpandedCards] = useState<{[key: string]: boolean}>({});
+  const [showAllContent, setShowAllContent] = useState(false);
 
   useEffect(() => {
     setTimeout(() => {
@@ -40,6 +43,7 @@ export default function Paket() {
           name: "Biar Kebiasa",
           harga: 0,
           channels: ["Telegram", "Whatsapp"],
+          input: ["Foto Struk", "Voice Note", "Transaksi Manual"],
           chat: 10,
           is_paid: false,
           billing_plans: [
@@ -56,14 +60,11 @@ export default function Paket() {
                 "Nama Paket": "Biar Kebiasa",
                 "Harga per bulan": "Gratis",
                 "Kuota Chat": "10",
-                "Kustomisasi Kategori": false,
                 "Channel": "Telegram & Whatsapp",
                 "Kolaborasi Group": "Telegram Group tidak terbatas",
                 "Ekspor Format": "Excel",
                 "Insight & Analisis Bulanan": false,
-                "Input Transaksi Manual": true,
-                "Input Foto Struk": false,
-                "Input Voice Note": false,
+                "Input": "Foto Struk, Voice Note & Transaksi Manual",
                 "Dukungan": "Email"
               },
             },
@@ -80,14 +81,11 @@ export default function Paket() {
                 "Nama Paket": "Biar Kebiasa",
                 "Harga per bulan": "Gratis",
                 "Kuota Chat": "10",
-                "Kustomisasi Kategori": false,
                 "Channel": "Telegram & Whatsapp",
                 "Kolaborasi Group": "Telegram Group tidak terbatas",
                 "Ekspor Format": "Excel",
                 "Insight & Analisis Bulanan": false,
-                "Input Transaksi Manual": true,
-                "Input Foto Struk": false,
-                "Input Voice Note": false,
+                "Input": "Foto Struk, Voice Note & Transaksi Manual",
                 "Dukungan": "Email"
               },
             },
@@ -98,6 +96,7 @@ export default function Paket() {
           name: "Biar Rapi",
           harga: 16500,
           channels: ["Telegram", "Whatsapp"],
+          input: ["Foto Struk", "Voice Note", "Transaksi Manual"],
           chat: 500,
           is_paid: true,
           billing_plans: [
@@ -114,14 +113,11 @@ export default function Paket() {
                 "Nama Paket": "Biar Rapi",
                 "Harga per bulan": "Rp 16.500",
                 "Kuota Chat": "500",
-                "Kustomisasi Kategori": true,
                 "Channel": "Telegram & Whatsapp",
                 "Kolaborasi Group": "Telegram Group tidak terbatas",
                 "Ekspor Format": "Excel",
                 "Insight & Analisis Bulanan": true,
-                "Input Transaksi Manual": true,
-                "Input Foto Struk": true,
-                "Input Voice Note": true,
+                "Input": "Foto Struk, Voice Note & Transaksi Manual",
                 "Dukungan": "Email & Chat"
               },
             },
@@ -136,16 +132,13 @@ export default function Paket() {
               is_active: true,
               features: {
                 "Nama Paket": "Pro",
-                "Harga per bulan": "Rp 164.340",
+                "Harga per Tahun": "Rp 198.000",
                 "Kuota Chat": "6.000",
-                "Kustomisasi Kategori": true,
                 "Channel": "Telegram & Whatsapp",
                 "Kolaborasi Group": "Telegram Group tidak terbatas",
                 "Ekspor Format": "Excel",
                 "Insight & Analisis Bulanan": true,
-                "Input Transaksi Manual": true,
-                "Input Foto Struk": true,
-                "Input Voice Note": true,
+                "Input": "Foto Struk, Voice Note & Transaksi Manual",
                 "Dukungan": "Email & Chat"
               },
             },
@@ -156,6 +149,7 @@ export default function Paket() {
           name: "Biar Tetep On Track",
           harga: 65000,
           channels: ["Telegram", "Whatsapp", "Priority Support"],
+          input: ["Foto Struk", "Voice Note", "Transaksi Manual"],
           chat: 2000,
           is_paid: true,
           billing_plans: [
@@ -172,14 +166,11 @@ export default function Paket() {
                 "Nama Paket": "Biar Tetep On Track",
                 "Harga per bulan": "Rp 65.000",
                 "Kuota Chat": "50.000",
-                "Kustomisasi Kategori": true,
                 "Channel": "Semua Channel",
                 "Kolaborasi Group": true,
                 "Ekspor Format": "CSV, Excel, PDF",
                 "Insight & Analisis Bulanan": true,
-                "Input Transaksi Manual": true,
-                "Input Foto Struk": true,
-                "Input Voice Note": true,
+                "Input": "Foto Struk, Voice Note & Transaksi Manual",
                 "Dukungan": "Priority 24/7"
               },
             },
@@ -194,16 +185,13 @@ export default function Paket() {
               is_active: true,
               features: {
                 "Nama Paket": "Biar Tetep On Track",
-                "Harga per bulan": "Rp 647.400",
+                "Harga per Tahun": "Rp 780.000",
                 "Kuota Chat": "50.000",
-                "Kustomisasi Kategori": true,
                 "Channel": "Semua Channel",
                 "Kolaborasi Group": true,
                 "Ekspor Format": "Excel",
                 "Insight & Analisis Bulanan": true,
-                "Input Transaksi Manual": true,
-                "Input Foto Struk": true,
-                "Input Voice Note": true,
+                "Input": "Foto Struk, Voice Note & Transaksi Manual",
                 "Dukungan": "Priority 24/7"
               },
             },
@@ -214,6 +202,7 @@ export default function Paket() {
           name: "Biar Sesuai Kamu",
           harga: 0,
           channels: ["custom"],
+          input: ["Foto Struk", "Voice Note", "Transaksi Manual"],
           chat: 0,
           is_paid: true,
           billing_plans: [
@@ -230,14 +219,11 @@ export default function Paket() {
                 "Nama Paket": "Biar Sesuai Kamu",
                 "Harga per bulan": "Custom",
                 "Kuota Chat": "Custom",
-                "Kustomisasi Kategori": true,
                 "Channel": "Custom",
                 "Kolaborasi Group": true,
                 "Ekspor Format": "Custom",
                 "Insight & Analisis Bulanan": true,
-                "Input Transaksi Manual": true,
-                "Input Foto Struk": true,
-                "Input Voice Note": true,
+                "Input": "Foto Struk, Voice Note & Transaksi Manual",
                 "Dukungan": "Priority 24/7"
               },
             },
@@ -254,14 +240,11 @@ export default function Paket() {
                 "Nama Paket": "Biar Sesuai Kamu",
                 "Harga per bulan": "Custom",
                 "Kuota Chat": "Custom",
-                "Kustomisasi Kategori": true,
                 "Channel": "Custom",
                 "Kolaborasi Group": true,
                 "Ekspor Format": "Custom",
                 "Insight & Analisis Bulanan": true,
-                "Input Transaksi Manual": true,
-                "Input Foto Struk": true,
-                "Input Voice Note": true,
+                "Input": "Foto Struk, Voice Note & Transaksi Manual",
                 "Dukungan": "Priority 24/7"
               },
             },
@@ -285,22 +268,19 @@ export default function Paket() {
     "Nama Paket",
     "Harga per bulan",
     "Kuota Chat",
-    "Kustomisasi Kategori",
     "Channel",
     "Kolaborasi Group",
     "Ekspor Format",
     "Insight & Analisis Bulanan",
-    "Input Transaksi Manual",
-    "Input Foto Struk",
-    "Input Voice Note",
+    "Input",
     "Dukungan"
   ];
 
   return (
-    <div className="py-12 md:py-16 bg-gradient-to-b from-white via-blue-50 to-cyan-50 text-slate-800 antialiased min-h-screen">
+    <div className="py-12 md:py-16 bg-[#DFF3FF] text-slate-800 antialiased min-h-screen">
       {/* Hero Section */}
       <section id="paket" className="flex flex-col items-center text-center mt-12 px-6">
-        <h2 className="text-4xl md:text-5xl font-extrabold mb-4 bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+        <h2 className="text-4xl md:text-5xl font-extrabold mb-4 bg-gradient-to-r from-[#0566BD] to-[#A8E063] bg-clip-text text-transparent">
           Kelola Keuangan Jadi Lebih Mudah 💰
         </h2>
         <p className="text-gray-600 max-w-4xl mb-8 text-lg">
@@ -323,19 +303,27 @@ export default function Paket() {
             onClick={() => setBillingCycle("annually")}
             className={`px-6 py-2 rounded-full text-sm font-semibold transition-all ${
               billingCycle === "annually"
-                ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg"
+                ? "bg-gradient-to-r from-[#0566BD] to-[#A8E063] text-white shadow-lg"
                 : "text-gray-600 hover:text-gray-900"
             }`}
           >
             Tahunan
             <span className="ml-2 text-xs bg-yellow-400 text-gray-900 px-2 py-0.5 rounded-full">
-              Hemat 17%
+              Hemat 15%
             </span>
           </button>
         </div>
+
+<button
+  onClick={() => setShowAllContent(!showAllContent)}
+  className="mb-8 px-8 py-3 bg-gradient-to-r from-[#0566BD] to-[#A8E063] text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-all"
+>
+  {showAllContent ? "Sembunyikan Detail Paket" : "Lihat Paket Lengkap →"}
+</button>
       </section>
 
       {/* Pricing Cards */}
+      
       <main className="flex-1">
         <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-4 max-w-7xl mx-auto w-full px-6 mb-16">
           {packages.map((pkg, index) => {
@@ -350,7 +338,7 @@ export default function Paket() {
                 style={{ transitionDelay: `${index * 100}ms` }}
                 className={`relative border-2 rounded-2xl p-8 flex flex-col transform transition-all duration-300 ease-out hover:scale-105 hover:shadow-2xl ${
                   isPro
-                    ? "bg-gradient-to-br from-blue-600 to-cyan-600 text-white border-blue-500 shadow-xl scale-105"
+                    ? "bg-gradient-to-br from-[#0566BD] to-[#A8E063] text-white border-gradient-to-br from-[#0566BD] to-[#A8E063] shadow-xl scale-105"
                     : "bg-white border-gray-200 shadow-lg"
                 }`}
               >
@@ -366,33 +354,48 @@ export default function Paket() {
                   <h3 className="text-2xl font-bold mb-2">{pkg.name}</h3>
                   <p className={`text-sm ${isPro ? "text-blue-100" : "text-gray-500"}`}>
                     {pkg.name === "Biar Kebiasa"
-                      ? "Cocok untuk pencatatan pribadi"
+                      ? "Cocok untuk memulai"
                       : pkg.name === "Biar Rapi"
-                      ? "Untuk pengguna aktif dan bisnis kecil"
-                      : "Untuk tim dan usaha skala besar"}
+                      ? "Untuk pengguna aktif dan bisnis"
+                      : pkg.name === "Biar Tetep On Track"
+                      ? "Untuk tim dan usaha skala besar"
+                      : "sesuaikan kebutuhanmu"}
                   </p>
                 </div>
 
                 <div className="flex flex-col items-center justify-center mb-6 py-4">
                   <div className="flex items-baseline">
                     <span className="text-4xl font-extrabold">
-                      Rp{plan.harga.toLocaleString("id-ID")}
-                    </span>
+                      {pkg.name === "Biar Sesuai Kamu"
+      ? "Custom"
+      : plan.harga === 0 && pkg.name === "Biar Kebiasa" 
+      ? "Free" 
+      : billingCycle === "annually" && (pkg.name === "Biar Rapi" || pkg.name === "Biar Tetep On Track")
+    ? `Rp${Math.round(plan.harga * 0.85).toLocaleString("id-ID")}`
+    : `Rp${plan.harga.toLocaleString("id-ID")}`}
+                      </span>
                   </div>
                   <span className={`text-sm mt-1 ${isPro ? "text-blue-100" : "text-gray-500"}`}>
                     /{billingCycle === "monthly" ? "bulan" : "tahun"}
                   </span>
-                  {billingCycle === "annually" && plan.harga > 0 && (
-                    <span className={`text-xs mt-2 ${isPro ? "text-blue-100" : "text-gray-500"}`}>
-                      ~Rp{Math.round(plan.harga / 12).toLocaleString("id-ID")}/bulan
-                    </span>
+                  {billingCycle === "annually" && plan.harga > 0 && pkg.name !== "Biar Sesuai Kamu" && (
+  <div className={`text-xs mt-2 ${isPro ? "text-blue-100" : "text-gray-500"}`}>
+    <span className="line-through opacity-70">
+      Rp{Math.round((plan.harga / 0.85) / 12).toLocaleString("id-ID")}/bulan
+    </span>
+    <span className="ml-2 font-bold">
+      ~Rp{Math.round(plan.harga / 12).toLocaleString("id-ID")}/bulan
+    </span>
+  </div>
                   )}
                 </div>
 
                 <div className="space-y-4 flex-1">
                   <div className={`p-3 rounded-lg ${isPro ? "bg-white/10" : "bg-gray-50"}`}>
                     <div className="text-sm font-semibold mb-2">Kuota Chat</div>
-                    <div className="text-xl font-bold">{plan.chat.toLocaleString("id-ID")} pesan</div>
+                    <div className="text-xl font-bold">{pkg.name === "Biar Sesuai Kamu" 
+      ? "Custom" 
+      : `${plan.chat.toLocaleString("id-ID")} pesan`}</div>
                   </div>
 
                   <div>
@@ -411,12 +414,33 @@ export default function Paket() {
                         </span>
                       ))}
                     </div>
-                  </div>
+                </div>
+                <div>
+                    <div className="text-sm font-semibold mb-2">Input</div>
+                    <div className="flex flex-wrap gap-2">
+                      {pkg.input.map((ch, idx) => (
+                        <span
+                          key={idx}
+                          className={`px-3 py-1 text-xs font-medium rounded-full ${
+                            isPro
+                              ? "bg-white/20 text-white"
+                              : "bg-blue-100 text-blue-700"
+                          }`}
+                        >
+                          {ch}
+                        </span>
+                      ))}
+                    </div>
+                </div>
 
+              {showAllContent && (
+                <>
                   <div>
                     <div className="text-sm font-semibold mb-3">Fitur Unggulan</div>
                     <ul className="space-y-2 text-sm">
-                      {Object.entries(plan.features)
+                      {pkg.name === "Biar Sesuai Kamu"
+                      ? "Custom"
+                      : Object.entries(plan.features)
                         .filter(([key]) => !["Nama Paket", "Harga per bulan", "Kuota Chat", "Channel", "Dukungan"].includes(key))
                         .map(([key, value], i) => {
                           const isAvailable = typeof value === 'boolean' ? value : true;
@@ -431,23 +455,25 @@ export default function Paket() {
                         })}
                     </ul>
                   </div>
-                </div>
 
-                <Link href={`/subscription?package=${pkg.id}&plan=${pkg.name}&billing=${billingCycle}&price=${plan.harga}`}
-                  className={`mt-6 w-full py-3 px-6 rounded-lg font-semibold transition-all ${
-                    isPro
-                      ? "bg-white text-blue-600 hover:bg-gray-100 shadow-lg"
-                      : "bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700 shadow-md"
-                  }`}
-                >
-                  {pkg.is_paid ? "Pilih Paket" : "Mulai Gratis"}
-                </Link>
+                  <Link href={`/subscription?package=${pkg.id}&plan=${pkg.name}&billing=${billingCycle}&price=${plan.harga}`}
+                    className={`mt-6 w-full py-3 px-6 rounded-lg font-semibold transition-all text-center block ${
+                      isPro
+                        ? "bg-white text-blue-600 hover:bg-gray-100 shadow-lg"
+                        : "bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700 shadow-md"
+                    }`}
+                  >
+                    {pkg.is_paid ? "Pilih Paket" : "Mulai Gratis"}
+                  </Link>
+                </>
+              )}
+                </div>
               </div>
             );
           })}
-        </div>
+      </div>
 
-        {/* Feature Comparison Table */}
+      {showAllContent && (
         <section className="max-w-7xl mx-auto w-full px-6 mb-20">
           <h3 className="text-3xl font-bold mb-8 text-center bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
             Bandingkan Semua Fitur
@@ -499,7 +525,8 @@ export default function Paket() {
             </table>
           </div>
         </section>
-      </main>
+      )}
+    </main>
     </div>
   );
 }

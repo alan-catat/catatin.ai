@@ -1117,6 +1117,7 @@ groupType={selectedGroupType}
                 <code className="block bg-white dark:bg-gray-900 p-3 pr-12 rounded border border-gray-300 dark:border-gray-600 text-blue-600 dark:text-blue-400 font-mono">
                   /aktivasi {activationCode || ""}
                 </code>
+                
                 {/* Button Copy - Muncul jika ada kode */}
                 {activationCode && (
                   <button

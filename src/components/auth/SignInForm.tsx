@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Checkbox from "@/components/form/input/Checkbox";
 import Input from "@/components/form/input/InputField";
@@ -26,8 +26,8 @@ export default function SignInForm({ redirectTo }: SignInFormProps) {
   const N8N_SIGNIN_URL =
     process.env.NEXT_PUBLIC_N8N_SIGNIN_URL ||
     "https://your-n8n-domain.com/webhook/signin";
+    
   const WEBHOOK_GOOGLE = process.env.NEXT_PUBLIC_N8N_GOOGLE_SIGNIN_URL!;
-
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -54,14 +54,22 @@ export default function SignInForm({ redirectTo }: SignInFormProps) {
 
       // ✅ LOGIN BERHASIL (respon object)
       if (typeof data === "object" && data.success && data.user) {
-        // Simpan email + token di localStorage
+        // Simpan session
         localStorage.setItem("user_email", data.user.email);
         if (data.token) localStorage.setItem("token", data.token);
-
-        // Simpan user lengkap (opsional)
         localStorage.setItem("user", JSON.stringify(data.user));
 
-        // Redirect
+        // ✅ REMEMBER ME: Simpan credentials jika checkbox dicentang
+        if (isChecked) {
+          localStorage.setItem("remembered_email", email.toLowerCase());
+          // Simpan password (encode base64 untuk sedikit keamanan)
+          localStorage.setItem("remembered_password", btoa(password));
+        } else {
+          // Hapus jika tidak dicentang
+          localStorage.removeItem("remembered_email");
+          localStorage.removeItem("remembered_password");
+        }
+
         setTimeout(() => router.push(redirectTo || "/dashboard-user/profile"), 200);
         return;
       }
@@ -70,6 +78,16 @@ export default function SignInForm({ redirectTo }: SignInFormProps) {
       if (typeof data === "string" && data.toLowerCase().includes("sukses")) {
         localStorage.setItem("user_email", email.toLowerCase());
         localStorage.setItem("user", JSON.stringify({ email: email.toLowerCase() }));
+
+        // ✅ REMEMBER ME
+        if (isChecked) {
+          localStorage.setItem("remembered_email", email.toLowerCase());
+          localStorage.setItem("remembered_password", btoa(password));
+        } else {
+          localStorage.removeItem("remembered_email");
+          localStorage.removeItem("remembered_password");
+        }
+
         setTimeout(() => router.push(redirectTo || "/dashboard-user/profile"), 200);
         return;
       }
@@ -99,6 +117,21 @@ export default function SignInForm({ redirectTo }: SignInFormProps) {
     // Redirect ke n8n dengan parameter callback
     window.location.href = `${n8nWebhookUrl}?callback=${encodeURIComponent(callbackUrl)}`;
   };
+
+  useEffect(() => {
+    const savedEmail = localStorage.getItem("remembered_email");
+    const savedPassword = localStorage.getItem("remembered_password");
+    
+    if (savedEmail) {
+      setEmail(savedEmail);
+      setIsChecked(true);
+      
+      // Opsional: isi password jika disimpan (kurang aman, tapi bisa digunakan)
+      if (savedPassword) {
+        setPassword(atob(savedPassword)); // decode dari base64
+      }
+    }
+  }, []);
 
   return (
     <div className="flex flex-col flex-1 lg:w-1/2 w-full">

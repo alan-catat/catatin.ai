@@ -24,7 +24,7 @@ export default function Header() {
 
   return (
     <header
-      className={`fixed top-0 w-full py-4 bg-white/70 backdrop-blur-md border-b border-gray-200 z-50 transition-transform duration-500 ${
+      className={`fixed top-0 w-full py-4 bg-[#DFF3FF]/70 backdrop-blur-md border-b border-gray-200 z-50 transition-transform duration-500 ${
         hidden ? "-translate-y-full" : "translate-y-0"
       }`}
     >

@@ -8,8 +8,8 @@ const CTASection = () => {
   return (
     <section
       id="signup"
-      className="relative px-6 md:px-37 md:pr-37 py-20 text-center text-white overflow-hidden bg-[#2e2e2e] font-nunito"
-    >
+      className="relative px-6 lg:px-16 py-16 md:py-10 px-12 text-center text-white overflow-hidden bg-[#2e2e2e] rounded-3xl shadow-2xl max-w-6xl mx-auto my-5 border-2 border-transparent bg-clip-padding before:absolute before:inset-0 before:rounded-3xl before:p-[2px] before:bg-gradient-to-r before:from-blue-500 before:to-cyan-500 before:-z-10"
+      >
       {/* Content */}
       <div className="container mx-auto px-5 text-center relative z-10">
         <div className="max-w-4xl mx-auto">
@@ -26,9 +26,7 @@ const CTASection = () => {
 </h2>
 
           <p className="text-xl md:text-2xl text-white/90 mb-10 max-w-2xl mx-auto">
-            <span className="text-3xl font-bold bg-gradient-to-r from-[#0566BD] to-[#A8E063] bg-clip-text text-transparent">
-              catatin.ai
-            </span> bantu kamu nyatet hal penting tanpa repot — struk, pesan, catatan, semuanya beres otomatis.
+            Kami akan bantu kamu nyatet transaksi penting tanpa repot — struk, pesan, catatan, semuanya beres otomatis.
           </p>
 
           {/* CTA Buttons */}

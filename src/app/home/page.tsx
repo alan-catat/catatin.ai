@@ -12,11 +12,11 @@ import React, { useState, useEffect } from "react";
 export default function Home() {
   
   return (
-    <main className="min-h-screen bg-gradient-to-l from-white via-[#B2F7FF] to-[#80F2FF] text-slate-800 antialiased">
+    <main className="min-h-screen bg-[#DFF3FF] text-slate-800 antialiased">
       <Header />
       
       {/* HERO */}
-      <section className="pt-10 w-full bg-gradient-to-l from-white via-[#B2F7FF] to-[#80F2FF] text-slate-800">
+      <section className="pt-10 w-full bg-[#DFF3FF] text-slate-800">
   <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-0 py-16 md:py-20 flex flex-col md:flex-row items-center gap-12 md:gap-20">
     
     {/* Left (Text) */}
@@ -76,7 +76,7 @@ export default function Home() {
           playsInline
           controls
         >
-          <source src="/cerah.mp4" type="video/mp4" />
+          <source src="/cerah_compressed.mp4" type="video/mp4" />
         </video>
       </div>
     </div>

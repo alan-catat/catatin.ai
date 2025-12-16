@@ -6,8 +6,9 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Input from "@/components/form/input/InputField";
 import Button from "@/components/ui/button/Button";
 import { Eye, EyeOff } from "lucide-react";
+import Link from "next/link";
 
-const steps = ["Registrasi Akun", "Validasi Akun", "Pembayaran", "Selesai"];
+const steps = ["Registrasi Akun","Verifikasi Akun", "Pembayaran", "Selesai"];
 
 // URL N8N Webhooks - GANTI DENGAN URL N8N ANDA
 const N8N_BASE_URL = "https://n8n.srv1074739.hstgr.cloud/webhook";
@@ -78,9 +79,18 @@ const [selectedBank, setSelectedBank] = useState<string>("");
     };
 
     const prevStep = () => {
-        const newStep = Math.max(step - 1, 0);
-        saveProgress(newStep);
-    };
+    const isRegistered = localStorage.getItem('isRegistered');
+    
+    // Jika di step 2 dan sudah registrasi, jangan bisa kembali
+    if (step === 2 && isRegistered === 'true') {
+        showToast("Anda sudah terdaftar dan tidak bisa kembali ke halaman registrasi");
+        return;
+    }
+    
+    // TAMBAHKAN INI yang hilang:
+    const newStep = Math.max(step - 1, 0);
+    saveProgress(newStep);
+};
 
     // Step 0: Registrasi
     const handleSignup = async () => {
@@ -89,19 +99,24 @@ const firstName = nameParts[0] || "";
 const lastName = nameParts.slice(1).join(" ");
 
         if (!termsAccepted) {
-            alert("Harap centang Terms & Conditions sebelum mendaftar.");
+            showToast("Harap centang Terms & Conditions sebelum mendaftar.");
             return;
         }
 
         if (password !== confirmPassword) {
-            alert("Password dan konfirmasi password tidak sama.");
+            showToast("Password dan konfirmasi password tidak sama.");
             return;
         }
 
-        if (password.length < 8) {
-            alert("Password minimal 8 karakter.");
+        if (password.length < 8 || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
+            showToast("Password Tidak Sesuai.");
             return;
         }
+
+         if (!fullName || !Email || !password || !confirmPassword) {
+         showToast("Semua field harus diisi!");
+        return;
+         }
 
         setLoading(true);
         try {
@@ -123,26 +138,39 @@ const lastName = nameParts.slice(1).join(" ");
 
             const data = await response.json();
 
-            if (!response.ok) {
-                alert(data.message || "Registrasi gagal. Silakan coba lagi.");
-                return;
-            }
-
-            setUserId(data.userId);
-            alert("Registrasi berhasil 🎉 Kode verifikasi telah dikirim ke Email Anda.");
-            nextStep();
-        } catch (error) {
-            console.error("Signup error:", error);
-            alert("Terjadi kesalahan. Silakan coba lagi.");
-        } finally {
-            setLoading(false);
-        }
-    };
+            if (response.ok) {
+    // Simpan userId dari response jika ada
+    if (data.userId) {
+        setUserId(data.userId);
+    }
+    
+    localStorage.setItem('isRegistered', 'true');
+    localStorage.setItem('userData', JSON.stringify({
+        fullName,
+        Email,
+        userId: data.userId || "", // Simpan userId juga
+        registeredAt: new Date().toISOString()
+    }));
+    
+    // Update progress dengan step 2
+    saveProgress(2);
+    
+    showToast("Registrasi berhasil! Silakan cek email Anda untuk verifikasi.");
+} else {
+      showToast(data.message || "Registrasi gagal!");
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    showToast("Terjadi kesalahan saat registrasi!");
+  } finally {
+    setLoading(false);
+  }
+};
 
     // Step 1: Validasi Akun
     const handleValidate = async () => {
         if (!verificationCode) {
-            alert("Masukkan kode verifikasi dari Email Anda.");
+            showToast("Masukkan kode verifikasi dari Email Anda.");
             return;
         }
 
@@ -160,15 +188,15 @@ const lastName = nameParts.slice(1).join(" ");
             const data = await response.json();
 
             if (!response.ok) {
-                alert(data.message || "Kode verifikasi salah.");
+                showToast(data.message || "Kode verifikasi salah.");
                 return;
             }
 
-            alert("Email berhasil diverifikasi! ✅");
+            showToast("Email berhasil diverifikasi! ✅");
             nextStep();
         } catch (error) {
             console.error("Validation error:", error);
-            alert("Terjadi kesalahan. Silakan coba lagi.");
+            showToast("Terjadi kesalahan. Silakan coba lagi.");
         } finally {
             setLoading(false);
         }
@@ -177,17 +205,17 @@ const lastName = nameParts.slice(1).join(" ");
     // Step 2: Pembayaran
     const handlePayment = async () => {
         if (!paymentMethod) {
-            alert("Pilih metode pembayaran");
+            showToast("Pilih metode pembayaran");
             return;
         }
         if (paymentMethod === 'va' && !virtualAccount) {
-        alert("Pilih bank untuk generate Virtual Account");
+        showToast("Pilih bank untuk generate Virtual Account");
         return;
     }
 
     // Validasi bukti transfer
     if (!proof) {
-        alert("Upload bukti transfer terlebih dahulu");
+        showToast("Upload bukti transfer terlebih dahulu");
         return;
     }
 
@@ -215,15 +243,15 @@ const lastName = nameParts.slice(1).join(" ");
             const data = await response.json();
 
             if (!response.ok) {
-                alert(data.message || "Pembayaran gagal.");
+                showToast(data.message || "Pembayaran gagal.");
                 return;
             }
 
-            alert("Pembayaran berhasil diproses! 💳");
+            showToast("Pembayaran berhasil diproses! 💳");
             nextStep();
         } catch (error) {
             console.error("Payment error:", error);
-            alert("Terjadi kesalahan saat memproses pembayaran.");
+            showToast("Terjadi kesalahan saat memproses pembayaran.");
         } finally {
             setLoading(false);
         }
@@ -309,6 +337,28 @@ const handleBankSelect = (bankCode: string) => {
     setVirtualAccount(va);
 };
 
+// Tambahkan setelah useEffect yang load subscription_progress
+useEffect(() => {
+    const isRegistered = localStorage.getItem('isRegistered');
+    
+    // Jika sudah registrasi dan masih di step 0, langsung ke step 2
+    if (isRegistered === 'true' && step === 0) {
+        setStep(2);
+    }
+}, [step]);
+
+const [toast, setToast] = useState<{
+    show: boolean;
+    message: string;
+    type: 'success' | 'error' | 'info';
+  }>({ show: false, message: '', type: 'success' });
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+  setToast({ show: true, message, type });
+  setTimeout(() => {
+    setToast({ show: false, message: '', type: 'success' });
+  }, 3000); // Hilang setelah 3 detik
+};
 
     return (
         <div className="min-h-screen flex flex-col bg-gradient-to-b from-blue-50 to-cyan-50">
@@ -436,12 +486,26 @@ const handleBankSelect = (bankCode: string) => {
                                         onChange={(e) => setTermsAccepted(e.target.checked)}
                                     />
                                     <span className="text-sm text-gray-600">
-                                        Saya menyetujui Terms & Conditions
+                                        Saya menyetujui <span className="text-brand-500 hover:text-brand-600 dark:text-brand-400">
+                    <Link href="/T&C"><b> S&K </b></Link>
+                  </span>{" "}
                                     </span>
                                 </div>
                                 <Button className="w-full mt-4" onClick={handleSignup} disabled={loading}>
                                     {loading ? "Loading..." : "Daftar & Cek Email →"}
                                 </Button>
+                                <div className="text-center mt-4">
+    <button
+        type="button"
+        onClick={() => {
+            localStorage.setItem('isRegistered', 'true');
+            saveProgress(2);
+        }}
+        className="text-sm text-blue-600 hover:text-blue-700 underline"
+    >
+        Sudah punya akun? Langsung ke pembayaran →
+    </button>
+</div>
                             </motion.div>
                         )}
 
@@ -454,7 +518,7 @@ const handleBankSelect = (bankCode: string) => {
                                 exit={{ opacity: 0, x: -50 }}
                                 className="space-y-5 text-center"
                             >
-                                <h2 className="text-2xl font-bold text-gray-800">Validasi Akun</h2>
+                                <h2 className="text-2xl font-bold text-gray-800">Verfikasi Akun</h2>
                                 <p className="text-gray-500">
                                     Kami telah mengirim kode verifikasi ke:
                                     <br />
@@ -756,7 +820,7 @@ const handleBankSelect = (bankCode: string) => {
                         <button
                             onClick={() => {
                                 navigator.clipboard.writeText(virtualAccount);
-                                alert("Nomor VA disalin!");
+                                showToast("Nomor VA disalin!");
                             }}
                             className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
                         >
