@@ -1,4 +1,4 @@
-import SignInForm from '@/components/auth/dashboard-user/signinForm';
+import SignInForm from '@/components/auth/SignInForm';
 import { createClient } from '@/utils/supabase/server';
 import { redirect } from 'next/navigation'
 
