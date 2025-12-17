@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { FileText, Upload, Download, Shield, Cloud, ArrowRight, Award, Star, Settings, ChevronDown, ChevronUp } from 'lucide-react';
-
+import Link from 'next/link';
 
 export default function Convert() {
   const [file, setFile] = useState<File | null>(null);
@@ -120,42 +120,24 @@ if (password) {
           catatin.ai
         </span>
           </div>
-          <nav className="hidden md:flex space-x-6">
-            <button className="text-gray-600 hover:text-gray-900">Convert</button>
-            <button className="text-gray-600 hover:text-gray-900">Compress</button>
-            <button className="text-gray-600 hover:text-gray-900">Tools</button>
-            <button className="text-gray-600 hover:text-gray-900">API</button>
-            <button className="text-gray-600 hover:text-gray-900">Pricing</button>
-          </nav>
-          <div className="flex space-x-4">
-            <button className="text-gray-600 hover:text-gray-900">Log In</button>
-            <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
-              Sign Up
-            </button>
-          </div>
+          <p className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                <Link
+                  href="/home"
+                  className="text-2l text-brand-500 hover:text-brand-600 dark:text-brand-400"
+                >
+                  <b>← Kembali ke halaman utama</b>
+                </Link>
+              </p>
         </div>
       </header>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center mb-8">
-          <h1 className="text-5xl font-bold text-gray-900 mb-4">File Converter</h1>
+          <h1 className="text-5xl font-bold text-gray-900 mb-4">Convertin</h1>
           <p className="text-xl text-gray-600">
-            Easily convert files from one format to another, online.
+            Kami akan bantu kamu nyatet transaksi penting tanpa repot.
           </p>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-          {quickActions.map((action, index) => (
-            <button
-              key={index}
-              className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow text-left"
-            >
-              <span className="text-gray-700 font-medium">{action.label}</span>
-              <ArrowRight className="w-5 h-5 text-gray-400" />
-            </button>
-          ))}
         </div>
 
         {/* File Upload Area */}
@@ -176,7 +158,7 @@ if (password) {
                 <Upload className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                 <label className="cursor-pointer">
                   <span className="inline-block px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
-                    📄 Choose Files
+                    📄 Pilih File
                   </span>
                   <input
                     type="file"
@@ -186,10 +168,10 @@ if (password) {
                   />
                 </label>
                 <p className="mt-4 text-sm text-gray-500">
-                  Max file size 1GB. <span className="text-indigo-600 cursor-pointer">Sign Up</span> for more
+                  Ukuran file maksimal 1GB. <span className="text-indigo-600 cursor-pointer">Daftar</span> untuk lebih banyak
                 </p>
                 <p className="text-xs text-gray-400 mt-2">
-                  By proceeding, you agree to our <span className="text-indigo-600 cursor-pointer">Terms of Use</span>
+                  Dengan melanjutkan, Anda setuju dengan <span className="text-indigo-600 cursor-pointer">Ketentuan Penggunaan</span> kami
                 </p>
               </>
             ) : (
@@ -207,7 +189,7 @@ if (password) {
                   onClick={() => setFile(null)}
                   className="text-sm text-red-600 hover:text-red-700"
                 >
-                  Remove file
+                  Hapus file
                 </button>
               </div>
             )}
@@ -217,7 +199,7 @@ if (password) {
             <div className="mt-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Convert to:
+                  Konversi ke:
                 </label>
                 <select
                   value={format}
@@ -240,12 +222,12 @@ if (password) {
                 {loading ? (
                   <>
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    <span>Converting...</span>
+                    <span>Mengkonversi...</span>
                   </>
                 ) : (
                   <>
                     <Download className="w-5 h-5" />
-                    <span>Convert Now</span>
+                    <span>Konversi Sekarang</span>
                   </>
                 )}
               </button>
@@ -253,72 +235,59 @@ if (password) {
           )}
         </div>
 
-        {/* Bottom Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12">
-          {bottomActions.map((action, index) => (
-            <button
-              key={index}
-              className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow text-left"
-            >
-              <span className="text-gray-700 font-medium">{action.label}</span>
-              <ArrowRight className="w-5 h-5 text-gray-400" />
-            </button>
-          ))}
-        </div>
-
        {/* Advanced Settings */}
-<div className="mt-6 border border-gray-200 rounded-lg">
-  <button
-    onClick={() => setShowAdvanced(!showAdvanced)}
-    className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
-  >
-    <div className="flex items-center space-x-2">
-      <Settings className="w-5 h-5 text-gray-600" />
-      <span className="font-medium text-gray-900">Advanced settings (optional)</span>
-    </div>
-    {showAdvanced ? (
-      <ChevronUp className="w-5 h-5 text-gray-400" />
-    ) : (
-      <ChevronDown className="w-5 h-5 text-gray-400" />
-    )}
-  </button>
+              <div className="mt-6 border border-gray-200 rounded-lg">
+                <button
+                  onClick={() => setShowAdvanced(!showAdvanced)}
+                  className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center space-x-2">
+                    <Settings className="w-5 h-5 text-gray-600" />
+                    <span className="font-medium text-gray-900">Pengaturan lanjutan (opsional)</span>
+                  </div>
+                  {showAdvanced ? (
+                    <ChevronUp className="w-5 h-5 text-gray-400" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 text-gray-400" />
+                  )}
+                </button>
 
-  {showAdvanced && (
-    <div className="border-t border-gray-200 p-4 space-y-6">
-      {/* Compress Section */}
-      <div className="bg-gray-50 rounded-lg p-4">
-        <div className="flex items-center space-x-2 mb-4">
-          <Settings className="w-4 h-4 text-gray-600" />
-          <h3 className="font-medium text-gray-900">Compress</h3>
-        </div>
-        
-        <div className="space-y-3">
-          <label className="block">
-            <span className="text-sm font-medium text-gray-700 mb-2 block">
-              Compression level
-            </span>
-            <select
-              value={compressionLevel}
-              onChange={(e) => setCompressionLevel(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
-            >
-              <option value="no-compression">No Compression</option>
-              <option value="low">Low - Minimal compression, higher quality</option>
-              <option value="medium">Medium - Balance between quality and size</option>
-              <option value="high">High - Maximum compression, smaller size</option>
-            </select>
-          </label>
-          <p className="text-xs text-gray-500">
-            Select the desired compression level: No Compression for original quality, High for maximum compression and smaller size, Medium for a balance between quality and size, or Low for minimal compression and higher quality.
-          </p>
-        </div>
-      </div>
+                {showAdvanced && (
+                  <div className="border-t border-gray-200 p-4 space-y-6">
+                    {/* Compress Section */}
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <div className="flex items-center space-x-2 mb-4">
+                        <Settings className="w-4 h-4 text-gray-600" />
+                        <h3 className="font-medium text-gray-900">Kompres</h3>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <label className="block">
+                          <span className="text-sm font-medium text-gray-700 mb-2 block">
+                            Tingkat kompresi
+                          </span>
+                          <select
+                            value={compressionLevel}
+                            onChange={(e) => setCompressionLevel(e.target.value)}
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
+                          >
+                            <option value="no-compression">Tanpa Kompresi</option>
+                            <option value="low">Rendah - Kompresi minimal, kualitas lebih tinggi</option>
+                            <option value="medium">Sedang - Seimbang antara kualitas dan ukuran</option>
+                            <option value="high">Tinggi - Kompresi maksimal, ukuran lebih kecil</option>
+                          </select>
+                        </label>
+                        <p className="text-xs text-gray-500">
+                          Pilih tingkat kompresi yang diinginkan: Tanpa Kompresi untuk kualitas asli, Tinggi untuk kompresi maksimal dan ukuran lebih kecil, Sedang untuk keseimbangan antara kualitas dan ukuran, atau Rendah untuk kompresi minimal dan kualitas lebih tinggi.
+                        </p>
+                      </div>
+                    </div>
 
       {/* Document Options Section */}
       <div className="bg-gray-50 rounded-lg p-4">
         <div className="flex items-center space-x-2 mb-4">
           <Settings className="w-4 h-4 text-gray-600" />
-          <h3 className="font-medium text-gray-900">Document Options</h3>
+          <h3 className="font-medium text-gray-900">Opsi Dokumen</h3>
         </div>
         
         <div className="space-y-3">
@@ -336,7 +305,7 @@ if (password) {
             />
           </label>
           <p className="text-xs text-gray-500">
-            Password to open the source file (Maximum 255 characters).
+            Kata sandi untuk membuka file sumber.
           </p>
         </div>
       </div>
@@ -344,37 +313,38 @@ if (password) {
       {/* Apply Button */}
       <div className="flex justify-end">
         <button className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center space-x-2">
-          <span>Apply to All</span>
+          <span>Apply</span>
           <ChevronDown className="w-4 h-4" />
         </button>
       </div>
     </div>
   )}
 </div>
+
 {/* How to Convert Section */}
-<div className="bg-white rounded-xl shadow-lg p-8 mb-12">
-  <h2 className="text-3xl font-bold text-gray-900 mb-6">How to Convert to PDF?</h2>
-  <ol className="space-y-4 text-gray-700">
-    <li className="flex items-start">
-      <span className="font-bold mr-2">1.</span>
-      <span>Click the <span className="font-semibold">"Choose Files"</span> button and select the files you want to convert.</span>
-    </li>
-    <li className="flex items-start">
-      <span className="font-bold mr-2">2.</span>
-      <span>Convert to PDF by clicking on the <span className="font-semibold">"Convert"</span> button.</span>
-    </li>
-    <li className="flex items-start">
-      <span className="font-bold mr-2">3.</span>
-      <span>When the status change to "Done" click the <span className="font-semibold">"Download PDF"</span> button.</span>
-    </li>
-  </ol>
-</div>
+        <div className="bg-white rounded-xl shadow-lg p-8 mb-12">
+          <h2 className="text-3xl font-bold text-gray-900 mb-6">Cara Konversi ke PDF?</h2>
+          <ol className="space-y-4 text-gray-700">
+            <li className="flex items-start">
+              <span className="font-bold mr-2">1.</span>
+              <span>Klik tombol <span className="font-semibold">"Pilih File"</span> dan pilih file yang ingin Anda konversi.</span>
+            </li>
+            <li className="flex items-start">
+              <span className="font-bold mr-2">2.</span>
+              <span>Konversi ke PDF dengan mengklik tombol <span className="font-semibold">"Konversi"</span>.</span>
+            </li>
+            <li className="flex items-start">
+              <span className="font-bold mr-2">3.</span>
+              <span>Ketika status berubah menjadi "Selesai" klik tombol <span className="font-semibold">"Unduh PDF"</span>.</span>
+            </li>
+          </ol>
+        </div>
       </main>
 
       {/* Footer */}
       <footer className="bg-slate-800 text-white mt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="grid grid-cols-2 md:grid-cols-6 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-1 gap-8">
             
             <div>© catatin.ai · All rights reserved (2025)</div>
           </div>
