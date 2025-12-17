@@ -1,13 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import { FileText, Upload, Download, Shield, Cloud, ArrowRight } from 'lucide-react';
+import { FileText, Upload, Download, Shield, Cloud, ArrowRight, Award, Star, Settings, ChevronDown, ChevronUp } from 'lucide-react';
+
 
 export default function Convert() {
   const [file, setFile] = useState<File | null>(null);
   const [format, setFormat] = useState('excel');
   const [loading, setLoading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+const [compressionLevel, setCompressionLevel] = useState('no-compression');
+const [password, setPassword] = useState('');
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -39,8 +43,12 @@ export default function Convert() {
 
     try {
       const formData = new FormData();
-      formData.append('file', file);
-      formData.append('format', format);
+formData.append('file', file);
+formData.append('format', format);
+formData.append('compressionLevel', compressionLevel);  // ← BARU
+if (password) {
+  formData.append('password', password);  // ← BARU
+}
 
       // Ganti dengan URL webhook n8n Anda
       const n8nWebhookUrl = 'https://your-n8n-instance.com/webhook/pdf-converter';
@@ -66,6 +74,7 @@ export default function Convert() {
     }
   };
 
+  
   const quickActions = [
     { label: 'Compress PDFs to 2MB', icon: ArrowRight },
     { label: 'Convert Audio to Mp3', icon: ArrowRight },
@@ -81,10 +90,22 @@ export default function Convert() {
   ];
 
   const features = [
-    { icon: FileText, title: 'Convert Any File', description: 'Support for all major file formats' },
-    { icon: Cloud, title: 'Works Anywhere', description: 'No installation required' },
-    { icon: Shield, title: 'Privacy Guaranteed', description: 'Your files are secure' },
-  ];
+  { 
+    icon: Award,  // ← GANTI dari FileText
+    title: 'Best Quality',
+    description: 'Perform high-quality PDF conversions by adjusting page size, margins, and orientation. Plus, you can also batch convert PDF files.'
+  },
+  { 
+    icon: Star,  // ← GANTI dari Cloud
+    title: 'All-In-One Tool',
+    description: 'Supports more than 300+ PDF conversions. Convert any file to PDF or convert from PDF to other formats. All using a single web tool!'
+  },
+  { 
+    icon: Shield, 
+    title: 'Free & Secure',
+    description: 'This PDF converter is free. It works on Windows, Mac, Linux, Chrome, Edge, Firefox... pretty much any web browser. Plus, we upload files over a secure HTTPS connection and delete all files automatically after a few hours. So you can convert files without worrying about file security and privacy.'
+  },
+];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
@@ -245,23 +266,109 @@ export default function Convert() {
           ))}
         </div>
 
-        {/* Features */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
-          {features.map((feature, index) => {
-            const Icon = feature.icon;
-            return (
-              <div key={index} className="text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-100 rounded-full mb-4">
-                  <Icon className="w-8 h-8 text-indigo-600" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  {feature.title}
-                </h3>
-                <p className="text-gray-600">{feature.description}</p>
-              </div>
-            );
-          })}
+       {/* Advanced Settings */}
+<div className="mt-6 border border-gray-200 rounded-lg">
+  <button
+    onClick={() => setShowAdvanced(!showAdvanced)}
+    className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
+  >
+    <div className="flex items-center space-x-2">
+      <Settings className="w-5 h-5 text-gray-600" />
+      <span className="font-medium text-gray-900">Advanced settings (optional)</span>
+    </div>
+    {showAdvanced ? (
+      <ChevronUp className="w-5 h-5 text-gray-400" />
+    ) : (
+      <ChevronDown className="w-5 h-5 text-gray-400" />
+    )}
+  </button>
+
+  {showAdvanced && (
+    <div className="border-t border-gray-200 p-4 space-y-6">
+      {/* Compress Section */}
+      <div className="bg-gray-50 rounded-lg p-4">
+        <div className="flex items-center space-x-2 mb-4">
+          <Settings className="w-4 h-4 text-gray-600" />
+          <h3 className="font-medium text-gray-900">Compress</h3>
         </div>
+        
+        <div className="space-y-3">
+          <label className="block">
+            <span className="text-sm font-medium text-gray-700 mb-2 block">
+              Compression level
+            </span>
+            <select
+              value={compressionLevel}
+              onChange={(e) => setCompressionLevel(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
+            >
+              <option value="no-compression">No Compression</option>
+              <option value="low">Low - Minimal compression, higher quality</option>
+              <option value="medium">Medium - Balance between quality and size</option>
+              <option value="high">High - Maximum compression, smaller size</option>
+            </select>
+          </label>
+          <p className="text-xs text-gray-500">
+            Select the desired compression level: No Compression for original quality, High for maximum compression and smaller size, Medium for a balance between quality and size, or Low for minimal compression and higher quality.
+          </p>
+        </div>
+      </div>
+
+      {/* Document Options Section */}
+      <div className="bg-gray-50 rounded-lg p-4">
+        <div className="flex items-center space-x-2 mb-4">
+          <Settings className="w-4 h-4 text-gray-600" />
+          <h3 className="font-medium text-gray-900">Document Options</h3>
+        </div>
+        
+        <div className="space-y-3">
+          <label className="block">
+            <span className="text-sm font-medium text-gray-700 mb-2 block">
+              Password (optional)
+            </span>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter password"
+              maxLength={255}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            />
+          </label>
+          <p className="text-xs text-gray-500">
+            Password to open the source file (Maximum 255 characters).
+          </p>
+        </div>
+      </div>
+
+      {/* Apply Button */}
+      <div className="flex justify-end">
+        <button className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center space-x-2">
+          <span>Apply to All</span>
+          <ChevronDown className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  )}
+</div>
+{/* How to Convert Section */}
+<div className="bg-white rounded-xl shadow-lg p-8 mb-12">
+  <h2 className="text-3xl font-bold text-gray-900 mb-6">How to Convert to PDF?</h2>
+  <ol className="space-y-4 text-gray-700">
+    <li className="flex items-start">
+      <span className="font-bold mr-2">1.</span>
+      <span>Click the <span className="font-semibold">"Choose Files"</span> button and select the files you want to convert.</span>
+    </li>
+    <li className="flex items-start">
+      <span className="font-bold mr-2">2.</span>
+      <span>Convert to PDF by clicking on the <span className="font-semibold">"Convert"</span> button.</span>
+    </li>
+    <li className="flex items-start">
+      <span className="font-bold mr-2">3.</span>
+      <span>When the status change to "Done" click the <span className="font-semibold">"Download PDF"</span> button.</span>
+    </li>
+  </ol>
+</div>
       </main>
 
       {/* Footer */}
