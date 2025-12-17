@@ -207,9 +207,9 @@ export default function SignUpForm() {
                     )}
                   </span>
                 </div>
-                {passwordError && (
-                  <p className="text-red-500 text-sm mt-1">{passwordError}</p>
-                )}
+                {confirmPassword && password !== confirmPassword && (
+                <p className="text-sm text-red-500 mt-1">Passwords tidak sama.</p>
+              )}
               </div>
 
               <div className="flex items-center gap-3">

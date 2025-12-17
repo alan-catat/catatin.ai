@@ -8,6 +8,7 @@ import Button from "@/components/ui/button/Button";
 import EyeIcon from "@/icons/EyeIcon";
 import EyeCloseIcon from "@/icons/EyeCloseIcon";
 import Link from "next/link";
+import { useAuth } from '@/lib/auth-context';
 
 type SignInFormProps = {
   redirectTo: string;
@@ -21,6 +22,7 @@ export default function SignInForm({ redirectTo }: SignInFormProps) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const { login } = useAuth();
 
   // URL webhook n8n untuk login
   const N8N_SIGNIN_URL =
@@ -28,33 +30,35 @@ export default function SignInForm({ redirectTo }: SignInFormProps) {
     "https://your-n8n-domain.com/webhook/signin";
     
   const WEBHOOK_GOOGLE = process.env.NEXT_PUBLIC_N8N_GOOGLE_SIGNIN_URL!;
+  
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setErrorMsg("");
 
     try {
-      const response = await fetch(N8N_SIGNIN_URL, {
+      // ✅ KIRIM KE API ROUTE (bukan langsung ke N8N)
+      // API route akan validasi ke N8N dan set cookie httpOnly
+      const response = await fetch('/api/auth/login', {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.toLowerCase(), password }),
+        body: JSON.stringify({ 
+          email: email.toLowerCase(), 
+          password,
+          n8nUrl: N8N_SIGNIN_URL // kirim URL n8n ke API route
+        }),
+        credentials: 'include', // PENTING: untuk terima cookies
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error(`Gagal login (${response.status})`);
+        throw new Error(data.error || `Gagal login (${response.status})`);
       }
 
-      const text = await response.text();
-      let data;
-      try {
-        data = JSON.parse(text);
-      } catch {
-        data = text;
-      }
-
-      // ✅ LOGIN BERHASIL (respon object)
-      if (typeof data === "object" && data.success && data.user) {
-        // Simpan session
+      // ✅ LOGIN BERHASIL
+      if (data.success && data.user) {
+        // Tetap simpan di localStorage untuk kompatibilitas dengan code lain
         localStorage.setItem("user_email", data.user.email);
         if (data.token) localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
@@ -62,19 +66,18 @@ export default function SignInForm({ redirectTo }: SignInFormProps) {
         // ✅ REMEMBER ME: Simpan credentials jika checkbox dicentang
         if (isChecked) {
           localStorage.setItem("remembered_email", email.toLowerCase());
-          // Simpan password (encode base64 untuk sedikit keamanan)
           localStorage.setItem("remembered_password", btoa(password));
         } else {
-          // Hapus jika tidak dicentang
           localStorage.removeItem("remembered_email");
           localStorage.removeItem("remembered_password");
         }
 
+        // Cookie sudah di-set oleh API route, jadi user akan tetap login
         setTimeout(() => router.push(redirectTo || "/dashboard-user/profile"), 200);
         return;
       }
 
-      // ✅ LOGIN BERHASIL (respon plain text)
+      // ✅ LOGIN BERHASIL (respon plain text) - backward compatibility
       if (typeof data === "string" && data.toLowerCase().includes("sukses")) {
         localStorage.setItem("user_email", email.toLowerCase());
         localStorage.setItem("user", JSON.stringify({ email: email.toLowerCase() }));
@@ -100,7 +103,7 @@ export default function SignInForm({ redirectTo }: SignInFormProps) {
       );
     } catch (err: any) {
       console.error("Login error:", err);
-      setErrorMsg("Tidak dapat terhubung ke server. Coba lagi nanti.");
+      setErrorMsg(err.message || "Tidak dapat terhubung ke server. Coba lagi nanti.");
     } finally {
       setLoading(false);
     }
@@ -198,7 +201,7 @@ export default function SignInForm({ redirectTo }: SignInFormProps) {
               <div className="flex items-center gap-3">
                 <Checkbox checked={isChecked} onChange={setIsChecked} />
                 <span className="block font-normal text-gray-700 text-theme-sm dark:text-gray-400">
-                  Tetap Masuk
+                  Ingat aku
                 </span>
               </div>
               <Link

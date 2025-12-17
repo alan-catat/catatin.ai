@@ -44,7 +44,6 @@ const categories = [
   { value: "Bisnis - Biaya Proyek/Layanan", label: "Bisnis - Biaya Proyek/Layanan", type: "Bisnis" },
   { value: "Bisnis - Biaya Entertaint", label: "Bisnis - Biaya Entertaint", type: "Bisnis" },
   { value: "Bisnis - Pendapatan", label: "Bisnis - Pendapatan", type: "Bisnis" },
-  { value: "Bisnis - Kamera", label: "Bisnis - Kamera", type: "Bisnis" },
   { value: "Bisnis - Uang Muka Klien / DP", label: "Bisnis - Uang Muka Klien / DP", type: "Bisnis" },
   { value: "Bisnis - Pengeluaran lainnya", label: "Bisnis - Pengeluaran lainnya", type: "Bisnis" },
   { value: "Bisnis - Pendapatan lainnya", label: "Bisnis - Pendapatan lainnya", type: "Bisnis" },

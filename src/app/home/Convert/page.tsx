@@ -268,63 +268,7 @@ export default function Convert() {
       <footer className="bg-slate-800 text-white mt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="grid grid-cols-2 md:grid-cols-6 gap-8">
-            <div>
-              <h4 className="font-semibold mb-4">Video Converter</h4>
-              <ul className="space-y-2 text-sm text-gray-300">
-                <li>MP4 Converter</li>
-                <li>Video to GIF</li>
-                <li>MOV to MP4</li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Audio Converter</h4>
-              <ul className="space-y-2 text-sm text-gray-300">
-                <li>MP3 Converter</li>
-                <li>MP4 to MP3</li>
-                <li>Video to MP3</li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Image Converter</h4>
-              <ul className="space-y-2 text-sm text-gray-300">
-                <li>JPG to PDF</li>
-                <li>PDF to JPG</li>
-                <li>HEIC to JPG</li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Document & Ebook</h4>
-              <ul className="space-y-2 text-sm text-gray-300">
-                <li>PDF to WORD</li>
-                <li>EPUB to PDF</li>
-                <li>EPUB to MOBI</li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Archive & Time</h4>
-              <ul className="space-y-2 text-sm text-gray-300">
-                <li>RAR to Zip</li>
-                <li>PST to EST</li>
-                <li>CST to EST</li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Unit Converter</h4>
-              <ul className="space-y-2 text-sm text-gray-300">
-                <li>Lbs to Kg</li>
-                <li>Kg to Lbs</li>
-                <li>Feet to Meters</li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-gray-700 mt-8 pt-8 flex justify-between text-sm text-gray-400">
-            <div className="space-x-6">
-              <a href="#" className="hover:text-white">About Us</a>
-              <a href="#" className="hover:text-white">Donate</a>
-              <a href="#" className="hover:text-white">Privacy</a>
-              <a href="#" className="hover:text-white">Terms</a>
-              <a href="#" className="hover:text-white">Contact</a>
-            </div>
+            
             <div>© catatin.ai · All rights reserved (2025)</div>
           </div>
         </div>

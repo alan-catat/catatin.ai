@@ -8,6 +8,8 @@ import { Wallet, ShoppingBag, Briefcase, CreditCard, DollarSign, ChevronDown, X,
 import { USER_OVERVIEWS } from "@/config/variables";
 import "react-datepicker/dist/react-datepicker.css";
 import DatePicker from "@/components/form/date-picker";
+import { useAuth } from '@/lib/auth-context';
+import { useRouter } from 'next/navigation';
 
 function formatDateLocal(d: Date) {
   const y = d.getFullYear();
@@ -68,6 +70,8 @@ function getMostExpensive(cashflows: CashFlow[]) {
 
 export default function DashboardUser() {
   const { setAlertData } = useAlert();
+    const { user, loading: authLoading, logout } = useAuth();
+  const router = useRouter();
   const [mostExpensive, setMostExpensive] = useState<any[]>([]);
   const [largestIncome, setLargestIncome] = useState<any[]>([]);
   const [chartLoading, setChartLoading] = useState(false);
@@ -81,6 +85,7 @@ export default function DashboardUser() {
       const [tempDateTo, setTempDateTo] = useState<string>("");
       const [dateFrom, setDateFrom] = useState<string>("");
 const [dateTo, setDateTo] = useState<string>("");
+
   
   // ✅ PERUBAHAN: Tambah state untuk multi-select (nama variable baru agar tidak bentrok)
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
@@ -142,11 +147,12 @@ const [dateTo, setDateTo] = useState<string>("");
   // ✅ TIDAK UBAH PARAMETER - tetap pakai groupName seperti aslinya
   async function fetchCashFlows(period?: string, groupName?: string) {
     try {
-      const storedEmail = typeof window !== "undefined" ? localStorage.getItem("user_email") : null;
-      if (!storedEmail) {
-        console.warn("Email user tidak ditemukan di localStorage");
-        return [];
-      }
+      // Gunakan email dari auth context (dari cookie)
+if (!user?.email) {
+  console.warn("User tidak terautentikasi");
+  return [];
+}
+const storedEmail = user.email;
 
       const url = process.env.NEXT_PUBLIC_N8N_GETCASHFLOW_URL;
       if (!url) throw new Error("NEXT_PUBLIC_N8N_GETCASHFLOW_URL");
@@ -324,10 +330,39 @@ useEffect(() => {
       }
     })();
   }, [selectedPeriod, selectedGroups]);
+// Check authentication loading
+if (authLoading) {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-gray-100"></div>
+        <p className="mt-4 text-gray-600 dark:text-gray-400">Memuat...</p>
+      </div>
+    </div>
+  );
+}
 
-  if (loading) return <div className="text-center mt-10">Memuat dashboard...</div>;
+// Redirect jika tidak authenticated
+useEffect(() => {
+  if (!authLoading && !user) {
+    router.push('/auth/dashboard-user/signin');
+  }
+}, [authLoading, user, router]);
 
-  
+if (authLoading) {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+    </div>
+  );
+}
+
+if (!user) {
+  return null; // Sedang redirect
+}
+
+// Dashboard loading
+if (loading) return <div className="text-center mt-10">Memuat dashboard...</div>;
 
   return (
     <div className="p-6 space-y-6">

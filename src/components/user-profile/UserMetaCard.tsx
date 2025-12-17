@@ -9,6 +9,7 @@ import Label from "../form/Label";
 import { useAlert } from "../ui/alert/Alert";
 import Image from "next/image";
 import DatePicker from "@/components/form/date-picker";
+import Link from "next/link";
 
 // ✅ PINDAHKAN SEMUA HELPER FUNCTIONS KE LUAR COMPONENT
 const convertDriveUrl = (url?: string) => {
@@ -282,9 +283,9 @@ export default function UserMetaCard({ profile }: { profile: any }) {
 
         <button
           onClick={openModal}
-          className="flex items-center gap-2 rounded-xl border border-gray-300 bg-[#BCD4B5] px-6 py-1 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 lg:w-auto"
+          className="flex items-center gap-2 rounded-xl border border-gray-300 bg-[#BCD4B5] px-6 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 lg:w-auto"
         >
-          ✏️ Edit
+         <b>Edit</b>
         </button>
       </div>
 
@@ -445,6 +446,9 @@ export default function UserMetaCard({ profile }: { profile: any }) {
             </div>
 
             <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
+              <span className="text-brand-500 hover:text-brand-600 dark:text-brand-400">
+                  <Link href="/auth/reset-password/update?from=dashboard">-Ganti Password-</Link>
+                      </span>
               <Button size="sm" variant="outline" onClick={closeModal}>Keluar</Button>
 
               <Button
