@@ -263,7 +263,7 @@ useEffect(() => {
   
   if (!authLoading && !user) {
     console.log('❌ Not authenticated, redirecting to signin');
-    router.push('/auth/signin');
+    router.push('/auth/dashboard-user/signin');
   }
 }, [mounted, authLoading, user, router]);
 
