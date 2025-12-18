@@ -473,59 +473,7 @@ export default function Paket() {
           })}
       </div>
 
-      {showAllContent && (
-        <section className="max-w-7xl mx-auto w-full px-6 mb-20">
-          <h3 className="text-3xl font-bold mb-8 text-center bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
-            Bandingkan Semua Fitur
-          </h3>
-          <div className="overflow-x-auto rounded-xl shadow-xl border border-gray-200">
-            <table className="min-w-full bg-white text-sm">
-              <thead>
-                <tr className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white">
-                  <th className="p-4 text-left font-semibold">Fitur</th>
-                  {packages.map((pkg) => (
-                    <th key={pkg.id} className="p-4 text-center font-semibold min-w-[150px]">
-                      {pkg.name}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {allFeatures.map((feature, idx) => (
-                  <tr
-                    key={idx}
-                    className={`border-t ${
-                      idx % 2 === 0 ? "bg-white" : "bg-gray-50"
-                    } hover:bg-blue-50 transition`}
-                  >
-                    <td className="p-4 font-medium text-gray-700">{feature}</td>
-                    {packages.map((pkg) => {
-                      const plan = pkg.billing_plans.find(
-                        (bp) => bp.billing_cycle === billingCycle
-                      );
-                      const value = plan?.features[feature];
-
-                      return (
-                        <td key={pkg.id} className="p-4 text-center">
-                          {typeof value === "boolean" ? (
-                            value ? (
-                              <span className="text-green-500 font-bold text-lg">✓</span>
-                            ) : (
-                              <span className="text-gray-300">—</span>
-                            )
-                          ) : (
-                            <span className="text-gray-700 font-medium">{value}</span>
-                          )}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      )}
+      
     </main>
     </div>
   );
