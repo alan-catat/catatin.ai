@@ -131,7 +131,7 @@ expires.setDate(expires.getDate() + 2); // 2 hari dari sekarang
 
 response.cookies.set('auth-token', token, {
   httpOnly: true,
-  secure: false, // false untuk localhost
+  secure: process.env.NODE_ENV === 'production', // false untuk localhost
   sameSite: 'lax',
   maxAge: 172800, // 2 hari dalam detik (60*60*24*2)
   expires: expires, // ← TAMBAH INI
