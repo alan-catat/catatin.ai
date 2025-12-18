@@ -41,13 +41,14 @@ export default function SignInForm({ redirectTo }: SignInFormProps) {
       // API route akan validasi ke N8N dan set cookie httpOnly
       const response = await fetch('/api/auth/login', {
         method: "POST",
+        credentials: 'include', // PENTING: untuk terima cookies
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           email: email.toLowerCase(), 
           password,
           n8nUrl: N8N_SIGNIN_URL // kirim URL n8n ke API route
         }),
-        credentials: 'include', // PENTING: untuk terima cookies
+        
       });
 
       const data = await response.json();
@@ -72,9 +73,9 @@ export default function SignInForm({ redirectTo }: SignInFormProps) {
           localStorage.removeItem("remembered_password");
         }
 
-        // Cookie sudah di-set oleh API route, jadi user akan tetap login
-        setTimeout(() => router.push(redirectTo || "/dashboard-user/profile"), 200);
-        return;
+       await new Promise((r) => setTimeout(r, 0));
+router.push(redirectTo || "/dashboard-user/profile");
+
       }
 
       // ✅ LOGIN BERHASIL (respon plain text) - backward compatibility

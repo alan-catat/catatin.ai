@@ -4,22 +4,16 @@ import type { NextRequest } from 'next/server'
 import { jwtVerify } from 'jose'
 
 export async function GET(request: NextRequest) {
+  const token = request.cookies.get('auth-token')?.value
+  if (!token) {
+    return NextResponse.json({ user: null }, { status: 401 })
+  }
+
   try {
-    const token = request.cookies.get('auth-token')?.value
-
-    if (!token) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      )
-    }
-
-    if (!process.env.JWT_SECRET) {
-      throw new Error('JWT_SECRET not defined')
-    }
-
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET)
-    const { payload } = await jwtVerify(token, secret)
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET!)
+    const { payload } = await jwtVerify(token, secret, {
+      clockTolerance: 5,
+    })
 
     return NextResponse.json({
       user: {
@@ -28,11 +22,8 @@ export async function GET(request: NextRequest) {
         name: payload.name,
       },
     })
-
   } catch (err) {
-    return NextResponse.json(
-      { error: 'Invalid or expired token' },
-      { status: 401 }
-    )
+    console.error('JWT error:', err)
+    return NextResponse.json({ user: null }, { status: 401 })
   }
 }

@@ -1,20 +1,15 @@
-"use client";
+// app/dashboard-user/layout.tsx
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import ClientProviders from "./clientprovider";
 
-import { SidebarProvider } from "@/context/SidebarContext";
-import { ThemeProvider } from "@/context/ThemeContext";
-import AdminLayout from "./AdminLayout"; 
-import { UserProvider } from "@/context/UserContext";
+export default async function Layout({ children }: { children: React.ReactNode }) {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("auth-token")?.value;
 
-export default function DashboardUserLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <ThemeProvider>
-      <SidebarProvider>
-        <AdminLayout>{children}</AdminLayout>
-      </SidebarProvider>
-    </ThemeProvider>
-  );
+  if (!token) {
+    redirect("/auth/signin");
+  }
+
+  return <ClientProviders>{children}</ClientProviders>;
 }

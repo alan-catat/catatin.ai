@@ -1,10 +1,6 @@
-import { Metadata } from "next";
+// app/dashboard-user/page.tsx
 import DashboardClient from "./DashboardClient";
 
-export const metadata: Metadata = {
-  title: "catatin.ai",
-};
-
-export default function DashboardPage() {
+export default function Page() {
   return <DashboardClient />;
 }
