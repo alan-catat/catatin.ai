@@ -1,8 +1,9 @@
-// clientprovider.tsx
-'use client';
+"use client";
 
-import { AuthProvider } from '@/lib/auth-context';
-import AdminLayout from './AdminLayout';
+import { SidebarProvider } from "@/context/SidebarContext";
+import { ThemeProvider } from "@/context/ThemeContext";
+import { AuthProvider } from "@/lib/auth-context";
+import AdminLayout from "./AdminLayout";
 
 interface User {
   id: string;
@@ -21,7 +22,11 @@ export default function ClientProviders({
 }: ClientProvidersProps) {
   return (
     <AuthProvider initialUser={user}>
-      <AdminLayout>{children}</AdminLayout>
+      <ThemeProvider>
+        <SidebarProvider>
+          <AdminLayout>{children}</AdminLayout>
+        </SidebarProvider>
+      </ThemeProvider>
     </AuthProvider>
   );
 }
