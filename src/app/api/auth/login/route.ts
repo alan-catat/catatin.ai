@@ -100,8 +100,19 @@ export async function POST(request: Request) {
       .setExpirationTime('2d') // 2 hari
       .sign(secret);
 
-    console.log('JWT token generated successfully');
+    const cookieExpires = new Date();
+cookieExpires.setDate(cookieExpires.getDate() + 2);
 
+const cookieValue = [
+  `auth-token=${token}`,
+  `Path=/`,
+  `Max-Age=172800`,
+  `Expires=${cookieExpires.toUTCString()}`,
+  `HttpOnly`,
+  `SameSite=Lax`
+].join('; ');
+
+console.log('🍪 Setting cookie:', cookieValue.substring(0, 100) + '...');
     // Buat response
     const response = NextResponse.json({
       success: true,
@@ -114,15 +125,25 @@ export async function POST(request: Request) {
       token: token, // untuk localStorage (backward compatibility)
     });
 
-    // Set httpOnly cookie (2 hari)
-    response.cookies.set('auth-token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 2, // 2 hari
-      path: '/',
-    });
+    // ✅ Set cookie dengan expires explicit
+const expires = new Date();
+expires.setDate(expires.getDate() + 2); // 2 hari dari sekarang
 
+response.cookies.set('auth-token', token, {
+  httpOnly: true,
+  secure: false, // false untuk localhost
+  sameSite: 'lax',
+  maxAge: 172800, // 2 hari dalam detik (60*60*24*2)
+  expires: expires, // ← TAMBAH INI
+  path: '/',
+});
+
+console.log('🍪 Cookie set with:', {
+  maxAge: 172800,
+  expires: expires.toISOString(),
+  sameSite: 'lax',
+  httpOnly: true
+});
     console.log('Cookie set successfully');
 
     return response;

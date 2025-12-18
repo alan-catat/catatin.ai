@@ -72,6 +72,7 @@ export default function DashboardUser() {
   const { setAlertData } = useAlert();
     const { user, loading: authLoading, logout } = useAuth();
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
   const [mostExpensive, setMostExpensive] = useState<any[]>([]);
   const [largestIncome, setLargestIncome] = useState<any[]>([]);
   const [chartLoading, setChartLoading] = useState(false);
@@ -95,6 +96,9 @@ const [dateTo, setDateTo] = useState<string>("");
   // ✅ State untuk temporary filter (belum apply)
   const [tempPeriod, setTempPeriod] = useState<string>("");
   const [tempGroups, setTempGroups] = useState<string[]>([]);
+
+
+  
 
   const colors = ["text-blue-500", "text-green-500", "text-purple-500", "text-orange-500", "text-pink-500"];
   const icons = [Wallet, ShoppingBag, Briefcase, CreditCard, DollarSign];
@@ -144,15 +148,15 @@ const [dateTo, setDateTo] = useState<string>("");
     return Object.entries(grouped).map(([name, value]) => ({ name, value }));
   }
 
-  // ✅ TIDAK UBAH PARAMETER - tetap pakai groupName seperti aslinya
   async function fetchCashFlows(period?: string, groupName?: string) {
-    try {
-      // Gunakan email dari auth context (dari cookie)
-if (!user?.email) {
-  console.warn("User tidak terautentikasi");
-  return [];
-}
-const storedEmail = user.email;
+  try {
+    // ✅ Pakai email dari auth context (dari cookie)
+    if (!user?.email) {
+      console.warn("User tidak terauthentikasi");
+      return [];
+    }
+    const storedEmail = user.email;
+    console.log('📧 Fetching cashflows for:', storedEmail);
 
       const url = process.env.NEXT_PUBLIC_N8N_GETCASHFLOW_URL;
       if (!url) throw new Error("NEXT_PUBLIC_N8N_GETCASHFLOW_URL");
@@ -244,125 +248,148 @@ const storedEmail = user.email;
   setDateTo(tempDateTo);
   };
 
-  useEffect(() => {
-    const init = async () => {
+// 1. Set mounted on first render
+useEffect(() => {
+  setMounted(true);
+}, []);
+
+// 2. Handle auth redirect
+useEffect(() => {
+  if (!mounted) return;
+  
+  if (!authLoading && !user) {
+    console.log('❌ Not authenticated, redirecting to signin');
+    router.push('/auth/dashboard-user/signin');
+  }
+}, [mounted, authLoading, user, router]);
+
+// 3. Close dropdown when clicking outside
+useEffect(() => {
+  const handleClickOutside = (event: MouseEvent) => {
+    if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      setIsDropdownOpen(false);
+    }
+  };
+  document.addEventListener('mousedown', handleClickOutside);
+  return () => document.removeEventListener('mousedown', handleClickOutside);
+}, []);
+
+// 4. Initialize dashboard when user is authenticated
+useEffect(() => {
+  console.log('🔵 useEffect #4 triggered:', { 
+    mounted, 
+    authLoading, 
+    hasUser: !!user, 
+    userEmail: user?.email 
+  });
+
+  if (!mounted || authLoading || !user?.email) {
+    console.log('⏳ Waiting for auth...', { mounted, authLoading, hasUser: !!user });
+    return;
+  }
+
+  const init = async () => {
+    console.log('🚀 Initializing dashboard for:', user.email);
+    
+    try {
       const p = generatePeriods();
+      console.log('📅 Periods generated:', p.length);
       setPeriods(p);
-      // ✅ Kirim "All Groups" saat init
+      
+      console.log('📡 Fetching cashflows...');
       const flows = await fetchCashFlows(p[p.length - 1], "All Groups");
+      console.log('✅ Cashflows fetched:', flows.length, 'items');
+      
       setSelectedPeriod(p[p.length - 1]);
-      setTempPeriod(p[p.length - 1]); // ✅ Set temp juga
+      setTempPeriod(p[p.length - 1]);
       setSelectedGroups([]);
-      setTempGroups([]); // ✅ Set temp juga
-      setStats(calculateStats(flows));
+      setTempGroups([]);
+      
+      const calculatedStats = calculateStats(flows);
+      console.log('📊 Stats calculated:', calculatedStats);
+      setStats(calculatedStats);
+      
       setMostExpensive(getMostExpensive(flows));
       setLargestIncome(getLargestIncome(flows));
       setLoading(false);
-    };
-    init();
-  }, []);
+      console.log('✅ Dashboard initialized!');
+    } catch (error) {
+      console.error('❌ Init error:', error);
+      setLoading(false); // ← PENTING: Set loading false even on error
+    }
+  };
+  
+  init();
+}, [mounted, authLoading, user]);
+
+// 5. Update data when filters change
 useEffect(() => {
-    if (!selectedPeriod) return;
+  if (!selectedPeriod || !mounted || authLoading || !user) return;
 
-    (async () => {
-      try {
-        setChartLoading(true);
-        
-        const flows = await fetchCashFlows(selectedPeriod, "All Groups");
-        
-        // Filter by groups
-        let filteredFlows = selectedGroups.length === 0 
-          ? flows 
-          : flows.filter(f => selectedGroups.includes(f.group_name || ''));
-        
-        // ✅ Tambahkan filter by date range
-        if (dateFrom || dateTo) {
-          filteredFlows = filteredFlows.filter(f => {
-            const flowDate = new Date(f.created_at);
-            const fromDate = dateFrom ? new Date(dateFrom) : null;
-            const toDate = dateTo ? new Date(dateTo) : null;
-            
-            if (fromDate && flowDate < fromDate) return false;
-            if (toDate && flowDate > toDate) return false;
-            return true;
-          });
-        }
-        
-        const newStats = calculateStats(filteredFlows);
-        setStats(newStats);
-        setMostExpensive(getMostExpensive(filteredFlows));
-        setLargestIncome(getLargestIncome(filteredFlows));
-      } catch (error) {
-        console.error('Error loading data:', error);
-      } finally {
-        setChartLoading(false);
+  (async () => {
+    try {
+      setChartLoading(true);
+      const flows = await fetchCashFlows(selectedPeriod, "All Groups");
+      
+      // Filter by groups
+      let filteredFlows = selectedGroups.length === 0 
+        ? flows 
+        : flows.filter(f => selectedGroups.includes(f.group_name || ''));
+      
+      // Filter by date range
+      if (dateFrom || dateTo) {
+        filteredFlows = filteredFlows.filter(f => {
+          const flowDate = new Date(f.created_at);
+          const fromDate = dateFrom ? new Date(dateFrom) : null;
+          const toDate = dateTo ? new Date(dateTo) : null;
+          
+          if (fromDate && flowDate < fromDate) return false;
+          if (toDate && flowDate > toDate) return false;
+          return true;
+        });
       }
-    })();
-  }, [selectedPeriod, selectedGroups, dateFrom, dateTo]); // ✅ Tambahkan dependencies
-  // ✅ FILTER DI FRONTEND - tapi tetap kirim "All Groups" ke backend
-  useEffect(() => {
-    if (!selectedPeriod) return;
+      
+      const newStats = calculateStats(filteredFlows);
+      setStats(newStats);
+      setMostExpensive(getMostExpensive(filteredFlows));
+      setLargestIncome(getLargestIncome(filteredFlows));
+    } catch (error) {
+      console.error('Error loading data:', error);
+    } finally {
+      setChartLoading(false);
+    }
+  })();
+}, [selectedPeriod, selectedGroups, dateFrom, dateTo, mounted, authLoading, user]);
 
-    (async () => {
-      try {
-        setChartLoading(true);
-        
-        // ✅ Selalu kirim "All Groups" untuk fetch semua data
-        const flows = await fetchCashFlows(selectedPeriod, "All Groups");
-        
-        // Filter di frontend berdasarkan selectedGroups
-        const filteredFlows = selectedGroups.length === 0 
-          ? flows 
-          : flows.filter(f => selectedGroups.includes(f.group_name || ''));
-        
-        const newStats = calculateStats(filteredFlows);
+if (!mounted) {
+  return null;
+}
 
-        setStats(newStats);
-        setMostExpensive(getMostExpensive(filteredFlows));
-        setLargestIncome(getLargestIncome(filteredFlows));
-      } catch (error) {
-        console.error('Error loading data:', error);
-        setStats({});
-        setMostExpensive([]);
-        setLargestIncome([]);
-      } finally {
-        setChartLoading(false);
-      }
-    })();
-  }, [selectedPeriod, selectedGroups]);
-// Check authentication loading
 if (authLoading) {
   return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
         <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-gray-100"></div>
-        <p className="mt-4 text-gray-600 dark:text-gray-400">Memuat...</p>
+        <p className="mt-4 text-gray-600 dark:text-gray-400">Memeriksa autentikasi...</p>
       </div>
     </div>
   );
 }
 
-// Redirect jika tidak authenticated
-useEffect(() => {
-  if (!authLoading && !user) {
-    router.push('/auth/dashboard-user/signin');
-  }
-}, [authLoading, user, router]);
+if (!user) {
+  return null;
+}
 
-if (authLoading) {
+if (loading) {
   return (
     <div className="min-h-screen flex items-center justify-center">
-      <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      <div className="text-center">
+        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-gray-100"></div>
+        <p className="mt-4 text-gray-600 dark:text-gray-400">Memuat data dashboard...</p>
+      </div>
     </div>
   );
 }
-
-if (!user) {
-  return null; // Sedang redirect
-}
-
-// Dashboard loading
-if (loading) return <div className="text-center mt-10">Memuat dashboard...</div>;
 
   return (
     <div className="p-6 space-y-6">

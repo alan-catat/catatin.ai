@@ -36,21 +36,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await fetch('/api/auth/me', {
         method: 'GET',
         credentials: 'include', // Penting untuk kirim cookies
+        cache: 'no-store',
       });
 
       if (response.ok) {
-        const data = await response.json();
-        setUser(data.user);
-      } else {
-        setUser(null);
-      }
-    } catch (error) {
-      console.error('Auth check failed:', error);
+      const data = await response.json();
+      console.log('✅ Auth check success:', data.user.email);
+      setUser(data.user);
+    } else {
+      console.log('❌ Auth check failed:', response.status);
       setUser(null);
-    } finally {
-      setLoading(false);
     }
-  };
+  } catch (error) {
+    console.error('Auth check error:', error);
+    setUser(null);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
