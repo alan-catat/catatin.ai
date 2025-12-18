@@ -248,6 +248,10 @@ const [dateTo, setDateTo] = useState<string>("");
   setDateTo(tempDateTo);
   };
 
+  // ========================================
+// useEffect Section - JANGAN DUPLIKAT!
+// ========================================
+
 // 1. Set mounted on first render
 useEffect(() => {
   setMounted(true);
@@ -259,7 +263,7 @@ useEffect(() => {
   
   if (!authLoading && !user) {
     console.log('❌ Not authenticated, redirecting to signin');
-    router.push('/auth/dashboard-user/signin');
+    router.push('/auth/signin');
   }
 }, [mounted, authLoading, user, router]);
 
@@ -276,13 +280,6 @@ useEffect(() => {
 
 // 4. Initialize dashboard when user is authenticated
 useEffect(() => {
-  console.log('🔵 useEffect #4 triggered:', { 
-    mounted, 
-    authLoading, 
-    hasUser: !!user, 
-    userEmail: user?.email 
-  });
-
   if (!mounted || authLoading || !user?.email) {
     console.log('⏳ Waiting for auth...', { mounted, authLoading, hasUser: !!user });
     return;
@@ -290,35 +287,18 @@ useEffect(() => {
 
   const init = async () => {
     console.log('🚀 Initializing dashboard for:', user.email);
-    
-    try {
-      const p = generatePeriods();
-      console.log('📅 Periods generated:', p.length);
-      setPeriods(p);
-      
-      console.log('📡 Fetching cashflows...');
-      const flows = await fetchCashFlows(p[p.length - 1], "All Groups");
-      console.log('✅ Cashflows fetched:', flows.length, 'items');
-      
-      setSelectedPeriod(p[p.length - 1]);
-      setTempPeriod(p[p.length - 1]);
-      setSelectedGroups([]);
-      setTempGroups([]);
-      
-      const calculatedStats = calculateStats(flows);
-      console.log('📊 Stats calculated:', calculatedStats);
-      setStats(calculatedStats);
-      
-      setMostExpensive(getMostExpensive(flows));
-      setLargestIncome(getLargestIncome(flows));
-      setLoading(false);
-      console.log('✅ Dashboard initialized!');
-    } catch (error) {
-      console.error('❌ Init error:', error);
-      setLoading(false); // ← PENTING: Set loading false even on error
-    }
+    const p = generatePeriods();
+    setPeriods(p);
+    const flows = await fetchCashFlows(p[p.length - 1], "All Groups");
+    setSelectedPeriod(p[p.length - 1]);
+    setTempPeriod(p[p.length - 1]);
+    setSelectedGroups([]);
+    setTempGroups([]);
+    setStats(calculateStats(flows));
+    setMostExpensive(getMostExpensive(flows));
+    setLargestIncome(getLargestIncome(flows));
+    setLoading(false);
   };
-  
   init();
 }, [mounted, authLoading, user]);
 
@@ -360,6 +340,10 @@ useEffect(() => {
     }
   })();
 }, [selectedPeriod, selectedGroups, dateFrom, dateTo, mounted, authLoading, user]);
+
+// ========================================
+// Render Checks
+// ========================================
 
 if (!mounted) {
   return null;

@@ -2,7 +2,7 @@ import {
     GridIcon, UserCircleIcon, ListIcon, PageIcon, PlugInIcon, CalenderIcon,
     ChatIcon,
   } from "@/icons";
-import { GroupIcon } from "lucide-react";
+import { GroupIcon, SubscriptIcon } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/icons";
 import { TelegramIcon } from "@/components/icons/icons";
   
@@ -37,6 +37,7 @@ import { TelegramIcon } from "@/components/icons/icons";
       { name: "Profil", path: "/dashboard-user/profile", icon: <UserCircleIcon /> },
       { name: "Channel", path: "/dashboard-user/add-channel", icon: <GroupIcon /> },
       { name: "Laporan", path: "/dashboard-user/reports", icon: <CalenderIcon /> },
+      { name: "Berlangganan", path: "/subscription  ", icon: <SubscriptIcon /> },
       
       
     ],

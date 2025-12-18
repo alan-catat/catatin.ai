@@ -27,22 +27,19 @@ export async function middleware(request: NextRequest) {
       
       console.log('✅ Token valid');
 
-      // ✅ AUTO-REDIRECT: Jika akses root, home, atau auth pages → redirect ke dashboard
-      if (pathname === '/' || pathname === '/home' || pathname.startsWith('/auth')) {
-        console.log('🔄 Redirecting to dashboard...');
-        return NextResponse.redirect(new URL('/dashboard-user', request.url));
-      }
-      
+      if (pathname === '/' || pathname === '/home' || pathname === '/auth/dashboard-user/signin') {
+  return NextResponse.redirect(new URL('/dashboard-user', request.url));
+}
+
       // ✅ Allow access ke dashboard dan pages lain
       return NextResponse.next();
 
-    } catch (error) {
-      console.log('❌ Token invalid, clearing cookie');
-      // Token invalid/expired, hapus cookie dan redirect ke login
-      const response = NextResponse.redirect(new URL('/auth/signin', request.url));
-      response.cookies.delete('auth-token');
-      return response;
-    }
+    } catch {
+  return NextResponse.redirect(
+    new URL('/auth/dashboard-user/signin', request.url)
+  );
+}
+
   }
 
   // ❌ JIKA USER BELUM LOGIN (tidak ada token)
@@ -50,7 +47,7 @@ export async function middleware(request: NextRequest) {
   // Redirect ke login jika coba akses protected route
   if (pathname.startsWith('/dashboard-user')) {
     console.log('🔒 Protected route, redirecting to signin');
-    return NextResponse.redirect(new URL('/auth/signin', request.url));
+    return NextResponse.redirect(new URL('/auth/dashboard-user/signin', request.url));
   }
 
   // Allow access ke public pages (/, /home, /auth/*)

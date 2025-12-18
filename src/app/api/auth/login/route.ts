@@ -1,6 +1,7 @@
 // app/api/auth/login/route.ts
 import { NextResponse } from 'next/server';
 import { SignJWT } from 'jose';
+import { randomUUID } from 'crypto';
 
 export async function POST(request: Request) {
   try {
@@ -91,29 +92,23 @@ export async function POST(request: Request) {
     );
     
     const token = await new SignJWT({ 
-      userId: userPayload.id || email,
-      email: userPayload.email || email,
-      name: userPayload.name || email.split('@')[0]
-    })
-      .setProtectedHeader({ alg: 'HS256' })
-      .setIssuedAt()
-      .setExpirationTime('2d') // 2 hari
-      .sign(secret);
+  userId: userPayload.id || email,
+  email: userPayload.email || email,
+  name: userPayload.name || '',
+  sessionId: crypto.randomUUID(), // ← ADD THIS: Unique per login
+  deviceInfo: request.headers.get('user-agent')?.substring(0, 50) || 'unknown' // Optional
+})
+  .setProtectedHeader({ alg: 'HS256' })
+  .setIssuedAt() // ← IMPORTANT: Timestamp
+  .setJti(crypto.randomUUID()) // ← ADD THIS: JWT ID (unique identifier)
+  .setExpirationTime('2d')
+  .sign(secret);
+
+console.log('🆔 Session ID:', token.substring(0, 30) + '...');
 
     const cookieExpires = new Date();
 cookieExpires.setDate(cookieExpires.getDate() + 2);
 
-const cookieValue = [
-  `auth-token=${token}`,
-  `Path=/`,
-  `Max-Age=172800`,
-  `Expires=${cookieExpires.toUTCString()}`,
-  `HttpOnly`,
-  `SameSite=Lax`
-].join('; ');
-
-console.log('🍪 Setting cookie:', cookieValue.substring(0, 100) + '...');
-    // Buat response
     const response = NextResponse.json({
       success: true,
       user: {
@@ -122,7 +117,6 @@ console.log('🍪 Setting cookie:', cookieValue.substring(0, 100) + '...');
         name: userPayload.name || email.split('@')[0],
         ...userPayload
       },
-      token: token, // untuk localStorage (backward compatibility)
     });
 
     // ✅ Set cookie dengan expires explicit
@@ -131,19 +125,12 @@ expires.setDate(expires.getDate() + 2); // 2 hari dari sekarang
 
 response.cookies.set('auth-token', token, {
   httpOnly: true,
-  secure: process.env.NODE_ENV === 'production', // false untuk localhost
-  sameSite: 'lax',
-  maxAge: 172800, // 2 hari dalam detik (60*60*24*2)
-  expires: expires, // ← TAMBAH INI
+  secure: true,              // ⬅️ JANGAN conditional
+  sameSite: 'none',          // ⬅️ INI KUNCI UTAMA
   path: '/',
+  maxAge: 60 * 60 * 24 * 2,  // 2 hari
 });
 
-console.log('🍪 Cookie set with:', {
-  maxAge: 172800,
-  expires: expires.toISOString(),
-  sameSite: 'lax',
-  httpOnly: true
-});
     console.log('Cookie set successfully');
 
     return response;

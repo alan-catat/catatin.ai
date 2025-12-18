@@ -1,45 +1,38 @@
 // app/api/auth/me/route.ts
-import { NextResponse } from 'next/server';
-import { jwtVerify } from 'jose';
-import { cookies } from 'next/headers';
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import { jwtVerify } from 'jose'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    // Ambil cookie dari request
-    const cookieStore = await cookies();
-    const token = cookieStore.get('auth-token')?.value;
+    const token = request.cookies.get('auth-token')?.value
 
-    // Jika tidak ada token, user belum login
     if (!token) {
       return NextResponse.json(
         { error: 'Not authenticated' },
         { status: 401 }
-      );
+      )
     }
 
-    // Verify JWT token
-    const secret = new TextEncoder().encode(
-      process.env.JWT_SECRET || 'default-secret-key-please-change-in-production-minimum-32-characters-long'
-    );
+    if (!process.env.JWT_SECRET) {
+      throw new Error('JWT_SECRET not defined')
+    }
 
-    const { payload } = await jwtVerify(token, secret);
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET)
+    const { payload } = await jwtVerify(token, secret)
 
-    // Return user data dari JWT payload
     return NextResponse.json({
       user: {
         id: payload.userId,
         email: payload.email,
         name: payload.name,
       },
-    });
+    })
 
-  } catch (error: any) {
-    console.error('Auth verification error:', error);
-    
-    // Jika token invalid/expired
+  } catch (err) {
     return NextResponse.json(
       { error: 'Invalid or expired token' },
       { status: 401 }
-    );
+    )
   }
 }
