@@ -5,6 +5,7 @@ import { createClient } from "@/utils/supabase/client"
 
 import { motion, AnimatePresence } from "framer-motion"
 import { X } from "lucide-react"
+import Paket from "./paket"
 
 export default function SubscriptionPage() {
   const supabase = createClient()
@@ -155,6 +156,7 @@ export default function SubscriptionPage() {
 
   return (
     <div className="p-6 space-y-6">
+      <Paket />
       {/* === Plan Info === */}
       {activePlan && (
         <div className="border rounded-xl p-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between

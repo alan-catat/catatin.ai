@@ -21,11 +21,18 @@ export default function Home() {
     button: (
       <div className="flex space-x-4">
         <button
-          onClick={() => setcreategroups(true)}
-          className="px-3 py-2 rounded-lg bg-cyan-700 text-white text-sm hover:bg-cyan-800 transition"
-        >
-          Tambah
-        </button>
+  onClick={() => {
+    setModalChannel("telegram");
+    setcreategroups(true);
+    setmodalgroupName("");
+    setmodalgroupType("");
+    setActivationCode("");
+    setIsActivated(false);
+  }}
+  className="px-3 py-2 rounded-lg bg-cyan-700 text-white text-sm hover:bg-cyan-800 transition"
+>
+  Tambah
+</button>
         <Link
           href="/Tutorial/Telegram/cara-membuat-group-telegram"
           className="px-12 py-2 text-brand-500 hover:text-brand-600 dark:text-brand-400 transition"
@@ -45,11 +52,18 @@ export default function Home() {
     button: (
       <div className="flex space-x-4">
         <button
-          onClick={() => setcreategroups(true)}
-          className="px-3 py-2 rounded-lg bg-emerald-700 text-white text-sm hover:bg-emerald-800 transition"
-        >
-          Tambah
-        </button>
+  onClick={() => {
+    setModalChannel("whatsapp");
+    setcreategroups(true);
+    setmodalgroupName(""); // pastikan kosong
+    setmodalgroupType("");
+    setActivationCode("");
+    setIsActivated(false);
+  }}
+  className="px-3 py-2 rounded-lg bg-emerald-700 text-white text-sm hover:bg-emerald-800 transition"
+>
+  Tambah
+</button>
         <Link
           href="/Tutorial/WhatsApp/cara-registrasi-whatsapp"
           className="px-12 py-2 text-brand-500 hover:text-brand-600 dark:text-brand-400 transition"
@@ -436,25 +450,23 @@ const fetchGroups = async () => {
         
         await checkAndGenerateActivation(userEmail, ModalChannel);
       }}>
-        <select 
-          value={ModalChannel} 
-          onChange={handleChannelChange} 
-          className="border rounded-lg px-3 py-2"
-          required
-        >
-          <option value="">-Channel- *</option>
-          <option value="telegram">Telegram</option>
-          <option value="whatsapp">Whatsapp</option>
-        </select>
-        <input 
-          value={modalgroupName} 
-          onChange={(e) => setmodalgroupName(e.target.value)} 
-          type="text" 
-          className="border rounded-lg px-3 py-2 disabled:bg-gray-100 disabled:cursor-not-allowed" 
-          placeholder="Nama Grup *" 
-          required={ModalChannel !== "whatsapp"}
-          disabled={ModalChannel === "whatsapp"}
-        />
+        <div className="text-sm font-medium">
+  Channel:{" "}
+  <span className="font-semibold capitalize">
+    {ModalChannel}
+  </span>
+</div>
+        {ModalChannel === "telegram" && (
+  <input 
+    value={modalgroupName} 
+    onChange={(e) => setmodalgroupName(e.target.value)} 
+    type="text" 
+    className="border rounded-lg px-3 py-2" 
+    placeholder="Nama Grup *" 
+    required
+  />
+)}
+
         
         <select 
           value={modalgroupType} 

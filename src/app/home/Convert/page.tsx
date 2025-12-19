@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FileText, Upload, Download, Shield, Cloud, ArrowRight, Award, Star, Settings, ChevronDown, ChevronUp } from 'lucide-react';
 import Link from 'next/link';
 
@@ -12,6 +12,27 @@ export default function Convert() {
   const [showAdvanced, setShowAdvanced] = useState(false);
 const [compressionLevel, setCompressionLevel] = useState('no-compression');
 const [password, setPassword] = useState('');
+const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  if (e.target.files && e.target.files[0]) {
+    const selectedFile = e.target.files[0];
+    setFile(selectedFile);
+    setPreviewUrl(URL.createObjectURL(selectedFile));
+  }
+};
+
+const handleDrop = (e: React.DragEvent) => {
+  e.preventDefault();
+  e.stopPropagation();
+  setDragActive(false);
+
+  if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+    const droppedFile = e.dataTransfer.files[0];
+    setFile(droppedFile);
+    setPreviewUrl(URL.createObjectURL(droppedFile));
+  }
+};
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -21,20 +42,6 @@ const [password, setPassword] = useState('');
     } else if (e.type === "dragleave") {
       setDragActive(false);
     }
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      setFile(e.dataTransfer.files[0]);
-    }
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) setFile(e.target.files[0]);
   };
 
   const convert = async () => {
@@ -106,6 +113,12 @@ if (password) {
     description: 'This PDF converter is free. It works on Windows, Mac, Linux, Chrome, Edge, Firefox... pretty much any web browser. Plus, we upload files over a secure HTTPS connection and delete all files automatically after a few hours. So you can convert files without worrying about file security and privacy.'
   },
 ];
+
+useEffect(() => {
+  return () => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+  };
+}, [previewUrl]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
@@ -186,14 +199,36 @@ if (password) {
                   </div>
                 </div>
                 <button
-                  onClick={() => setFile(null)}
-                  className="text-sm text-red-600 hover:text-red-700"
-                >
-                  Hapus file
-                </button>
+  onClick={() => {
+    setFile(null);
+    setPreviewUrl(null);
+  }}
+  className="text-sm text-red-600 hover:text-red-700"
+>
+  Hapus file
+</button>
               </div>
             )}
           </div>
+          {file && previewUrl && (
+  <div className="mt-6">
+    <h3 className="text-sm font-medium text-gray-700 mb-2">
+      Preview Dokumen
+    </h3>
+
+    <div className="border rounded-lg overflow-hidden bg-gray-100 h-[400px]">
+      <iframe
+        src={previewUrl}
+        className="w-full h-full"
+        title="PDF Preview"
+      />
+    </div>
+
+    <p className="text-xs text-gray-500 mt-2">
+      * Ini hanya preview, hasil konversi bisa berbeda tergantung format tujuan.
+    </p>
+  </div>
+)}
 
           {file && (
             <div className="mt-6 space-y-4">

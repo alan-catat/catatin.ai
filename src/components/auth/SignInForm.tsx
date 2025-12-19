@@ -97,17 +97,19 @@ router.push(redirectTo || "/dashboard-user/profile");
       }
 
       // ❌ LOGIN GAGAL
+      if (!data?.success) {
       setErrorMsg(
         typeof data === "string"
           ? data
           : data?.error || "Email atau password salah."
-      );
+      );}
     } catch (err: any) {
       console.error("Login error:", err);
       setErrorMsg(err.message || "Tidak dapat terhubung ke server. Coba lagi nanti.");
     } finally {
       setLoading(false);
     }
+    return;
   };
 
   const handleGoogleSignIn = () => {

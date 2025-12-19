@@ -2,9 +2,12 @@ import {
     GridIcon, UserCircleIcon, ListIcon, PageIcon, PlugInIcon, CalenderIcon,
     ChatIcon,
   } from "@/icons";
-import { GroupIcon, SubscriptIcon } from "lucide-react";
+import { CreditCard, CreditCardIcon, GroupIcon, SubscriptIcon } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/icons";
 import { TelegramIcon } from "@/components/icons/icons";
+import { Package } from "lucide-react";
+import { BadgeCheck } from "lucide-react";
+import { CalendarClock } from "lucide-react";
   
   export type NavItem = {
     name: string;
@@ -37,7 +40,7 @@ import { TelegramIcon } from "@/components/icons/icons";
       { name: "Profil", path: "/dashboard-user/profile", icon: <UserCircleIcon /> },
       { name: "Channel", path: "/dashboard-user/add-channel", icon: <GroupIcon /> },
       { name: "Laporan", path: "/dashboard-user/reports", icon: <CalenderIcon /> },
-      { name: "Berlangganan", path: "/subscription  ", icon: <SubscriptIcon /> },
+      { name: "Berlangganan", path: "/dashboard-user/subscriptions", icon: <CreditCard /> },
       
       
     ],

@@ -10,14 +10,12 @@ import Link from "next/link";
 
 const steps = ["Registrasi Akun","Verifikasi Akun", "Pembayaran", "Selesai"];
 
-// URL N8N Webhooks - GANTI DENGAN URL N8N ANDA
 const N8N_BASE_URL = "https://n8n.srv1074739.hstgr.cloud/webhook";
 
 export default function SubscriptionPageClient() {
     const searchParams = useSearchParams();
     const router = useRouter();
 
-    // Ambil data dari URL
     const packageId = searchParams.get("package");
     const planName = searchParams.get("plan") || "Biar Kebiasa";
     const billingCycle = searchParams.get("billing") || "monthly";
@@ -38,6 +36,10 @@ export default function SubscriptionPageClient() {
     const [verificationCode, setVerificationCode] = useState("");
     const [virtualAccount, setVirtualAccount] = useState<string>("");
 const [selectedBank, setSelectedBank] = useState<string>("");
+const [isLoginMode, setIsLoginMode] = useState(false);
+const [loginEmail, setLoginEmail] = useState('');
+const [loginPassword, setLoginPassword] = useState('');
+const [showLoginPassword, setShowLoginPassword] = useState(false);
 
     // Load progress dari localStorage
     useEffect(() => {
@@ -72,6 +74,70 @@ const [selectedBank, setSelectedBank] = useState<string>("");
     );
 };
 
+const handleLogin = async () => {
+    if (!loginEmail || !loginPassword) {
+        showToast("Mohon masukkan email dan password!", "error");
+        return;
+    }
+    
+    setLoading(true);
+    try {
+        const response = await fetch(`${N8N_BASE_URL}/signin`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                email: loginEmail,
+                password: loginPassword,
+            }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            // Simpan data user dari login
+            if (data.userId) {
+                setUserId(data.userId);
+            }
+            if (data.email) {
+                setEmail(data.email);
+            }
+            if (data.fullName) {
+                setFullName(data.fullName);
+            }
+            
+            localStorage.setItem('isRegistered', 'true');
+            localStorage.setItem('userData', JSON.stringify({
+                fullName: data.fullName || loginEmail,
+                Email: loginEmail,
+                userId: data.userId || "",
+                loggedInAt: new Date().toISOString()
+            }));
+            
+            // Langsung ke step pembayaran
+            saveProgress(2);
+            showToast("Login berhasil! Silakan lanjutkan pembayaran.", "success");
+        } else {
+            showToast(data.message || "Email atau password salah!", "error");
+        }
+    } catch (error) {
+        console.error("Error:", error);
+        showToast("Terjadi kesalahan saat login!", "error");
+    } finally {
+        setLoading(false);
+    }
+};
+
+const switchToLogin = () => {
+    setIsLoginMode(true);
+    setStep(1); // Pindah ke step 1 untuk menampilkan form login
+};
+
+const switchToRegister = () => {
+    setIsLoginMode(false);
+    setStep(0); // Kembali ke step 0 untuk form registrasi
+};
 
     const nextStep = () => {
         const newStep = Math.min(step + 1, steps.length - 1);
@@ -79,16 +145,21 @@ const [selectedBank, setSelectedBank] = useState<string>("");
     };
 
     const prevStep = () => {
-    const isRegistered = localStorage.getItem('isRegistered');
-    
-    // Jika di step 2 dan sudah registrasi, jangan bisa kembali
-    if (step === 2 && isRegistered === 'true') {
-        showToast("Anda sudah terdaftar dan tidak bisa kembali ke halaman registrasi");
+    // Jika di login mode dan step 1, kembali ke registrasi
+    if (step === 1 && isLoginMode) {
+        setIsLoginMode(false);
+        setStep(0);
         return;
     }
     
-    // TAMBAHKAN INI yang hilang:
+    // Untuk kondisi lainnya, bisa kembali normal
     const newStep = Math.max(step - 1, 0);
+    
+    // Hapus isRegistered flag jika kembali ke step 0
+    if (newStep === 0) {
+        localStorage.removeItem('isRegistered');
+    }
+    
     saveProgress(newStep);
 };
 
@@ -342,10 +413,10 @@ useEffect(() => {
     const isRegistered = localStorage.getItem('isRegistered');
     
     // Jika sudah registrasi dan masih di step 0, langsung ke step 2
-    if (isRegistered === 'true' && step === 0) {
+    if (isRegistered === 'true' && step === 0 && !isLoginMode) {
         setStep(2);
     }
-}, [step]);
+}, [step, isLoginMode]);
 
 const [toast, setToast] = useState<{
     show: boolean;
@@ -494,52 +565,111 @@ const [toast, setToast] = useState<{
                                 <Button className="w-full mt-4" onClick={handleSignup} disabled={loading}>
                                     {loading ? "Loading..." : "Daftar & Cek Email →"}
                                 </Button>
-                                <div className="text-center mt-4">
+                                
+    <div className="text-center mt-4">
     <button
         type="button"
-        onClick={() => {
-            localStorage.setItem('isRegistered', 'true');
-            saveProgress(2);
-        }}
+        onClick={switchToLogin}
         className="text-sm text-blue-600 hover:text-blue-700 underline"
     >
-        Sudah punya akun? Langsung ke pembayaran →
+        Sudah punya akun? Login dulu yuk →
     </button>
 </div>
                             </motion.div>
                         )}
 
-                        {/* Step 1: Validasi */}
-                        {step === 1 && (
-                            <motion.div
-                                key="step1"
-                                initial={{ opacity: 0, x: 50 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -50 }}
-                                className="space-y-5 text-center"
-                            >
-                                <h2 className="text-2xl font-bold text-gray-800">Verfikasi Akun</h2>
-                                <p className="text-gray-500">
-                                    Kami telah mengirim kode verifikasi ke:
-                                    <br />
-                                    <span className="font-semibold text-gray-800">{Email}</span>
-                                </p>
-                                <Input
-                                    placeholder="Masukkan Kode Verifikasi"
-                                    value={verificationCode}
-                                    onChange={(e) => setVerificationCode(e.target.value)}
-                                    className="text-center text-2xl tracking-widest"
-                                />
-                                <div className="flex flex-col sm:flex-row gap-3 justify-center mt-4">
-                                    <Button variant="outline" onClick={prevStep}>
-                                        ← Kembali
-                                    </Button>
-                                    <Button onClick={handleValidate} disabled={loading}>
-                                        {loading ? "Memverifikasi..." : "Verifikasi Email"}
-                                    </Button>
-                                </div>
-                            </motion.div>
-                        )}
+                        {/* Step 1: Validasi ATAU Login */}
+{step === 1 && (
+    <AnimatePresence mode="wait">
+        {!isLoginMode ? (
+            // Mode Verifikasi Email
+            <motion.div
+                key="step1-verify"
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -50 }}
+                className="space-y-5 text-center"
+            >
+                <h2 className="text-2xl font-bold text-gray-800">Verifikasi Akun</h2>
+                <p className="text-gray-500">
+                    Kami telah mengirim kode verifikasi ke:
+                    <br />
+                    <span className="font-semibold text-gray-800">{Email}</span>
+                </p>
+                <Input
+                    placeholder="Masukkan Kode Verifikasi"
+                    value={verificationCode}
+                    onChange={(e) => setVerificationCode(e.target.value)}
+                    className="text-center text-2xl tracking-widest"
+                />
+                <div className="flex flex-col sm:flex-row gap-3 justify-center mt-4">
+                    <Button variant="outline" onClick={prevStep}>
+                        ← Kembali
+                    </Button>
+                    <Button onClick={handleValidate} disabled={loading}>
+                        {loading ? "Memverifikasi..." : "Verifikasi"}
+                    </Button>
+                </div>
+            </motion.div>
+        ) : (
+            // Mode Login
+            <motion.div
+                key="step1-login"
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -50 }}
+                className="space-y-5"
+            >
+                <h2 className="text-2xl font-bold text-gray-800">Login</h2>
+                <p className="text-gray-500">Masuk ke akun Anda</p>
+                
+                <Input
+                    placeholder="Email"
+                    type="email"
+                    value={loginEmail}
+                    onChange={(e) => setLoginEmail(e.target.value)}
+                />
+                
+                <div className="relative">
+                    <Input
+                        type={showLoginPassword ? "text" : "password"}
+                        placeholder="Password"
+                        value={loginPassword}
+                        onChange={(e) => setLoginPassword(e.target.value)}
+                        className="pr-10"
+                    />
+                    <button
+                        type="button"
+                        onClick={() => setShowLoginPassword(!showLoginPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                    >
+                        {showLoginPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                </div>
+
+                <div className="text-right">
+                    <button className="text-sm text-blue-600 hover:text-blue-700">
+                        Lupa password?
+                    </button>
+                </div>
+
+                <Button className="w-full" onClick={handleLogin} disabled={loading}>
+                    {loading ? "Loading..." : "Login →"}
+                </Button>
+
+                <div className="text-center mt-4">
+                    <button
+                        type="button"
+                        onClick={switchToRegister}
+                        className="text-sm text-blue-600 hover:text-blue-700 underline"
+                    >
+                        ← Belum punya akun? Daftar dulu
+                    </button>
+                </div>
+            </motion.div>
+        )}
+    </AnimatePresence>
+)}
 
                         {/* Step 2: Pembayaran */}
                         {step === 2 && (

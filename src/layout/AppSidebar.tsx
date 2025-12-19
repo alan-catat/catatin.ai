@@ -157,31 +157,25 @@ const AppSidebar: React.FC<Props> = ({ role, appLogo }) => {
       <div className="border-b dark:border-gray-800">
   <div className="flex items-center justify-center h-19 px-14">
         <Link href={logoLink}>
-          {isExpanded || isHovered || isMobileOpen ? (
-            <>
-              {appLogo.light && (
-                <img
-                  src={appLogo.light}
-                  alt="Logo"
-                  className="h-15 dark:hidden"
-                />
-              )}
-              {appLogo.dark && (
-                <img
-                  src={appLogo.dark}
-                  alt="Logo Dark"
-                  className="h-15 hidden dark:block"
-                />
-              )}
-            </>
-          ) : (
-            <img
-              src="/catatin.png"
-              alt="Logo Icon"
-              className="h-15"
-            />
-          )}
-        </Link>
+  {(isExpanded || isHovered || isMobileOpen) && (
+    <>
+      {/* Light mode */}
+      <span className="block dark:hidden text-4xl font-semibold
+        bg-gradient-to-r from-[#0566BD] to-[#A8E063]
+        bg-clip-text text-transparent">
+        catatin.ai
+      </span>
+
+      {/* Dark mode */}
+      <span className="hidden dark:block text-4xl font-semibold
+        bg-gradient-to-r from-[#A8E063] to-[#0566BD]
+        bg-clip-text text-transparent">
+        catatin.ai
+      </span>
+    </>
+  )}
+</Link>
+
       </div></div>
 
       {/* Navigation Menu */}
