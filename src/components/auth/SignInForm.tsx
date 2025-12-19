@@ -225,12 +225,15 @@ router.push(redirectTo || "/dashboard-user/profile");
                 {loading ? "Mulai masuk..." : "Masuk"}
               </Button>
             </div>
-            <div className="flex items-center gap-3">
+            <div>
               <Link
-              href="/auth/dashboard-user/signup"
-              className="px-40.5 py-3 md:px-51 py-3 rounded-lg bg-[#4EC722] text-sm text-white font-medium hover:bg-[#378C18] transition"
-            >
-              Daftar
+              href="/auth/dashboard-user/signup">
+                <Button
+                className="w-full bg-green-600"
+                size="sm"
+                type="submit"
+              >
+              Daftar</Button>
             </Link></div>
 
               <p className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">

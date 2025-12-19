@@ -2,6 +2,10 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import PaymentModal from "./payment";
+import CustomPlanModal from "./CustomPlanModal";
+
+const N8N_BASE_URL = "https://n8n.srv1074739.hstgr.cloud/webhook";
 
 type BillingPlan = {
   id: string;
@@ -25,6 +29,7 @@ type Package = {
   input: string[];
   chat: number;
   is_paid: boolean;
+  is_custom?: boolean;
   billing_plans: BillingPlan[];
 };
 
@@ -34,6 +39,14 @@ export default function Paket() {
   const [loading, setLoading] = useState(true);
   const [expandedCards, setExpandedCards] = useState<{[key: string]: boolean}>({});
   const [showAllContent, setShowAllContent] = useState(false);
+  const [showCustomModal, setShowCustomModal] = useState(false);
+
+
+  const [selectedPlan, setSelectedPlan] = useState<{
+  packageId: string;
+  planName: string;
+  price: number;
+} | null>(null);
 
   useEffect(() => {
     setTimeout(() => {
@@ -205,6 +218,7 @@ export default function Paket() {
           input: ["Foto Struk", "Voice Note", "Transaksi Manual"],
           chat: 0,
           is_paid: true,
+          is_custom: true,
           billing_plans: [
             {
               id: "4m",
@@ -275,6 +289,43 @@ export default function Paket() {
     "Input",
     "Dukungan"
   ];
+
+  const handleSelectPlan = (pkg: Package, plan: BillingPlan) => {
+  // FREE
+  if (!pkg.is_paid || plan.harga === 0) {
+    activateFreePlan(pkg.id, plan.id);
+    return;
+  }
+
+  // CUSTOM
+  if (pkg.is_custom) {
+    setShowCustomModal(true);
+    return;
+  }
+
+  // PAID
+  setSelectedPlan({
+    packageId: pkg.id,
+    planName: plan.name,
+    price: plan.harga,
+  });
+};
+
+
+const activateFreePlan = async (packageId: string, planId: string) => {
+  await fetch(`${N8N_BASE_URL}/activate-free`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      userId: "USER_ID_LOGIN",
+      packageId,
+      planId,
+    }),
+  });
+
+  alert("Paket gratis berhasil diaktifkan 🎉");
+};
+
 
   return (
     <div className="bg-white text-slate-800 antialiased min-h-screen">
@@ -450,16 +501,22 @@ export default function Paket() {
                         })}
                     </ul>
                   </div>
+<button
+  onClick={() => handleSelectPlan(pkg, plan)}
+  className={`mt-6 w-full py-3 px-6 rounded-lg font-semibold transition-all text-center block
+    ${isPro
+      ? "bg-white text-blue-600 hover:bg-gray-100 shadow-lg"
+      : "bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700 shadow-md"
+    }
+  `}
+>
+  {pkg.is_custom
+    ? "Ajukan Paket"
+    : pkg.is_paid
+    ? "Pilih Paket"
+    : "Mulai Gratis"}
+</button>
 
-                  <Link href={`/subscription?package=${pkg.id}&plan=${pkg.name}&billing=${billingCycle}&price=${plan.harga}`}
-                    className={`mt-6 w-full py-3 px-6 rounded-lg font-semibold transition-all text-center block ${
-                      isPro
-                        ? "bg-white text-blue-600 hover:bg-gray-100 shadow-lg"
-                        : "bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700 shadow-md"
-                    }`}
-                  >
-                    {pkg.is_paid ? "Pilih Paket" : "Mulai Gratis"}
-                  </Link>
                 </>
               )}
                 </div>
@@ -467,8 +524,22 @@ export default function Paket() {
             );
           })}
       </div>
+      <PaymentModal
+  open={selectedPlan !== null}
+  onClose={() => setSelectedPlan(null)}
+  userId="USER_ID_LOGIN"
+  email="user@email.com"
+  planName={selectedPlan?.planName ?? ""}
+  price={selectedPlan?.price ?? 0}
+/>
 
-      
+<CustomPlanModal
+  open={showCustomModal}
+  onClose={() => setShowCustomModal(false)}
+  userId="USER_ID_LOGIN"
+  email="user@email.com"
+/>
+
     </main>
     </div>
   );

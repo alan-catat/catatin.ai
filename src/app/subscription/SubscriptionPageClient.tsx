@@ -7,6 +7,7 @@ import Input from "@/components/form/input/InputField";
 import Button from "@/components/ui/button/Button";
 import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
+import Script from "next/script";
 
 const steps = ["Registrasi Akun","Verifikasi Akun", "Pembayaran", "Selesai"];
 
@@ -274,59 +275,56 @@ const lastName = nameParts.slice(1).join(" ");
     };
 
     // Step 2: Pembayaran
-    const handlePayment = async () => {
-        if (!paymentMethod) {
-            showToast("Pilih metode pembayaran");
-            return;
-        }
-        if (paymentMethod === 'va' && !virtualAccount) {
-        showToast("Pilih bank untuk generate Virtual Account");
-        return;
+const handlePayment = async () => {
+  setLoading(true);
+  try {
+    const res = await fetch(`${N8N_BASE_URL}/payment`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        userId,
+        email: Email,
+        plan: planName,
+        amount: Number(price),
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      showToast(data.message || "Gagal membuat transaksi", "error");
+      return;
     }
 
-    // Validasi bukti transfer
-    if (!proof) {
-        showToast("Upload bukti transfer terlebih dahulu");
-        return;
-    }
+    // PANGGIL MIDTRANS SNAP
+    window.snap.pay(data.snapToken, {
+      onSuccess: function (result) {
+        console.log("SUCCESS", result);
+        showToast("Pembayaran berhasil 🎉");
+        nextStep();
+      },
+      onPending: function (result) {
+        console.log("PENDING", result);
+        showToast("Menunggu pembayaran");
+      },
+      onError: function (result) {
+        console.log("ERROR", result);
+        showToast("Pembayaran gagal", "error");
+      },
+      onClose: function () {
+        showToast("Popup pembayaran ditutup", "info");
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    showToast("Error koneksi pembayaran", "error");
+  } finally {
+    setLoading(false);
+  }
+};
 
-        setLoading(true);
-        try {
-            const formData = new FormData();
-            formData.append("userId", userId || "");
-            formData.append("Email", Email);
-            formData.append("plan", planName);
-            formData.append("billingCycle", billingCycle);
-            formData.append("amount", price);
-            formData.append("paymentMethod", paymentMethod);
-            if (paymentMethod === 'va') {
-            formData.append("virtualAccount", virtualAccount);
-            formData.append("bankCode", selectedBank);
-        }
-        
-        if (proof) formData.append("proof", proof);
-
-            const response = await fetch(`${N8N_BASE_URL}/payment`, {
-                method: "POST",
-                body: formData,
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                showToast(data.message || "Pembayaran gagal.");
-                return;
-            }
-
-            showToast("Pembayaran berhasil diproses! 💳");
-            nextStep();
-        } catch (error) {
-            console.error("Payment error:", error);
-            showToast("Terjadi kesalahan saat memproses pembayaran.");
-        } finally {
-            setLoading(false);
-        }
-    };
 const [paymentDetails, setPaymentDetails] = useState({
     bank: {
         name: "Bank BCA",
@@ -429,6 +427,55 @@ const [toast, setToast] = useState<{
   setTimeout(() => {
     setToast({ show: false, message: '', type: 'success' });
   }, 3000); // Hilang setelah 3 detik
+};
+
+const handlePay = async () => {
+  setLoading(true);
+  try {
+    const res = await fetch(`${N8N_BASE_URL}/payment`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId,
+        email: Email,
+        plan: planName,
+        amount: Number(price),
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      showToast(data.message || "Gagal membuat transaksi", "error");
+      return;
+    }
+
+    if (!window.snap) {
+      showToast("Midtrans belum siap", "error");
+      return;
+    }
+
+    window.snap.pay(data.snapToken, {
+      onSuccess: () => {
+        showToast("Pembayaran berhasil 🎉");
+        nextStep();
+      },
+      onPending: () => {
+        showToast("Menunggu pembayaran", "info");
+      },
+      onError: () => {
+        showToast("Pembayaran gagal", "error");
+      },
+      onClose: () => {
+        showToast("Popup pembayaran ditutup", "info");
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    showToast("Terjadi kesalahan pembayaran", "error");
+  } finally {
+    setLoading(false);
+  }
 };
 
     return (
@@ -672,355 +719,59 @@ const [toast, setToast] = useState<{
 )}
 
                         {/* Step 2: Pembayaran */}
-                        {step === 2 && (
+{step === 2 && (
+  <>
+    <Script
+      src="https://app.sandbox.midtrans.com/snap/snap.js"
+      data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}
+      strategy="afterInteractive"
+    />
+
     <motion.div
-        key="step2"
-        initial={{ opacity: 0, x: 50 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: -50 }}
-        className="space-y-5"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="space-y-6"
     >
-        <h2 className="text-2xl font-bold text-gray-800">Pembayaran</h2>
-        
-        {/* Ringkasan Pembayaran */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h3 className="font-semibold text-gray-800 mb-2">Ringkasan Pembayaran</h3>
-            <div className="space-y-1 text-sm">
-                <p><span className="font-medium">Paket:</span> {planName}</p>
-                <p><span className="font-medium">Periode:</span> {billingCycle === 'monthly' ? 'Bulanan' : 'Tahunan'}</p>
-                <p className="text-lg font-bold text-blue-600 mt-2">
-                    Total: Rp {parseInt(price).toLocaleString('id-ID')}
-                </p>
-            </div>
-        </div>
+<div className="bg-blue-50 border border-blue-200 rounded-xl p-5">
+<h3 className="font-semibold text-gray-800">Ringkasan Pembayaran</h3>
+<div className="mt-3 text-sm space-y-1">
+<p><b>Paket:</b> {planName}</p>
+<p className="text-lg font-bold text-blue-600">
+Total: Rp {Number(price).toLocaleString("id-ID")}
+</p>
+</div>
+</div>
 
-        {/* Pilihan Metode Pembayaran */}
-        <div className="space-y-3">
-            <h3 className="font-semibold text-gray-800">Pilih Metode Pembayaran</h3>
-            
-            {/* Transfer Bank */}
-            <label className="block">
-                <div className="border rounded-lg p-4 cursor-pointer hover:border-blue-500 transition-colors">
-                    <div className="flex items-center">
-                        <input
-                            type="radio"
-                            name="payment"
-                            value="bank"
-                            checked={paymentMethod === 'bank'}
-                            onChange={(e) => setPaymentMethod(e.target.value)}
-                            className="mr-3"
-                        />
-                        <div className="flex-1">
-                            <span className="font-medium">Transfer Bank</span>
-                            <p className="text-sm text-gray-500">Transfer melalui ATM, Internet Banking, atau Mobile Banking</p>
-                        </div>
-                    </div>
-                </div>
-            </label>
 
-            {/* QRIS */}
-            <label className="block">
-                <div className="border rounded-lg p-4 cursor-pointer hover:border-blue-500 transition-colors">
-                    <div className="flex items-center">
-                        <input
-                            type="radio"
-                            name="payment"
-                            value="qris"
-                            checked={paymentMethod === 'qris'}
-                            onChange={(e) => setPaymentMethod(e.target.value)}
-                            className="mr-3"
-                        />
-                        <div className="flex-1">
-                            <span className="font-medium">QRIS</span>
-                            <p className="text-sm text-gray-500">Scan & bayar dengan semua aplikasi pembayaran</p>
-                        </div>
-                    </div>
-                </div>
-            </label>
+<div className="bg-white border rounded-xl p-6 space-y-4">
+<h4 className="font-semibold text-gray-800">Metode Pembayaran</h4>
+<p className="text-sm text-gray-600">
+Anda akan diarahkan ke halaman pembayaran aman Midtrans.
+</p>
 
-            {/* E-Wallet */}
-            <label className="block">
-                <div className="border rounded-lg p-4 cursor-pointer hover:border-blue-500 transition-colors">
-                    <div className="flex items-center">
-                        <input
-                            type="radio"
-                            name="payment"
-                            value="ewallet"
-                            checked={paymentMethod === 'ewallet'}
-                            onChange={(e) => setPaymentMethod(e.target.value)}
-                            className="mr-3"
-                        />
-                        <div className="flex-1">
-                            <span className="font-medium">E-Wallet</span>
-                            <p className="text-sm text-gray-500">GoPay, OVO, Dana, dan lainnya</p>
-                        </div>
-                    </div>
-                </div>
-            </label>
-        </div>
 
-        <label className="block">
-    <div className="border rounded-lg p-4 cursor-pointer hover:border-blue-500 transition-colors">
-        <div className="flex items-center">
-            <input
-                type="radio"
-                name="payment"
-                value="va"
-                checked={paymentMethod === 'va'}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-                className="mr-3"
-            />
-            <div className="flex-1">
-                <span className="font-medium">Virtual Account</span>
-                <p className="text-sm text-gray-500">Nomor rekening virtual khusus untuk Anda</p>
-            </div>
-        </div>
-    </div>
-</label>
+<ul className="text-sm text-gray-600 space-y-1 list-disc list-inside">
+<li>Virtual Account (BCA, BRI, BNI, Mandiri)</li>
+<li>QRIS</li>
+<li>GoPay, ShopeePay, dll</li>
+</ul>
 
-        {/* Detail Pembayaran berdasarkan metode yang dipilih */}
-        {paymentMethod && (
-            <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                className="bg-gray-50 border rounded-lg p-4 space-y-3"
-            >
-                <h3 className="font-semibold text-gray-800">Pilih Bank untuk Virtual Account</h3>
-                
-                {/* Transfer Bank */}
-                {paymentMethod === 'bank' && (
-                    <div className="space-y-3">
-                        <div className="bg-white rounded p-3 space-y-2">
-                            <div className="flex justify-between">
-                                <span className="text-gray-600">Bank:</span>
-                                <span className="font-semibold">{paymentDetails.bank.name}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-gray-600">No. Rekening:</span>
-                                <span className="font-semibold font-mono">{paymentDetails.bank.accountNumber}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-gray-600">Atas Nama:</span>
-                                <span className="font-semibold">{paymentDetails.bank.accountName}</span>
-                            </div>
-                        </div>
-                        <p className="text-sm text-gray-600 bg-yellow-50 border border-yellow-200 rounded p-2">
-                            ⚠️ {paymentDetails.bank.instructions}
-                        </p>
-                    </div>
-                )}
 
-                {/* QRIS */}
-                {paymentMethod === 'qris' && (
-                    <div className="space-y-3">
-                        <div className="bg-white rounded p-4 flex flex-col items-center">
-                            {/* Placeholder untuk QR Code - ganti dengan gambar asli */}
-                            <div className="w-64 h-64 bg-gray-200 flex items-center justify-center rounded">
-                                <div className="text-center">
-                                    <p className="text-gray-500 mb-2">QR Code</p>
-                                    <p className="text-xs text-gray-400">Scan untuk membayar</p>
-                                </div>
-                            </div>
-                            {/* Jika Anda punya gambar QR:
-                            <img 
-                                src={paymentDetails.qris.qrImage} 
-                                alt="QRIS Code" 
-                                className="w-64 h-64"
-                            />
-                            */}
-                        </div>
-                        <p className="text-sm text-gray-600 bg-yellow-50 border border-yellow-200 rounded p-2">
-                            ℹ️ {paymentDetails.qris.instructions}
-                        </p>
-                    </div>
-                )}
+<Button
+onClick={handlePay}
+disabled={loading}
+className="w-full"
+>
+{loading ? "Memproses..." : "Bayar Sekarang"}
+</Button>
+</div>
 
-                {/* E-Wallet */}
-                {paymentMethod === 'ewallet' && (
-                    <div className="space-y-3">
-                        <div className="bg-white rounded p-3 space-y-2">
-                            {paymentDetails.ewallet.options.map((wallet, idx) => (
-                                <div key={idx} className="flex justify-between items-center py-2 border-b last:border-0">
-                                    <span className="font-medium">{wallet.name}</span>
-                                    <span className="font-mono text-sm">{wallet.number}</span>
-                                </div>
-                            ))}
-                        </div>
-                        <p className="text-sm text-gray-600 bg-yellow-50 border border-yellow-200 rounded p-2">
-                            ℹ️ {paymentDetails.ewallet.instructions}
-                        </p>
-                    </div>
-                )}
-            </motion.div>
-        )}
 
-        
-
-        {/* Upload Bukti Transfer */}
-        {paymentMethod && (
-            <div>
-                <label className="block text-sm font-medium mb-2">
-                    Upload Bukti Transfer *
-                </label>
-                <input
-                    type="file"
-                    accept="image/*"
-                    className="w-full border rounded p-2"
-                    onChange={(e) => setProof(e.target.files ? e.target.files[0] : null)}
-                />
-                {proof && (
-                    <p className="text-sm text-green-600 mt-1">
-                        ✓ File terpilih: {proof.name}
-                    </p>
-                )}
-            </div>
-        )}
-
-{/* Detail untuk Virtual Account */}
-{paymentMethod === 'va' && (
-    <motion.div
-        initial={{ opacity: 0, height: 0 }}
-        animate={{ opacity: 1, height: "auto" }}
-        className="bg-gray-50 border rounded-lg p-4 space-y-4"
-    >
-        <h3 className="font-semibold text-gray-800">Pilih Bank untuk Virtual Account</h3>
-        
-        {/* Pilihan Bank */}
-        <div className="grid grid-cols-2 gap-3">
-            {bankVAOptions.map((bank) => (
-                <button
-                    key={bank.code}
-                    onClick={() => handleBankSelect(bank.code)}
-                    className={`p-4 border rounded-lg text-left hover:border-blue-500 transition-colors ${
-                        selectedBank === bank.code ? 'border-blue-500 bg-blue-50' : 'bg-white'
-                    }`}
-                >
-                    <div className="text-2xl mb-1">{bank.logo}</div>
-                    <div className="font-medium">{bank.name}</div>
-                </button>
-            ))}
-        </div>
-
-        {/* Tampilkan VA setelah bank dipilih */}
-        {virtualAccount && (
-            <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-white border-2 border-blue-500 rounded-lg p-4 space-y-4"
-            >
-                <div className="flex items-center justify-between">
-                    <h4 className="font-semibold text-gray-800">Nomor Virtual Account Anda</h4>
-                    <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
-                        Aktif 24 Jam
-                    </span>
-                </div>
-                
-                {/* Info Rekening Tujuan Owner */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2">
-                    <div className="flex items-center gap-2 text-blue-800 font-semibold">
-                        <span className="text-xl">🏦</span>
-                        <span>Rekening Tujuan Transfer</span>
-                    </div>
-                    <div className="grid grid-cols-[120px_1fr] gap-2 text-sm">
-                        <div className="text-gray-600">Bank:</div>
-                        <div className="font-semibold">{bankVAOptions.find(b => b.code === selectedBank)?.name}</div>
-                        
-                        <div className="text-gray-600">No. Rekening:</div>
-                        <div className="font-mono font-bold text-lg">
-                            {bankVAOptions.find(b => b.code === selectedBank)?.ownerAccount}
-                        </div>
-                        
-                        <div className="text-gray-600">Atas Nama:</div>
-                        <div className="font-semibold">{bankVAOptions.find(b => b.code === selectedBank)?.ownerName}</div>
-                    </div>
-                </div>
-
-                {/* Virtual Account Number */}
-                <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-                    <div className="text-sm text-gray-600">
-                        Gunakan Virtual Account ini sebagai referensi:
-                    </div>
-                    <div className="flex items-center justify-between bg-white border-2 border-dashed border-gray-300 rounded p-3">
-                        <div>
-                            <div className="text-xs text-gray-500 mb-1">Virtual Account Number</div>
-                            <span className="text-xl font-mono font-bold text-gray-800">
-                                {virtualAccount}
-                            </span>
-                        </div>
-                        <button
-                            onClick={() => {
-                                navigator.clipboard.writeText(virtualAccount);
-                                showToast("Nomor VA disalin!");
-                            }}
-                            className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
-                        >
-                            📋 Salin
-                        </button>
-                    </div>
-                    <p className="text-xs text-gray-500 italic">
-                        * Cantumkan nomor VA ini pada berita transfer atau keterangan
-                    </p>
-                </div>
-
-                <div className="space-y-3 text-sm">
-                    <p className="font-medium text-gray-800">📝 Cara Pembayaran:</p>
-                    <ol className="list-decimal list-inside space-y-2 text-gray-600 bg-gray-50 rounded p-3">
-                        <li>
-                            Buka aplikasi mobile banking atau ATM <strong>{bankVAOptions.find(b => b.code === selectedBank)?.name}</strong>
-                        </li>
-                        <li>
-                            Pilih menu <strong>Transfer ke Rekening {bankVAOptions.find(b => b.code === selectedBank)?.name}</strong>
-                        </li>
-                        <li>
-                            Masukkan nomor rekening: <strong className="font-mono">{bankVAOptions.find(b => b.code === selectedBank)?.ownerAccount}</strong>
-                        </li>
-                        <li>
-                            Nominal transfer: <span className="font-semibold text-blue-600">Rp {parseInt(price).toLocaleString('id-ID')}</span>
-                        </li>
-                        <li>
-                            Pada <strong>Berita/Keterangan Transfer</strong>, masukkan: <strong className="font-mono">{virtualAccount}</strong>
-                        </li>
-                        <li>Konfirmasi dan selesaikan pembayaran</li>
-                        <li>Simpan bukti transfer dan upload di bawah</li>
-                    </ol>
-                </div>
-
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm space-y-1">
-                    <div className="flex items-start gap-2">
-                        <span className="text-yellow-600 mt-0.5">⚠️</span>
-                        <div className="flex-1 text-gray-700">
-                            <strong>Penting:</strong>
-                            <ul className="mt-1 space-y-1 text-xs">
-                                <li>• Transfer ke rekening <strong>{bankVAOptions.find(b => b.code === selectedBank)?.name}</strong> di atas</li>
-                                <li>• Jumlah transfer harus <strong>TEPAT Rp {parseInt(price).toLocaleString('id-ID')}</strong></li>
-                                <li>• Wajib mencantumkan VA <strong>{virtualAccount}</strong> pada berita transfer</li>
-                                <li>• VA berlaku selama <strong>24 jam</strong></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </motion.div>
-        )}
-    </motion.div>
-)}
-
-        {/* Tombol Navigasi */}
-        <div className="flex gap-3">
-            <button
-                onClick={prevStep}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-                ← Kembali
-            </button>
-            <button
-                onClick={handlePayment}
-                disabled={loading || !paymentMethod || !proof}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-            >
-                {loading ? "Processing..." : "Konfirmasi Pembayaran"}
-            </button>
-        </div>
-    </motion.div>
+<p className="text-xs text-center text-gray-500">
+Pembayaran diproses oleh Midtrans • Aman & terenkripsi
+</p>
+</motion.div>
+  </>
 )}
 
                         {/* Step 3: Selesai */}
