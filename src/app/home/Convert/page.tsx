@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { FileText, Upload, Download, Shield, Cloud, ArrowRight, Award, Star, Settings, ChevronDown, ChevronUp } from 'lucide-react';
 import Link from 'next/link';
+import { Xlsx } from 'exceljs';
 
 const N8N_CONVERTIN_URL = process.env.NEXT_PUBLIC_N8N_CONVERTIN_URL;
 
@@ -54,8 +55,8 @@ const handleDrop = (e: React.DragEvent) => {
 
   setLoading(true);
   setProgress(0);
-  
-let interval: ReturnType<typeof setInterval> | undefined;
+
+  let interval: ReturnType<typeof setInterval> | undefined;
 
   try {
     interval = setInterval(() => {
@@ -63,7 +64,7 @@ let interval: ReturnType<typeof setInterval> | undefined;
     }, 500);
 
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("data", file);
     formData.append("format", format);
     formData.append("compressionLevel", compressionLevel);
     if (password) formData.append("password", password);
@@ -73,13 +74,93 @@ let interval: ReturnType<typeof setInterval> | undefined;
       body: formData,
     });
 
-    await res.json();
+    if (!res.ok) {
+      throw new Error('Konversi gagal. Silakan coba lagi.');
+    }
 
-    setProgress(100);
+    setProgress(95);
     clearInterval(interval);
+
+    const contentType = res.headers.get('content-type');
+    
+    // Jika response adalah JSON (data items dari N8N)
+    if (contentType && contentType.includes('application/json')) {
+      const data = await res.json();
+      
+      // Cari array items dari berbagai kemungkinan struktur
+      let items = data;
+      if (Array.isArray(data)) {
+        items = data;
+      } else if (data.items && Array.isArray(data.items)) {
+        items = data.items;
+      } else if (data.data && Array.isArray(data.data)) {
+        items = data.data;
+      } else {
+        throw new Error('Format data tidak sesuai. Expected array of items.');
+      }
+
+      if (items.length === 0) {
+        throw new Error('Tidak ada data untuk dikonversi.');
+      }
+
+      // Convert JSON to CSV (sederhana, tidak perlu library)
+      const headers = Object.keys(items[0]);
+      const csvRows = [];
+      
+      // Add header row
+      csvRows.push(headers.join(','));
+      
+      // Add data rows
+      for (const item of items) {
+        const values = headers.map(header => {
+          const value = item[header];
+          // Handle values yang mengandung koma atau newline
+          const escaped = ('' + value).replace(/"/g, '""');
+          return `"${escaped}"`;
+        });
+        csvRows.push(values.join(','));
+      }
+      
+      const csvContent = csvRows.join('\n');
+      
+      // Create blob and download
+      const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `converted-${file.name.replace(/\.[^/.]+$/, '')}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      setProgress(100);
+      showToast(`✅ Berhasil! ${items.length} items telah dikonversi ke CSV`);
+      
+    } else {
+      // Jika N8N mengembalikan file binary langsung (Excel/PDF/dll)
+      const blob = await res.blob();
+      
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      const extension = format === 'excel' ? 'xlsx' : format;
+      link.download = `converted-${file.name.replace(/\.[^/.]+$/, '')}.${extension}`;
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      setTimeout(() => window.URL.revokeObjectURL(url), 100);
+      setProgress(100);
+      showToast('✅ File berhasil dikonversi dan didownload!');
+    }
+
   } catch (err) {
-    clearInterval(interval);
-    console.error(err);
+    if (interval) clearInterval(interval);
+    console.error('Error:', err);
+    showToast(err instanceof Error ? err.message : 'Terjadi kesalahan saat konversi. Silakan coba lagi.');
   } finally {
     setTimeout(() => {
       setLoading(false);
@@ -87,7 +168,6 @@ let interval: ReturnType<typeof setInterval> | undefined;
     }, 500);
   }
 };
-
 
   const quickActions = [
     { label: 'Compress PDFs to 2MB', icon: ArrowRight },
@@ -120,6 +200,19 @@ let interval: ReturnType<typeof setInterval> | undefined;
     description: 'This PDF converter is free. It works on Windows, Mac, Linux, Chrome, Edge, Firefox... pretty much any web browser. Plus, we upload files over a secure HTTPS connection and delete all files automatically after a few hours. So you can convert files without worrying about file security and privacy.'
   },
 ];
+
+const [toast, setToast] = useState<{
+    show: boolean;
+    message: string;
+    type: 'success' | 'error' | 'info';
+  }>({ show: false, message: '', type: 'success' });
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+  setToast({ show: true, message, type });
+  setTimeout(() => {
+    setToast({ show: false, message: '', type: 'success' });
+  }, 3000); // Hilang setelah 3 detik
+};
 
 useEffect(() => {
   return () => {
@@ -281,7 +374,6 @@ useEffect(() => {
     </div>
   )}
 </button>
-
             </div>
           )}
         </div>
@@ -289,7 +381,6 @@ useEffect(() => {
        {/* Advanced Settings */}
               <div className="mt-6 border border-gray-200 rounded-lg">
                 <button
-                  onClick={() => setShowAdvanced(!showAdvanced)}
                   className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
                 >
                   <div className="flex items-center space-x-2">
