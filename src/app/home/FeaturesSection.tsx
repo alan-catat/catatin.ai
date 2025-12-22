@@ -14,8 +14,8 @@ const FeaturesSection = () => {
   const features = [
     {
       icon: ArrowBigRight,
-      title: "AI Agent",
-      description: "AI agent yang dapat membuat semua pekerjaan jadi lebih cepat.",
+      title: "AI",
+      description: "AI yang dapat membuat semua pekerjaan jadi lebih cepat.",
       color: "text-success",
     },
     {
@@ -27,16 +27,16 @@ const FeaturesSection = () => {
     },
     {
       icon: BarChart3,
-      title: "Analisis Mendalam",
+      title: "Catat dan lihat",
       description:
-        "Dashboard analitik yang memberikan insight mendalam tentang pola keuangan Anda.",
+        "Dashboard yang memberikan visualisasi tentang pola keuangan Anda.",
       color: "text-warning",
     },
     {
       icon: Shield,
       title: "Keamanan Terjamin",
       description:
-        "Kami memastikan data keuangan Anda tetap aman setiap saat.",
+        "Kami memastikan data Anda tetap aman setiap saat.",
       color: "text-destructive",
     },
     {

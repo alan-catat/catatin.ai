@@ -125,11 +125,13 @@ expires.setDate(expires.getDate() + 2); // 2 hari dari sekarang
 
 response.cookies.set('auth-token', token, {
   httpOnly: true,
-  secure: true,              // ⬅️ JANGAN conditional
-  sameSite: 'none',          // ⬅️ INI KUNCI UTAMA
+  secure: true,          // WAJIB (Hostinger HTTPS)
+  sameSite: 'lax',       // ⬅️ PALING STABIL
   path: '/',
-  maxAge: 60 * 60 * 24 * 2,  // 2 hari
-});
+  domain: 'www.catatin.ai', // ⬅️ WAJIB JIKA ADA dev.*
+  maxAge: 60 * 60 * 24 * 2,
+})
+
 
     console.log('Cookie set successfully');
 

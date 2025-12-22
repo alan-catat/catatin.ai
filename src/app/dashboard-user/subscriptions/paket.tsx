@@ -124,7 +124,7 @@ export default function Paket() {
               is_active: true,
               features: {
                 "Nama Paket": "Biar Rapi",
-                "Harga per bulan": "Rp 16.500",
+                "Harga per bulan": "16.5K",
                 "Kuota Chat": "500",
                 "Channel": "Telegram & Whatsapp",
                 "Kolaborasi Group": "Telegram Group tidak terbatas",
@@ -139,14 +139,14 @@ export default function Paket() {
               package_id: "2",
               name: "Biar Rapi",
               billing_cycle: "annually",
-              harga: 164340,
-              chat: 6000,
+              harga: 198000,
+              chat: 500,
               duration_days: 365,
               is_active: true,
               features: {
                 "Nama Paket": "Pro",
-                "Harga per Tahun": "Rp 198.000",
-                "Kuota Chat": "6.000",
+                "Harga per Tahun": "198000",
+                "Kuota Chat": "500",
                 "Channel": "Telegram & Whatsapp",
                 "Kolaborasi Group": "Telegram Group tidak terbatas",
                 "Ekspor Format": "Excel",
@@ -192,14 +192,14 @@ export default function Paket() {
               package_id: "3",
               name: "Biar Tetep On Track",
               billing_cycle: "annually",
-              harga: 647400,
-              chat: 24000,
+              harga: 780000,
+              chat: 2000,
               duration_days: 365,
               is_active: true,
               features: {
                 "Nama Paket": "Biar Tetep On Track",
                 "Harga per Tahun": "Rp 780.000",
-                "Kuota Chat": "50.000",
+                "Kuota Chat": "2000",
                 "Channel": "Semua Channel",
                 "Kolaborasi Group": true,
                 "Ekspor Format": "Excel",
@@ -313,7 +313,7 @@ export default function Paket() {
 
 
 const activateFreePlan = async (packageId: string, planId: string) => {
-  await fetch(`${N8N_BASE_URL}/activate-free`, {
+  await fetch(`${N8N_BASE_URL}/payment`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -326,13 +326,21 @@ const activateFreePlan = async (packageId: string, planId: string) => {
   alert("Paket gratis berhasil diaktifkan 🎉");
 };
 
+const formatHarga = (harga: number | string | undefined) => {
+  const nilai = Number(harga);
+  if (isNaN(nilai)) return "-";
+
+  if (nilai >= 1000) {
+    const k = nilai / 1000;
+    return `${k % 1 === 0 ? k : k.toFixed(1)}K`;
+  }
+
+  return nilai.toString();
+};
 
   return (
     <div className="bg-white text-slate-800 antialiased min-h-screen">
-      
       <section id="paket" className="flex flex-col items-center text-center mt-12 px-6">
-        
-
         {/* Toggle Monthly / Annually */}
         <div className="flex items-center justify-center space-x-2 bg-white rounded-full p-1 mb-10 shadow-md">
           <button
@@ -355,17 +363,10 @@ const activateFreePlan = async (packageId: string, planId: string) => {
           >
             Tahunan
             <span className="ml-2 text-xs bg-yellow-400 text-gray-900 px-2 py-0.5 rounded-full">
-              Hemat 15%
+              Hemat 20%
             </span>
           </button>
         </div>
-
-<button
-  onClick={() => setShowAllContent(!showAllContent)}
-  className="mb-8 px-8 py-3 bg-gradient-to-r from-[#0566BD] to-[#A8E063] text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-all"
->
-  {showAllContent ? "Sembunyikan Detail Paket" : "Lihat Paket Lengkap →"}
-</button>
       </section>
 
       {/* Pricing Cards */}
@@ -412,26 +413,27 @@ const activateFreePlan = async (packageId: string, planId: string) => {
                 <div className="flex flex-col items-center justify-center mb-6 py-4">
                   <div className="flex items-baseline">
                     <span className="text-4xl font-extrabold">
-                      {pkg.name === "Biar Sesuai Kamu"
-      ? "Custom"
-      : plan.harga === 0 && pkg.name === "Biar Kebiasa" 
-      ? "Free" 
-      : billingCycle === "annually" && (pkg.name === "Biar Rapi" || pkg.name === "Biar Tetep On Track")
-    ? `Rp${Math.round(plan.harga * 0.85).toLocaleString("id-ID")}`
-    : `Rp${plan.harga.toLocaleString("id-ID")}`}
-                      </span>
+  {pkg.name === "Biar Sesuai Kamu"
+    ? "Custom"
+    : plan?.harga === 0 && pkg.name === "Biar Kebiasa"
+    ? "Free"
+    : billingCycle === "annually" &&
+      (pkg.name === "Biar Rapi" || pkg.name === "Biar Tetep On Track")
+    ? formatHarga(Math.round((Number(plan?.harga) / 12) * 0.8))
+    : formatHarga(plan?.harga)}
+</span>
                   </div>
+                  {!["Biar Kebiasa", "Biar Sesuai Kamu"].includes(pkg.name) && (
                   <span className={`text-sm mt-1 ${isPro ? "text-blue-100" : "text-gray-500"}`}>
-                    /{billingCycle === "monthly" ? "bulan" : "tahun"}
+                    /{billingCycle === "monthly" ? "bulan" : "bulan"}
                   </span>
+                  )}
                   {billingCycle === "annually" && plan.harga > 0 && pkg.name !== "Biar Sesuai Kamu" && (
   <div className={`text-xs mt-2 ${isPro ? "text-blue-100" : "text-gray-500"}`}>
     <span className="line-through opacity-70">
-      Rp{Math.round((plan.harga / 0.85) / 12).toLocaleString("id-ID")}/bulan
+      {Math.round(plan.harga / 12).toLocaleString("id-ID")}/bulan
     </span>
-    <span className="ml-2 font-bold">
-      ~Rp{Math.round(plan.harga / 12).toLocaleString("id-ID")}/bulan
-    </span>
+    
   </div>
                   )}
                 </div>
@@ -441,7 +443,7 @@ const activateFreePlan = async (packageId: string, planId: string) => {
                     <div className="text-sm font-semibold mb-2">Kuota Chat</div>
                     <div className="text-xl font-bold">{pkg.name === "Biar Sesuai Kamu" 
       ? "Custom" 
-      : `${plan.chat.toLocaleString("id-ID")} pesan`}</div>
+      : `${plan.chat.toLocaleString("id-ID")} pesan /bulan`}</div>
                   </div>
 
                   <div>
@@ -501,21 +503,33 @@ const activateFreePlan = async (packageId: string, planId: string) => {
                         })}
                     </ul>
                   </div>
-<button
-  onClick={() => handleSelectPlan(pkg, plan)}
-  className={`mt-6 w-full py-3 px-6 rounded-lg font-semibold transition-all text-center block
-    ${isPro
-      ? "bg-white text-blue-600 hover:bg-gray-100 shadow-lg"
-      : "bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700 shadow-md"
-    }
-  `}
->
-  {pkg.is_custom
-    ? "Ajukan Paket"
-    : pkg.is_paid
-    ? "Pilih Paket"
-    : "Mulai Gratis"}
-</button>
+{pkg.is_custom ? (
+  <a
+    href="https://wa.me/6281118891092"
+    target="_blank"
+    rel="noopener noreferrer"
+    className={`mt-6 w-full py-3 px-6 rounded-lg font-semibold transition-all text-center block
+      ${isPro
+        ? "bg-white text-blue-600 hover:bg-gray-100 shadow-lg"
+        : "bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700 shadow-md"
+      }
+    `}
+  >
+    Ajukan Paket
+  </a>
+) : (
+  <button
+    onClick={() => handleSelectPlan(pkg, plan)}
+    className={`mt-6 w-full py-3 px-6 rounded-lg font-semibold transition-all
+      ${isPro
+        ? "bg-white text-blue-600 hover:bg-gray-100 shadow-lg"
+        : "bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700 shadow-md"
+      }
+    `}
+  >
+    {pkg.is_paid ? "Pilih Paket" : "Mulai Gratis"}
+  </button>
+)}
 
                 </>
               )}
@@ -540,6 +554,14 @@ const activateFreePlan = async (packageId: string, planId: string) => {
   email="user@email.com"
 />
 
+<div className="items-center text-center">
+<button
+  onClick={() => setShowAllContent(!showAllContent)}
+  className="mb-8 px-8 py-3 bg-gradient-to-r from-[#0566BD] to-[#A8E063] text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-all"
+>
+  {showAllContent ? "Sembunyikan Detail Paket" : "Lihat Paket Lengkap →"}
+</button>
+</div>
     </main>
     </div>
   );

@@ -9,7 +9,7 @@ const HowItWorksSection = () => {
       number: "01",
       title: "Kirim Pesan",
       description:
-        "Kirim detail transaksi melalui Telegram. Format bebas, cukup tuliskan seperti bicara normal!",
+        "Kirim detail transaksi melalui Telegram & WhatsApp. Format bebas, cukup tuliskan seperti bicara normal!",
     },
     {
       icon: Brain,
@@ -30,7 +30,7 @@ const HowItWorksSection = () => {
       number: "04",
       title: "Laporan Siap",
       description:
-        "Akses laporan lengkap, analisis trend, dan rekomendasi untuk mengoptimalkan keuangan Anda.",
+        "Akses laporan lengkap dan dapat diexport.",
     },
   ];
 

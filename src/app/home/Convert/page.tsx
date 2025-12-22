@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { FileText, Upload, Download, Shield, Cloud, ArrowRight, Award, Star, Settings, ChevronDown, ChevronUp } from 'lucide-react';
 import Link from 'next/link';
 
+const N8N_CONVERTIN_URL = process.env.NEXT_PUBLIC_N8N_CONVERTIN_URL;
+
 export default function Convert() {
   const [file, setFile] = useState<File | null>(null);
   const [format, setFormat] = useState('excel');
@@ -13,6 +15,8 @@ export default function Convert() {
 const [compressionLevel, setCompressionLevel] = useState('no-compression');
 const [password, setPassword] = useState('');
 const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+const [progress, setProgress] = useState(0);
+
 
 const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   if (e.target.files && e.target.files[0]) {
@@ -45,43 +49,46 @@ const handleDrop = (e: React.DragEvent) => {
   };
 
   const convert = async () => {
-    if (!file) return;
-    setLoading(true);
+  if (!file) return;
+  if (!N8N_CONVERTIN_URL) return;
 
-    try {
-      const formData = new FormData();
-formData.append('file', file);
-formData.append('format', format);
-formData.append('compressionLevel', compressionLevel);  // ← BARU
-if (password) {
-  formData.append('password', password);  // ← BARU
-}
-
-      // Ganti dengan URL webhook n8n Anda
-      const n8nWebhookUrl = 'https://your-n8n-instance.com/webhook/pdf-converter';
-      
-      const res = await fetch(n8nWebhookUrl, {
-        method: 'POST',
-        body: formData,
-      });
-
-      const result = await res.json();
-      
-      if (result.downloadUrl) {
-        // Download file yang sudah dikonversi
-        window.open(result.downloadUrl, '_blank');
-      } else if (result.error) {
-        alert('Error: ' + result.error);
-      }
-    } catch (error) {
-      alert('Error converting file. Please try again.');
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  setLoading(true);
+  setProgress(0);
   
+let interval: ReturnType<typeof setInterval> | undefined;
+
+  try {
+    interval = setInterval(() => {
+      setProgress((prev) => (prev >= 90 ? prev : prev + 10));
+    }, 500);
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("format", format);
+    formData.append("compressionLevel", compressionLevel);
+    if (password) formData.append("password", password);
+
+    const res = await fetch(N8N_CONVERTIN_URL, {
+      method: "POST",
+      body: formData,
+    });
+
+    await res.json();
+
+    setProgress(100);
+    clearInterval(interval);
+  } catch (err) {
+    clearInterval(interval);
+    console.error(err);
+  } finally {
+    setTimeout(() => {
+      setLoading(false);
+      setProgress(0);
+    }, 500);
+  }
+};
+
+
   const quickActions = [
     { label: 'Compress PDFs to 2MB', icon: ArrowRight },
     { label: 'Convert Audio to Mp3', icon: ArrowRight },
@@ -242,30 +249,39 @@ useEffect(() => {
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 >
                   <option value="excel">Excel (.xlsx)</option>
-                  <option value="word">Word (.docx)</option>
-                  <option value="sheets">Google Sheets</option>
-                  <option value="docs">Google Docs</option>
-                  <option value="ppt">PowerPoint (.pptx)</option>
+                  
                 </select>
               </div>
 
               <button
-                onClick={convert}
-                disabled={loading}
-                className="w-full py-4 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium text-lg transition-colors flex items-center justify-center space-x-2"
-              >
-                {loading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    <span>Mengkonversi...</span>
-                  </>
-                ) : (
-                  <>
-                    <Download className="w-5 h-5" />
-                    <span>Konversi Sekarang</span>
-                  </>
-                )}
-              </button>
+  disabled={loading}
+  className="w-full py-4 bg-indigo-600 text-white rounded-lg font-medium text-lg transition-colors"
+>
+  {loading ? (
+    <div className="w-full">
+      <div className="flex justify-between text-sm mb-2">
+        <span>Mengkonversi...</span>
+        <span>{progress}%</span>
+      </div>
+
+      <div className="w-full bg-indigo-200 rounded-full h-3 overflow-hidden">
+        <div
+          className="bg-white h-full transition-all duration-500"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+    </div>
+  ) : (
+    <div
+      onClick={convert}
+      className="flex items-center justify-center space-x-2 cursor-pointer"
+    >
+      <Download className="w-5 h-5" />
+      <span>Konversi Sekarang</span>
+    </div>
+  )}
+</button>
+
             </div>
           )}
         </div>
@@ -289,34 +305,7 @@ useEffect(() => {
 
                 {showAdvanced && (
                   <div className="border-t border-gray-200 p-4 space-y-6">
-                    {/* Compress Section */}
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <div className="flex items-center space-x-2 mb-4">
-                        <Settings className="w-4 h-4 text-gray-600" />
-                        <h3 className="font-medium text-gray-900">Kompres</h3>
-                      </div>
-                      
-                      <div className="space-y-3">
-                        <label className="block">
-                          <span className="text-sm font-medium text-gray-700 mb-2 block">
-                            Tingkat kompresi
-                          </span>
-                          <select
-                            value={compressionLevel}
-                            onChange={(e) => setCompressionLevel(e.target.value)}
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
-                          >
-                            <option value="no-compression">Tanpa Kompresi</option>
-                            <option value="low">Rendah - Kompresi minimal, kualitas lebih tinggi</option>
-                            <option value="medium">Sedang - Seimbang antara kualitas dan ukuran</option>
-                            <option value="high">Tinggi - Kompresi maksimal, ukuran lebih kecil</option>
-                          </select>
-                        </label>
-                        <p className="text-xs text-gray-500">
-                          Pilih tingkat kompresi yang diinginkan: Tanpa Kompresi untuk kualitas asli, Tinggi untuk kompresi maksimal dan ukuran lebih kecil, Sedang untuk keseimbangan antara kualitas dan ukuran, atau Rendah untuk kompresi minimal dan kualitas lebih tinggi.
-                        </p>
-                      </div>
-                    </div>
+                    
 
       {/* Document Options Section */}
       <div className="bg-gray-50 rounded-lg p-4">

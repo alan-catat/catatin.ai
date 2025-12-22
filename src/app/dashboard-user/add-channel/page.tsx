@@ -475,8 +475,9 @@ const fetchGroups = async () => {
           required={ModalChannel !== "whatsapp"}
         >
           <option value="">-Tipe- *</option>
-          <option value="Personal">Personal</option>
-          <option value="Bisnis">Bisnis</option>
+          <option value="personal">Personal</option>
+          <option value="pasangan">Pasangan</option>
+          <option value="keluarga">Keluarga</option>
         </select>
         
         <div className="flex justify-end gap-2 mt-4">
