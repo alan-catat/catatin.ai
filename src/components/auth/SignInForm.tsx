@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Checkbox from "@/components/form/input/Checkbox";
 import Input from "@/components/form/input/InputField";
@@ -8,7 +8,6 @@ import Button from "@/components/ui/button/Button";
 import EyeIcon from "@/icons/EyeIcon";
 import EyeCloseIcon from "@/icons/EyeCloseIcon";
 import Link from "next/link";
-import { useAuth } from '@/lib/auth-context';
 
 type SignInFormProps = {
   redirectTo: string;
@@ -22,94 +21,71 @@ export default function SignInForm({ redirectTo }: SignInFormProps) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-  const { login } = useAuth();
 
   // URL webhook n8n untuk login
   const N8N_SIGNIN_URL =
     process.env.NEXT_PUBLIC_N8N_SIGNIN_URL ||
     "https://your-n8n-domain.com/webhook/signin";
-    
   const WEBHOOK_GOOGLE = process.env.NEXT_PUBLIC_N8N_GOOGLE_SIGNIN_URL!;
-  
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setErrorMsg("");
 
     try {
-      // ✅ KIRIM KE API ROUTE (bukan langsung ke N8N)
-      // API route akan validasi ke N8N dan set cookie httpOnly
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch(N8N_SIGNIN_URL, {
         method: "POST",
-        credentials: 'include', // PENTING: untuk terima cookies
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          email: email.toLowerCase(), 
-          password,
-          n8nUrl: N8N_SIGNIN_URL // kirim URL n8n ke API route
-        }),
-        
+        body: JSON.stringify({ email: email.toLowerCase(), password }),
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
-        throw new Error(data.error || `Gagal login (${response.status})`);
+        throw new Error(`Gagal login (${response.status})`);
       }
 
-      // ✅ LOGIN BERHASIL
-      if (data.success && data.user) {
-        login(data.user); 
+      const text = await response.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        data = text;
+      }
+
+      // ✅ LOGIN BERHASIL (respon object)
+      if (typeof data === "object" && data.success && data.user) {
+        // Simpan email + token di localStorage
         localStorage.setItem("user_email", data.user.email);
         if (data.token) localStorage.setItem("token", data.token);
+
+        // Simpan user lengkap (opsional)
         localStorage.setItem("user", JSON.stringify(data.user));
 
-        // ✅ REMEMBER ME: Simpan credentials jika checkbox dicentang
-        if (isChecked) {
-          localStorage.setItem("remembered_email", email.toLowerCase());
-          localStorage.setItem("remembered_password", btoa(password));
-        } else {
-          localStorage.removeItem("remembered_email");
-          localStorage.removeItem("remembered_password");
-        }
-
-       await new Promise((r) => setTimeout(r, 0));
-router.push(redirectTo || "/dashboard-user/profile");
-
+        // Redirect
+        setTimeout(() => router.push(redirectTo || "/dashboard-user/profile"), 200);
+        return;
       }
 
-      // ✅ LOGIN BERHASIL (respon plain text) - backward compatibility
+      // ✅ LOGIN BERHASIL (respon plain text)
       if (typeof data === "string" && data.toLowerCase().includes("sukses")) {
         localStorage.setItem("user_email", email.toLowerCase());
         localStorage.setItem("user", JSON.stringify({ email: email.toLowerCase() }));
-
-        // ✅ REMEMBER ME
-        if (isChecked) {
-          localStorage.setItem("remembered_email", email.toLowerCase());
-          localStorage.setItem("remembered_password", btoa(password));
-        } else {
-          localStorage.removeItem("remembered_email");
-          localStorage.removeItem("remembered_password");
-        }
-
         setTimeout(() => router.push(redirectTo || "/dashboard-user/profile"), 200);
         return;
       }
 
       // ❌ LOGIN GAGAL
-      if (!data?.success) {
       setErrorMsg(
         typeof data === "string"
           ? data
           : data?.error || "Email atau password salah."
-      );}
+      );
     } catch (err: any) {
       console.error("Login error:", err);
-      setErrorMsg(err.message || "Tidak dapat terhubung ke server. Coba lagi nanti.");
+      setErrorMsg("Tidak dapat terhubung ke server. Coba lagi nanti.");
     } finally {
       setLoading(false);
     }
-    return;
   };
 
   const handleGoogleSignIn = () => {
@@ -123,21 +99,6 @@ router.push(redirectTo || "/dashboard-user/profile");
     // Redirect ke n8n dengan parameter callback
     window.location.href = `${n8nWebhookUrl}?callback=${encodeURIComponent(callbackUrl)}`;
   };
-
-  useEffect(() => {
-    const savedEmail = localStorage.getItem("remembered_email");
-    const savedPassword = localStorage.getItem("remembered_password");
-    
-    if (savedEmail) {
-      setEmail(savedEmail);
-      setIsChecked(true);
-      
-      // Opsional: isi password jika disimpan (kurang aman, tapi bisa digunakan)
-      if (savedPassword) {
-        setPassword(atob(savedPassword)); // decode dari base64
-      }
-    }
-  }, []);
 
   return (
     <div className="flex flex-col flex-1 lg:w-1/2 w-full">
@@ -204,7 +165,7 @@ router.push(redirectTo || "/dashboard-user/profile");
               <div className="flex items-center gap-3">
                 <Checkbox checked={isChecked} onChange={setIsChecked} />
                 <span className="block font-normal text-gray-700 text-theme-sm dark:text-gray-400">
-                  Ingat aku
+                  Tetap Masuk
                 </span>
               </div>
               <Link
@@ -225,15 +186,12 @@ router.push(redirectTo || "/dashboard-user/profile");
                 {loading ? "Mulai masuk..." : "Masuk"}
               </Button>
             </div>
-            <div>
+            <div className="flex items-center gap-3">
               <Link
-              href="/auth/dashboard-user/signup">
-                <Button
-                className="w-full bg-green-600"
-                size="sm"
-                type="submit"
-              >
-              Daftar</Button>
+              href="/auth/dashboard-user/signup"
+              className="px-40.5 py-3 md:px-51 py-3 rounded-lg bg-[#4EC722] text-sm text-white font-medium hover:bg-[#378C18] transition"
+            >
+              Daftar
             </Link></div>
 
               <p className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">

@@ -125,7 +125,7 @@ expires.setDate(expires.getDate() + 2); // 2 hari dari sekarang
 
 response.cookies.set('auth-token', token, {
   httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',          // WAJIB (Hostinger HTTPS)
+  secure: true,          // WAJIB (Hostinger HTTPS)
   sameSite: 'lax',       // ⬅️ PALING STABIL
   path: '/',
   domain: 'www.catatin.ai', // ⬅️ WAJIB JIKA ADA dev.*

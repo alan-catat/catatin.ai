@@ -6,24 +6,8 @@ import { StatCard } from "@/components/dashboard/StatCard";
 import { PieCart } from "@/components/charts/pie/PieCart";
 import { Wallet, ShoppingBag, Briefcase, CreditCard, DollarSign, ChevronDown, X, Check } from "lucide-react";
 import { USER_OVERVIEWS } from "@/config/variables";
+import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import DatePicker from "@/components/form/date-picker";
-import { useAuth } from '@/lib/auth-context';
-import { useRouter } from 'next/navigation';
-
-function formatDateLocal(d: Date) {
-  const y = d.getFullYear();
-  const m = `${d.getMonth() + 1}`.padStart(2, "0");
-  const day = `${d.getDate()}`.padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
-
-function parseYMDToDate(ymd?: string | null) {
-  if (!ymd) return undefined;
-  const [y, m, d] = ymd.split("-").map(Number);
-  if (!y || !m || !d) return undefined;
-  return new Date(y, m - 1, d);
-}
 
 interface kategori {
   id: string;
@@ -70,9 +54,6 @@ function getMostExpensive(cashflows: CashFlow[]) {
 
 export default function DashboardUser() {
   const { setAlertData } = useAlert();
-    const { user, loading: authLoading, logout } = useAuth();
-  const router = useRouter();
-  const [mounted, setMounted] = useState(false);
   const [mostExpensive, setMostExpensive] = useState<any[]>([]);
   const [largestIncome, setLargestIncome] = useState<any[]>([]);
   const [chartLoading, setChartLoading] = useState(false);
@@ -82,11 +63,6 @@ export default function DashboardUser() {
   const [periods, setPeriods] = useState<string[]>([]);
   const [selectedPeriod, setSelectedPeriod] = useState<string>("");
   const [groups, setGroups] = useState<string[]>([]);
-  const [tempDateFrom, setTempDateFrom] = useState<string>("");
-      const [tempDateTo, setTempDateTo] = useState<string>("");
-      const [dateFrom, setDateFrom] = useState<string>("");
-const [dateTo, setDateTo] = useState<string>("");
-
   
   // ✅ PERUBAHAN: Tambah state untuk multi-select (nama variable baru agar tidak bentrok)
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
@@ -96,12 +72,6 @@ const [dateTo, setDateTo] = useState<string>("");
   // ✅ State untuk temporary filter (belum apply)
   const [tempPeriod, setTempPeriod] = useState<string>("");
   const [tempGroups, setTempGroups] = useState<string[]>([]);
-
-
-  
-
-  const colors = ["text-blue-500", "text-green-500", "text-purple-500", "text-orange-500", "text-pink-500"];
-  const icons = [Wallet, ShoppingBag, Briefcase, CreditCard, DollarSign];
 
   const CustomInput = forwardRef(({ value, onClick }: any, ref: any) => (
     <button
@@ -148,15 +118,14 @@ const [dateTo, setDateTo] = useState<string>("");
     return Object.entries(grouped).map(([name, value]) => ({ name, value }));
   }
 
+  // ✅ TIDAK UBAH PARAMETER - tetap pakai groupName seperti aslinya
   async function fetchCashFlows(period?: string, groupName?: string) {
-  try {
-    // ✅ Pakai email dari auth context (dari cookie)
-    if (!user?.email) {
-      console.warn("User tidak terauthentikasi");
-      return [];
-    }
-    const storedEmail = user.email;
-    console.log('📧 Fetching cashflows for:', storedEmail);
+    try {
+      const storedEmail = typeof window !== "undefined" ? localStorage.getItem("user_email") : null;
+      if (!storedEmail) {
+        console.warn("Email user tidak ditemukan di localStorage");
+        return [];
+      }
 
       const url = process.env.NEXT_PUBLIC_N8N_GETCASHFLOW_URL;
       if (!url) throw new Error("NEXT_PUBLIC_N8N_GETCASHFLOW_URL");
@@ -164,9 +133,8 @@ const [dateTo, setDateTo] = useState<string>("");
       // ✅ SELALU kirim groupName, default "All Groups"
       const requestBody: any = {
         email: storedEmail,
-        groupName: groupName || "All Groups",
-        date_from: dateFrom || "",
-      date_to: dateTo || "",
+        period: period === "All Time" ? null : (period || null),
+        groupName: groupName || "All Groups"
       };
 
       console.log('=== SENDING TO N8N ===');
@@ -216,7 +184,7 @@ const [dateTo, setDateTo] = useState<string>("");
     const totalIncome = data.filter((f) => f.flow_type === "income").reduce((a, b) => a + b.flow_amount, 0);
     const totalExpense = data.filter((f) => f.flow_type === "expense").reduce((a, b) => a + b.flow_amount, 0);
     const balance = totalIncome - totalExpense;
-      
+
     const incomeData = groupByCategory(data, "income");
     const expenseData = groupByCategory(data, "expense");
 
@@ -244,136 +212,59 @@ const [dateTo, setDateTo] = useState<string>("");
   const handleApplyFilter = () => {
     setSelectedPeriod(tempPeriod);
     setSelectedGroups(tempGroups);
-    setDateFrom(tempDateFrom);
-  setDateTo(tempDateTo);
   };
 
-  // ========================================
-// useEffect Section - JANGAN DUPLIKAT!
-// ========================================
+  useEffect(() => {
+    const init = async () => {
+      const p = generatePeriods();
+      setPeriods(p);
+      // ✅ Kirim "All Groups" saat init
+      const flows = await fetchCashFlows(p[p.length - 1], "All Groups");
+      setSelectedPeriod(p[p.length - 1]);
+      setTempPeriod(p[p.length - 1]); // ✅ Set temp juga
+      setSelectedGroups([]);
+      setTempGroups([]); // ✅ Set temp juga
+      setStats(calculateStats(flows));
+      setMostExpensive(getMostExpensive(flows));
+      setLargestIncome(getLargestIncome(flows));
+      setLoading(false);
+    };
+    init();
+  }, []);
 
-// 1. Set mounted on first render
-useEffect(() => {
-  setMounted(true);
-}, []);
+  // ✅ FILTER DI FRONTEND - tapi tetap kirim "All Groups" ke backend
+  useEffect(() => {
+    if (!selectedPeriod) return;
 
-// 2. Handle auth redirect
-useEffect(() => {
-  if (!mounted) return;
-  
-  if (!authLoading && !user) {
-    console.log('❌ Not authenticated, redirecting to signin');
-    router.push('/auth/dashboard-user/signin');
-  }
-}, [mounted, authLoading, user, router]);
+    (async () => {
+      try {
+        setChartLoading(true);
+        
+        // ✅ Selalu kirim "All Groups" untuk fetch semua data
+        const flows = await fetchCashFlows(selectedPeriod, "All Groups");
+        
+        // Filter di frontend berdasarkan selectedGroups
+        const filteredFlows = selectedGroups.length === 0 
+          ? flows 
+          : flows.filter(f => selectedGroups.includes(f.group_name || ''));
+        
+        const newStats = calculateStats(filteredFlows);
 
-// 3. Close dropdown when clicking outside
-useEffect(() => {
-  const handleClickOutside = (event: MouseEvent) => {
-    if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-      setIsDropdownOpen(false);
-    }
-  };
-  document.addEventListener('mousedown', handleClickOutside);
-  return () => document.removeEventListener('mousedown', handleClickOutside);
-}, []);
-
-// 4. Initialize dashboard when user is authenticated
-useEffect(() => {
-  if (!mounted || authLoading || !user?.email) {
-    console.log('⏳ Waiting for auth...', { mounted, authLoading, hasUser: !!user });
-    return;
-  }
-
-  const init = async () => {
-    console.log('🚀 Initializing dashboard for:', user.email);
-    const p = generatePeriods();
-    setPeriods(p);
-    const flows = await fetchCashFlows(p[p.length - 1], "All Groups");
-    setSelectedPeriod(p[p.length - 1]);
-    setTempPeriod(p[p.length - 1]);
-    setSelectedGroups([]);
-    setTempGroups([]);
-    setStats(calculateStats(flows));
-    setMostExpensive(getMostExpensive(flows));
-    setLargestIncome(getLargestIncome(flows));
-    setLoading(false);
-  };
-  init();
-}, [mounted, authLoading, user]);
-
-// 5. Update data when filters change
-useEffect(() => {
-  if (!selectedPeriod || !mounted || authLoading || !user) return;
-
-  (async () => {
-    try {
-      setChartLoading(true);
-      const flows = await fetchCashFlows(selectedPeriod, "All Groups");
-      
-      // Filter by groups
-      let filteredFlows = selectedGroups.length === 0 
-        ? flows 
-        : flows.filter(f => selectedGroups.includes(f.group_name || ''));
-      
-      // Filter by date range
-      if (dateFrom || dateTo) {
-        filteredFlows = filteredFlows.filter(f => {
-          const flowDate = new Date(f.created_at);
-          const fromDate = dateFrom ? new Date(dateFrom) : null;
-          const toDate = dateTo ? new Date(dateTo) : null;
-          
-          if (fromDate && flowDate < fromDate) return false;
-          if (toDate && flowDate > toDate) return false;
-          return true;
-        });
+        setStats(newStats);
+        setMostExpensive(getMostExpensive(filteredFlows));
+        setLargestIncome(getLargestIncome(filteredFlows));
+      } catch (error) {
+        console.error('Error loading data:', error);
+        setStats({});
+        setMostExpensive([]);
+        setLargestIncome([]);
+      } finally {
+        setChartLoading(false);
       }
-      
-      const newStats = calculateStats(filteredFlows);
-      setStats(newStats);
-      setMostExpensive(getMostExpensive(filteredFlows));
-      setLargestIncome(getLargestIncome(filteredFlows));
-    } catch (error) {
-      console.error('Error loading data:', error);
-    } finally {
-      setChartLoading(false);
-    }
-  })();
-}, [selectedPeriod, selectedGroups, dateFrom, dateTo, mounted, authLoading, user]);
+    })();
+  }, [selectedPeriod, selectedGroups]);
 
-// ========================================
-// Render Checks
-// ========================================
-
-if (!mounted) {
-  return null;
-}
-
-if (authLoading) {
-  return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-gray-100"></div>
-        <p className="mt-4 text-gray-600 dark:text-gray-400">Memeriksa autentikasi...</p>
-      </div>
-    </div>
-  );
-}
-
-if (!user) {
-  return null;
-}
-
-if (loading) {
-  return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-gray-100"></div>
-        <p className="mt-4 text-gray-600 dark:text-gray-400">Memuat data dashboard...</p>
-      </div>
-    </div>
-  );
-}
+  if (loading) return <div className="text-center mt-10">Memuat dashboard...</div>;
 
   return (
     <div className="p-6 space-y-6">
@@ -435,24 +326,22 @@ if (loading) {
           </div>
 
           <DatePicker
-                        id="dateFrom"
-                        placeholder="Tanggal Awal"
-                        defaultDate={parseYMDToDate(tempDateFrom)}
-                        onChange={(dates: any[]) => {
-                          const d = dates?.[0];
-                          if (d) setTempDateFrom(formatDateLocal(d));
-                        }}
-                      />
-          
-                      <DatePicker
-                        id="dateTo"
-                        placeholder="Tanggal Akhir"
-                        defaultDate={parseYMDToDate(tempDateTo)}
-                        onChange={(dates: any[]) => {
-                          const d = dates?.[0];
-                          if (d) setTempDateTo(formatDateLocal(d));
-                        }}
-                      />
+            selected={
+              tempPeriod === "All Time" || !tempPeriod
+                ? null
+                : new Date(`${tempPeriod.split(" ")[0]} 1, ${tempPeriod.split(" ")[1]}`)
+            }
+            onChange={(date) => {
+              if (!date) return;
+              const month = date.toLocaleString("en-US", { month: "long" });
+              const year = date.getFullYear();
+              setTempPeriod(`${month} ${year}`);
+            }}
+            dateFormat="MMMM yyyy"
+            showMonthYearPicker
+            customInput={<CustomInput />}
+            placeholderText="Pilih periode"
+          />
           
           
           {/* ✅ Tombol Apply */}
@@ -461,7 +350,7 @@ if (loading) {
             className="px-6 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium 
                      transition-colors shadow-sm"
           >
-            Apply
+            Terapkan
           </button>
         </div>
       </div>

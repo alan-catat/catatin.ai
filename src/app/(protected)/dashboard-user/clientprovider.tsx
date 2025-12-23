@@ -20,12 +20,10 @@ export default function ClientProviders({
   user,
 }: ClientProvidersProps) {
   return (
-    <AuthProvider initialUser={user}>
       <ThemeProvider>
         <SidebarProvider>
           <AdminLayout>{children}</AdminLayout>
         </SidebarProvider>
       </ThemeProvider>
-    </AuthProvider>
   );
 }
