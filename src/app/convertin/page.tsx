@@ -276,15 +276,9 @@ useEffect(() => {
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-2">
-            <div className="flex ">
-      <Image
-        src="/convertin.png"
-        alt="convertin"
-        width={800}
-        height={450}
-        className="shadow-md"
-      />
-    </div>
+            <span className="text-xl font-bold bg-[#066D97] bg-clip-text text-transparent">
+          convertin
+        </span>
           </div>
           <p className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
                 <Link
