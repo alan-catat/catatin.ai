@@ -1,15 +1,12 @@
 'use client'
 
 import { useEffect, useState } from "react"
-import { createClient } from "@/utils/supabase/client"
 
 import { motion, AnimatePresence } from "framer-motion"
 import { X } from "lucide-react"
 import Paket from "./paket"
 
 export default function SubscriptionPage() {
-  const supabase = createClient()
-
   const [history, setHistory] = useState<any[]>([])
   const [activePlan, setActivePlan] = useState<any>(null)
   const [plans, setPlans] = useState<any[]>([])
@@ -18,59 +15,23 @@ export default function SubscriptionPage() {
   const pageSize = 10
 
   useEffect(() => {
-    const fetchData = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+  const fetchData = async () => {
+    try {
+      const res = await fetch(`/subscription`)
+      if (!res.ok) throw new Error("Failed fetch subscription")
 
-      // ambil billing history via RPC
-      const { data, error } = await supabase.rpc("get_user_billing_data", {
-        p_user_id: user.id,
-        limit_count: pageSize,
-        offset_count: (page - 1) * pageSize,
-      });
+      const data = await res.json()
 
-      if (error) {
-        console.error("RPC Error:", error)
-        return
-      }
-
-      const rows = (data || []).map((d: any) => ({
-        subscriptionId: d.subscription_id,
-        plan: d.plan_name,
-        status: d.status,
-        amount: d.amount_paid ? `Rp${Number(d.amount_paid).toLocaleString()}` : "-",
-        date: d.paid_at ? new Date(d.paid_at).toLocaleDateString() : "-",
-        invoiceUrl: d.invoice_url,
-      }))
-
-      setHistory(rows)
-
-      // cari plan aktif
-      const currentActive = rows.find((r: { status: string }) => r.status === "active")
-      setActivePlan(currentActive || null)
-
-      if (currentActive) {
-        // ambil daftar plan (langsung filter di query)
-        const { data: planData, error: planError } = await supabase
-          .from("billing_plans")
-          .select("*")
-          .eq("is_active", true)
-          .neq("price", 0) // exclude free
-          .neq("name", currentActive.plan) // exclude current plan
-          .order("price", { ascending: true })
-
-        if (planError) {
-          console.error("Error fetching plans:", planError)
-        } else {
-          setPlans(planData || [])
-        }
-      }
+      setHistory(data.history || [])
+      setActivePlan(data.activePlan || null)
+      setPlans(data.availablePlans || [])
+    } catch (err) {
+      console.error(err)
     }
+  }
 
-    fetchData()
-  }, [page])
-
-
+  fetchData()
+}, [page])
 
   const handleUpgrade = () => {
     setShowPlans(true)
@@ -81,78 +42,40 @@ export default function SubscriptionPage() {
     alert("Renew subscription clicked")
   }
 
-
-  const handleChoosePlan = async (plan: any) => {
-    try {
-      // 1️⃣ Ambil user info dari user_profiles
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error("User not logged in")
-
-      const { data: profile, error: profileError } = await supabase
-        .from("user_profiles")
-        .select("full_name, email")
-        .eq("user_id", user.id)
-        .single()
-
-      if (profileError) {
-        console.error("Error fetching profile:", profileError)
-        throw new Error(profileError.message)
-      }
-
-      // 2️⃣ Kirim request ke API Midtrans
-      const res = await fetch("/api/midtrans/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: user.id,
-          amount: Number(plan.price),
-          planId: plan.id,
-          planName: plan.name,
-          name: profile?.full_name || "Guest",
-          email: profile?.email || "no-reply@example.com",
-          items: [
-            { id: plan.id, price: Number(plan.price), quantity: 1, name: plan.name }
-          ]
-        })
+const handleChoosePlan = async (plan: any) => {
+  try {
+    const res = await fetch("/api/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        planId: plan.id,
+        planName: plan.name,
+        amount: Number(plan.harga)
       })
+    })
 
-      if (!res.ok) {
-        const text = await res.text()
-        console.error("Checkout API error:", text)
-        throw new Error(text)
-      }
+    if (!res.ok) throw new Error("Checkout failed")
 
-      let data
-      try {
-        data = await res.json()
-      } catch {
-        const text = await res.text()
-        throw new Error(`Invalid JSON response: ${text}`)
-      }
+    const data = await res.json()
 
-      console.log("Midtrans response:", data)
-
-      // 3️⃣ Load Snap JS & panggil snap.pay
-      const snap = (window as any).snap
-      if (!snap) {
-        const script = document.createElement("script")
-        script.id = "midtrans-script"
-        script.src = "https://app.sandbox.midtrans.com/snap/snap.js"
-        script.setAttribute("data-client-key", data.clientKey)
-        document.body.appendChild(script)
-        script.onload = () => (window as any).snap.pay(data.token)
-      } else {
-        snap.pay(data.token)
-      }
-    } catch (err) {
-      console.error("Checkout error:", err)
+    const snap = (window as any).snap
+    if (!snap) {
+      const script = document.createElement("script")
+      script.src = "https://app.sandbox.midtrans.com/snap/snap.js"
+      script.setAttribute("data-client-key", data.clientKey)
+      document.body.appendChild(script)
+      script.onload = () => (window as any).snap.pay(data.token)
+    } else {
+      snap.pay(data.token)
     }
+  } catch (err) {
+    console.error(err)
   }
+}
 
-
-  function handleCancel(): void {
-
-  }
+const handleCancel = async () => {
+  await fetch("/api/subscription/cancel", { method: "POST" })
+}
 
   return (
     <div className="p-6 space-y-6">
@@ -319,7 +242,7 @@ export default function SubscriptionPage() {
                     <div>
                       <h4 className="font-semibold text-lg">{plan.name}</h4>
                       <p className="text-sm text-gray-500 mb-2">
-                        Rp {parseInt(plan.price).toLocaleString()} /{" "}
+                        Rp {parseInt(plan.harga).toLocaleString()} /{" "}
                         {plan.billing_cycle}
                       </p>
 

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import PaymentModal from "../dashboard-user/subscriptions/payment";
+import CustomPlanModal from "../dashboard-user/subscriptions/CustomPlanModal";
 
 const N8N_BASE_URL = "https://n8n.srv1074739.hstgr.cloud/webhook";
 
@@ -37,12 +38,16 @@ export default function Paket() {
   const [packages, setPackages] = useState<Package[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAllContent, setShowAllContent] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+
 
   const [selectedPlan, setSelectedPlan] = useState<{
     id: string;
     name: string;
-    price: number;
+    harga: number;
   } | null>(null);
+
+const activePackageId = "1"; // TODO: ambil dari backend
 
   useEffect(() => {
     setTimeout(() => {
@@ -57,7 +62,7 @@ export default function Paket() {
           is_paid: false,
           billing_plans: [
             {
-              id: "1m",
+              id: "pk001",
               package_id: "1",
               name: "Biar Kebiasa",
               billing_cycle: "monthly",
@@ -78,7 +83,7 @@ export default function Paket() {
               },
             },
             {
-              id: "1y",
+              id: "pk001",
               package_id: "1",
               name: "Biar Kebiasa",
               billing_cycle: "annually",
@@ -110,7 +115,7 @@ export default function Paket() {
           is_paid: true,
           billing_plans: [
             {
-              id: "2m",
+              id: "pk002",
               package_id: "2",
               name: "Biar Rapi",
               billing_cycle: "monthly",
@@ -131,7 +136,7 @@ export default function Paket() {
               },
             },
             {
-              id: "2y",
+              id: "pk004",
               package_id: "2",
               name: "Biar Rapi",
               billing_cycle: "annually",
@@ -163,7 +168,7 @@ export default function Paket() {
           is_paid: true,
           billing_plans: [
             {
-              id: "3m",
+              id: "pk003",
               package_id: "3",
               name: "Biar Tetep On Track",
               billing_cycle: "monthly",
@@ -184,7 +189,7 @@ export default function Paket() {
               },
             },
             {
-              id: "3y",
+              id: "pk005",
               package_id: "3",
               name: "Biar Tetep On Track",
               billing_cycle: "annually",
@@ -275,25 +280,38 @@ export default function Paket() {
   }
 
   const handleSelectPlan = (pkg: Package, plan: BillingPlan) => {
-    // FREE - tidak perlu action karena sudah termasuk saat registrasi
-    if (!pkg.is_paid || plan.harga === 0) {
-      alert("Paket gratis sudah aktif di akun Anda 🎉");
-      return;
-    }
+  // ❌ Belum login
+  if (!userEmail) {
+    alert("Silakan login atau daftar terlebih dahulu");
+    window.location.href = "/login"; // atau /register
+    return;
+  }
 
-    // CUSTOM - redirect ke WhatsApp
-    if (pkg.is_custom) {
-      window.open("https://wa.me/6281118891092", "_blank");
-      return;
-    }
+  // Paket sudah aktif
+  if (pkg.id === activePackageId) {
+    alert("Paket ini sedang aktif ✅");
+    return;
+  }
 
-    // PAID - buka modal pembayaran (hanya untuk paket 2 dan 3)
-    setSelectedPlan({
-      id: plan.id,
-      name: plan.name,
-      price: plan.harga,
-    });
-  };
+  // FREE
+  if (!pkg.is_paid || plan.harga === 0) {
+    alert("Paket gratis sudah aktif di akun Anda 🎉");
+    return;
+  }
+
+  // CUSTOM
+  if (pkg.is_custom) {
+    window.open("https://wa.me/6281118891092", "_blank");
+    return;
+  }
+
+  // PAID
+  setSelectedPlan({
+    id: plan.id,
+    name: plan.name,
+    harga: plan.harga,
+  });
+};
 
   const formatHarga = (harga: number | string | undefined) => {
     const nilai = Number(harga);
@@ -306,6 +324,7 @@ export default function Paket() {
 
     return nilai.toString();
   };
+
 
   return (
     <div className="py-12 md:py-16 bg-[#DFF3FF] text-slate-800 antialiased min-h-screen">
@@ -482,21 +501,16 @@ export default function Paket() {
                         </ul>
                       </div>
 
-                      <button
-                        onClick={() => handleSelectPlan(pkg, plan)}
-                        className={`mt-6 w-full py-3 px-6 rounded-lg font-semibold transition-all
-                          ${isPro
-                            ? "bg-white text-blue-600 hover:bg-gray-100 shadow-lg"
-                            : "bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700 shadow-md"
-                          }
-                        `}
-                      >
-                        {pkg.is_custom 
-                          ? "Hubungi Kami" 
-                          : pkg.is_paid 
-                          ? "Pilih Paket" 
-                          : "Paket Aktif"}
-                      </button>
+                      <Link href={`/subscription`}
+                    className={`mt-6 w-full py-3 px-6 rounded-lg font-semibold transition-all text-center block ${
+                      isPro
+                        ? "bg-white text-blue-600 hover:bg-gray-100 shadow-lg"
+                        : "bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700 shadow-md"
+                    }`}
+                  >
+                    {pkg.is_paid ? "Pilih Paket" : "Mulai Gratis"}
+                  </Link>
+
                     </>
                   )}
                 </div>
@@ -505,14 +519,16 @@ export default function Paket() {
           })}
         </div>
 
-        {/* Payment Modal - hanya untuk paket berbayar (2 dan 3) */}
-        <PaymentModal
-          open={selectedPlan !== null}
-          onClose={() => setSelectedPlan(null)}
-          planId={selectedPlan?.id || ""}
-          planName={selectedPlan?.name || ""}
-          price={selectedPlan?.price || 0}
-        />
+      {selectedPlan && userEmail && (
+  <PaymentModal
+    open={true}
+    onClose={() => setSelectedPlan(null)}
+    planId={selectedPlan.id}
+    planName={selectedPlan.name}
+    harga={selectedPlan.harga}
+    email={userEmail}
+  />
+)}
 
         <div className="items-center text-center">
           <button

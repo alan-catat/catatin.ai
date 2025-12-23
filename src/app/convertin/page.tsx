@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { FileText, Upload, Download, Shield, Cloud, ArrowRight, Award, Star, Settings, ChevronDown, ChevronUp } from 'lucide-react';
 import Link from 'next/link';
 import ExcelJS from 'exceljs';
+import Image from "next/image";
+
 
 const N8N_CONVERTIN_URL = process.env.NEXT_PUBLIC_N8N_CONVERTIN_URL;
 
@@ -183,7 +185,7 @@ const handleDrop = (e: React.DragEvent) => {
       window.URL.revokeObjectURL(url);
 
       setProgress(100);
-      alert(`✅ Berhasil! ${items.length} transaksi telah dikonversi ke Excel`);
+      showToast(`✅ Berhasil! ${items.length} transaksi telah dikonversi ke Excel`);
       
     } else {
       // Jika N8N mengembalikan file binary langsung
@@ -194,7 +196,7 @@ const handleDrop = (e: React.DragEvent) => {
       link.href = url;
       
       const extension = format === 'excel' ? 'xlsx' : format;
-      link.download = `converted-${file.name.replace(/\.[^/.]+$/, '')}.${extension}`;
+      link.download = `convertin-${file.name.replace(/\.[^/.]+$/, '')}.${extension}`;
       
       document.body.appendChild(link);
       link.click();
@@ -274,9 +276,15 @@ useEffect(() => {
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-2">
-            <span className="text-xl font-bold bg-gradient-to-r from-[#0566BD] to-[#A8E063] bg-clip-text text-transparent">
-          catatin.ai
-        </span>
+            <div className="flex ">
+      <Image
+        src="/convertin.png"
+        alt="convertin"
+        width={800}
+        height={450}
+        className="shadow-md"
+      />
+    </div>
           </div>
           <p className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
                 <Link
@@ -292,9 +300,9 @@ useEffect(() => {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center mb-8">
-          <h1 className="text-5xl font-bold text-gray-900 mb-4">Convertin</h1>
+          <h1 className="text-5xl font-bold text-gray-900 mb-4">convertin</h1>
           <p className="text-xl text-gray-600">
-            Tidak perlu input manual! PDF bank statement langsung jadi Excel siap dianalisis.
+            Tidak perlu input manual! PDF bank statement BCA langsung jadi Excel siap dianalisis.
           </p>
         </div>
 
@@ -316,7 +324,7 @@ useEffect(() => {
                 <Upload className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                 <label className="cursor-pointer">
                   <span className="inline-block px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
-                    📄 Pilih File
+                    📄 Upload File
                   </span>
                   <input
                     type="file"
@@ -326,7 +334,7 @@ useEffect(() => {
                   />
                 </label>
                 <p className="mt-4 text-sm text-gray-500">
-                  Ukuran file maksimal 1GB. <span className="text-indigo-600 cursor-pointer">Daftar</span> untuk lebih banyak
+                  Ukuran file maksimal 100MB. <span className="text-indigo-600 cursor-pointer">Daftar</span> untuk lebih banyak
                 </p>
                 <p className="text-xs text-gray-400 mt-2">
                   Dengan melanjutkan, Anda setuju dengan <span className="text-indigo-600 cursor-pointer">Ketentuan Penggunaan</span> kami
@@ -415,7 +423,7 @@ useEffect(() => {
       className="flex items-center justify-center space-x-2 cursor-pointer"
     >
       <Download className="w-5 h-5" />
-      <span>Convertin Sekarang</span>
+      <span>convertin Sekarang</span>
     </div>
   )}
 </button>
@@ -424,8 +432,8 @@ useEffect(() => {
         </div>
 
        {/* Advanced Settings */}
-              <div className="mt-6 border border-gray-200 rounded-lg">
-  <div className="w-full flex items-center justify-between p-4 bg-gray-50">
+              <div className="mt-6 rounded-lg border shadow-lg">
+  <div className="w-full flex items-center justify-between p-4 bg-gray-300 shadow-lg">
     <div className="flex items-center space-x-2">
       <Settings className="w-5 h-5 text-gray-600" />
       <span className="font-medium text-gray-900">
@@ -435,11 +443,11 @@ useEffect(() => {
   </div>
 
                 
-                  <div className="border-t border-gray-200 p-4 space-y-6">
+                  <div className="border-t border-gray-200 p-4 space-y-6 bg-white  shadow-lg">
                     
 
       {/* Document Options Section */}
-      <div className="bg-gray-50 rounded-lg p-4">
+      <div className="bg-white rounded-lg p-4">
         <div className="flex items-center space-x-2 mb-4">
           <Settings className="w-4 h-4 text-gray-600" />
           <h3 className="font-medium text-gray-900">Opsi Dokumen</h3>
@@ -454,7 +462,7 @@ useEffect(() => {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter password"
+              placeholder="Masukan password"
               maxLength={255}
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             />
@@ -464,6 +472,7 @@ useEffect(() => {
           </p>
         </div>
       </div>
+      
 
       {/* Apply Button */}
       <div className="flex justify-end">
@@ -472,11 +481,11 @@ useEffect(() => {
           <ChevronDown className="w-4 h-4" />
         </button>
       </div>
-    </div>
-</div>
+    </div></div>
 
-{/* How to Convert Section */}
-        <div className="bg-white rounded-xl shadow-lg p-8 mb-12">
+
+{/* How to Convert Section */}<div className="mt-8">
+        <div className="bg-white rounded-xl shadow-lg p-8 mb-12 shadow-lg">
           <h2 className="text-3xl font-bold text-gray-900 mb-6">Cara Konversi</h2>
           <ol className="space-y-4 text-gray-700">
             <li className="flex items-start">
@@ -485,11 +494,31 @@ useEffect(() => {
             </li>
             <li className="flex items-start">
               <span className="font-bold mr-2">2.</span>
-              <span>Klik tombol <b>Convertin Sekarang</b>.</span>
+              <span>Klik tombol <b>convertin Sekarang</b>.</span>
             
             </li>
           </ol>
         </div>
+        </div>
+
+        <div className="mt-8">
+  <div className="bg-white rounded-xl shadow-lg p-8 mb-12">
+    <h2 className="text-3xl font-bold text-gray-900 mb-6">
+      Contoh Hasil
+    </h2>
+
+    <div className="flex ">
+      <Image
+        src="/contoh-hasil.png"
+        alt="Contoh Hasil"
+        width={800}
+        height={450}
+        className="shadow-md"
+      />
+    </div>
+  </div>
+</div>
+
       </main>
 
       {/* Footer */}
@@ -497,7 +526,7 @@ useEffect(() => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="grid grid-cols-1 md:grid-cols-1 gap-8">
             
-            <div>© catatin.ai · All rights reserved (2025)</div>
+            <div>© PT. Monivo Global Teknologi · All rights reserved (2025)</div>
           </div>
         </div>
       </footer>

@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import Script from "next/script";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 const N8N_BASE_URL = "https://n8n.srv1074739.hstgr.cloud/webhook";
 
@@ -11,20 +11,23 @@ type ToastType = "success" | "error" | "info";
 type PaymentModalProps = {
   open: boolean;
   onClose: () => void;
-  userId: string;
-  email: string;
+
+  planId: string;
   planName: string;
-  price: number;
+  harga: number;
+  email: string;
 };
 
 export default function PaymentModal({
   open,
   onClose,
-  userId,
-  email,
+  planId,
   planName,
-  price,
+  harga,
+  email,
 }: PaymentModalProps) {
+  if (!open) return null;
+
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState<{
     show: boolean;
@@ -36,8 +39,6 @@ export default function PaymentModal({
     type: "success",
   });
 
-  if (!open) return null;
-
   const showToast = (message: string, type: ToastType = "success") => {
     setToast({ show: true, message, type });
     setTimeout(() => {
@@ -47,17 +48,17 @@ export default function PaymentModal({
 
   const handlePay = async () => {
     if (loading) return;
-
     setLoading(true);
+
     try {
       const res = await fetch(`${N8N_BASE_URL}/payment`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId,
+          planId,
           email,
           plan: planName,
-          amount: Number(price),
+          amount: finalHarga,
         }),
       });
 
@@ -96,6 +97,17 @@ export default function PaymentModal({
     }
   };
 
+  const finalHarga = useMemo(() => {
+  if (!harga || !planName) return 0;
+
+  const isAnnual =
+    planName.toLowerCase().includes("tahunan") ||
+    planName.toLowerCase().includes("annual");
+
+  return isAnnual ? Math.round(harga * 0.8) : harga;
+}, [harga, planName]);
+
+
   return (
     <>
       {/* Midtrans Snap */}
@@ -129,8 +141,16 @@ export default function PaymentModal({
                 <b>Paket:</b> {planName}
               </p>
               <p>
-                <b>Total:</b> Rp {price.toLocaleString("id-ID")}
-              </p>
+  <b>Total:</b>{" "}
+  Rp {finalHarga > 0 ? finalHarga.toLocaleString("id-ID") : "-"}
+</p>
+
+{planName.toLowerCase().includes("tahunan") && (
+  <p className="text-xs text-green-600">
+    Termasuk diskon 20% paket tahunan 🎉
+  </p>
+)}
+
               <p className="text-xs text-gray-500">
                 Anda akan diarahkan ke halaman pembayaran Midtrans
               </p>

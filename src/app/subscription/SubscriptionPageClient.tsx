@@ -16,12 +16,6 @@ const N8N_BASE_URL = "https://n8n.srv1074739.hstgr.cloud/webhook";
 export default function SubscriptionPageClient() {
     const searchParams = useSearchParams();
     const router = useRouter();
-
-    const packageId = searchParams.get("package");
-    const planName = searchParams.get("plan") || "Biar Kebiasa";
-    const billingCycle = searchParams.get("billing") || "monthly";
-    const price = searchParams.get("price") || "0";
-
     const [step, setStep] = useState(0);
     const [fullName, setFullName] = useState("");
     const [Email, setEmail] = useState("");
@@ -41,6 +35,22 @@ const [isLoginMode, setIsLoginMode] = useState(false);
 const [loginEmail, setLoginEmail] = useState('');
 const [loginPassword, setLoginPassword] = useState('');
 const [showLoginPassword, setShowLoginPassword] = useState(false);
+const [planId, setPlanId] = useState<string>("");
+
+useEffect(() => {
+    const pkg = searchParams.get("package");
+    if (pkg) {
+        setPlanId(pkg);
+    }
+    const saved = localStorage.getItem("subscription_progress");
+    if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.step) setStep(parsed.step);
+        if (parsed.fullName) setFullName(parsed.fullName);
+        if (parsed.Email) setEmail(parsed.Email);
+        if (parsed.userId) setUserId(parsed.userId);
+    }
+}, [searchParams]);
 
     // Load progress dari localStorage
     useEffect(() => {
@@ -80,8 +90,15 @@ const handleLogin = async () => {
         showToast("Mohon masukkan email dan password!", "error");
         return;
     }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(loginEmail)) {
+        showToast("Format email tidak valid!", "error");
+        return;
+    }
     
     setLoading(true);
+    
     try {
         const response = await fetch(`${N8N_BASE_URL}/signin`, {
             method: "POST",
@@ -96,35 +113,67 @@ const handleLogin = async () => {
 
         const data = await response.json();
 
-        if (response.ok) {
-            // Simpan data user dari login
-            if (data.userId) {
-                setUserId(data.userId);
-            }
-            if (data.email) {
-                setEmail(data.email);
-            }
-            if (data.fullName) {
-                setFullName(data.fullName);
-            }
+        if (response.ok && response.status === 200) {
+           const loggedUserId = data.userId || "";
+const loggedEmail = data.email || loginEmail;
+const loggedFullName = data.fullName || loginEmail;
+
+setUserId(loggedUserId);
+setEmail(loggedEmail); 
+setFullName(loggedFullName); 
             
             localStorage.setItem('isRegistered', 'true');
             localStorage.setItem('userData', JSON.stringify({
                 fullName: data.fullName || loginEmail,
-                Email: loginEmail,
+                email: loginEmail,
                 userId: data.userId || "",
                 loggedInAt: new Date().toISOString()
             }));
             
-            // Langsung ke step pembayaran
-            saveProgress(2);
-            showToast("Login berhasil! Silakan lanjutkan pembayaran.", "success");
+            // 🎯 Cek paket gratis
+            const isFreePackage = planId === "pk001" || 
+                                 planId === "1m" || 
+                                 planId === "1y" || 
+                                 planName?.toLowerCase().includes("biar kebiasa");
+            
+            if (isFreePackage) {
+                // Paket gratis - langsung aktivasi dan redirect
+                localStorage.setItem('activePackageId', '1');
+                localStorage.setItem('packageActivatedAt', new Date().toISOString());
+                localStorage.removeItem("subscription_progress");
+                
+                showToast("🎉 Login berhasil! Paket 'Biar Kebiasa' telah aktif!", "success");
+                
+                setTimeout(() => {
+                    router.push("/dashboard-user");
+                }, 2000);
+            } else {
+                // Paket berbayar - lanjut ke pembayaran
+                saveProgress(2);
+                showToast("Login berhasil! Silakan lanjutkan pembayaran.", "success");
+            }
+            
         } else {
-            showToast(data.message || "Email atau password salah!", "error");
+            const errorMessage = data.message || data.error || "Email atau password salah!";
+            showToast(errorMessage, "error");
+            
+            console.error("Login failed:", {
+                status: response.status,
+                statusText: response.statusText,
+                data: data
+            });
         }
+        
     } catch (error) {
-        console.error("Error:", error);
-        showToast("Terjadi kesalahan saat login!", "error");
+        console.error("Login error:", error);
+        
+        if (error instanceof TypeError && error.message.includes('fetch')) {
+            showToast("Tidak dapat terhubung ke server. Periksa koneksi internet Anda.", "error");
+        } else if (error instanceof SyntaxError) {
+            showToast("Terjadi kesalahan saat memproses data dari server.", "error");
+        } else {
+            showToast("Terjadi kesalahan saat login. Silakan coba lagi.", "error");
+        }
     } finally {
         setLoading(false);
     }
@@ -165,114 +214,155 @@ const switchToRegister = () => {
 };
 
     // Step 0: Registrasi
-    const handleSignup = async () => {
-        const nameParts = fullName.trim().split(/\s+/);
-const firstName = nameParts[0] || "";
-const lastName = nameParts.slice(1).join(" ");
+const handleSignup = async () => {
+    const nameParts = fullName.trim().split(/\s+/);
+    const firstName = nameParts[0] || "";
+    const lastName = nameParts.slice(1).join(" ");
 
-        if (!termsAccepted) {
-            showToast("Harap centang Terms & Conditions sebelum mendaftar.");
-            return;
-        }
-
-        if (password !== confirmPassword) {
-            showToast("Password dan konfirmasi password tidak sama.");
-            return;
-        }
-
-        if (password.length < 8 || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
-            showToast("Password Tidak Sesuai.");
-            return;
-        }
-
-         if (!fullName || !Email || !password || !confirmPassword) {
-         showToast("Semua field harus diisi!");
+    if (!termsAccepted) {
+        showToast("Harap centang Terms & Conditions sebelum mendaftar.", "error");
         return;
-         }
-
-        setLoading(true);
-        try {
-    const response = await fetch(`${N8N_BASE_URL}/SignUp`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            Timestamp: new Date().toISOString(),
-            FirstName: firstName,
-            LastName: lastName,
-            Email,
-            password,
-            plan: planName,
-            packageId,
-        }),
-    });
-
-            const data = await response.json();
-
-            if (response.ok) {
-    // Simpan userId dari response jika ada
-    if (data.userId) {
-        setUserId(data.userId);
     }
-    
-    localStorage.setItem('isRegistered', 'true');
-    localStorage.setItem('userData', JSON.stringify({
-        fullName,
-        Email,
-        userId: data.userId || "", // Simpan userId juga
-        registeredAt: new Date().toISOString()
-    }));
-    
-    // Update progress dengan step 2
-    saveProgress(2);
-    
-    showToast("Registrasi berhasil! Silakan cek email Anda untuk verifikasi.");
-} else {
-      showToast(data.message || "Registrasi gagal!");
+
+    if (password !== confirmPassword) {
+        showToast("Password dan konfirmasi password tidak sama.", "error");
+        return;
     }
-  } catch (error) {
-    console.error("Error:", error);
-    showToast("Terjadi kesalahan saat registrasi!");
-  } finally {
-    setLoading(false);
-  }
+
+    if (password.length < 8 || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
+        showToast("Password Tidak Sesuai.", "error");
+        return;
+    }
+
+    if (!fullName || !Email || !password || !confirmPassword) {
+        showToast("Semua field harus diisi!", "error");
+        return;
+    }
+
+    setLoading(true);
+    try {
+        const response = await fetch(`${N8N_BASE_URL}/SignUp`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                Timestamp: new Date().toISOString(),
+                FirstName: firstName,
+                LastName: lastName,
+                Email,
+                password,
+                plan: planName,
+                planId: planId,
+            }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            if (data.userId) {
+                setUserId(data.userId);
+            }
+            
+            localStorage.setItem('isRegistered', 'true');
+            localStorage.setItem('userData', JSON.stringify({
+                fullName,
+                Email,
+                userId: data.userId || "",
+                registeredAt: new Date().toISOString()
+            }));
+            
+            // 🎯 Cek apakah paket gratis
+            const isFreePackage = planId === "1" || 
+                                 planId === "1m" || 
+                                 planId === "1y" || 
+                                 planName?.toLowerCase().includes("biar kebiasa");
+            
+            if (isFreePackage) {
+                // Paket gratis - langsung ke step 1 (verifikasi)
+                saveProgress(1);
+                showToast("Registrasi berhasil! Silakan verifikasi email Anda untuk mengaktifkan paket gratis.", "success");
+            } else {
+                // Paket berbayar - ke step 1 (verifikasi)
+                saveProgress(1);
+                showToast("Registrasi berhasil! Silakan verifikasi email Anda.", "success");
+            }
+            
+        } else {
+            showToast(data.message || "Registrasi gagal!", "error");
+        }
+    } catch (error) {
+        console.error("Error:", error);
+        showToast("Terjadi kesalahan saat registrasi!", "error");
+    } finally {
+        setLoading(false);
+    }
 };
 
     // Step 1: Validasi Akun
-    const handleValidate = async () => {
-        if (!verificationCode) {
-            showToast("Masukkan kode verifikasi dari Email Anda.");
+const handleValidate = async () => {
+    if (!verificationCode) {
+        showToast("Masukkan kode verifikasi dari Email Anda.", "error");
+        return;
+    }
+
+    setLoading(true);
+    try {
+        const response = await fetch(`${N8N_BASE_URL}/verify-account`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                Email,
+                token: verificationCode,
+            }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            showToast(data.message || "Kode verifikasi salah.", "error");
             return;
         }
 
-        setLoading(true);
-        try {
-            const response = await fetch(`${N8N_BASE_URL}/verify-account`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    Email,
-                    token: verificationCode,
-                }),
-            });
+        // ✅ Verifikasi berhasil
+        showToast("Email berhasil diverifikasi! ✅", "success");
 
-            const data = await response.json();
+        // 🎯 Cek apakah paket yang dipilih adalah paket gratis "Biar Kebiasa"
+        const isFreePackage = planId === "1" || 
+                             planId === "1m" || 
+                             planId === "1y" || 
+                             planName?.toLowerCase().includes("biar kebiasa");
 
-            if (!response.ok) {
-                showToast(data.message || "Kode verifikasi salah.");
-                return;
-            }
-
-            showToast("Email berhasil diverifikasi! ✅");
+        if (isFreePackage) {
+            // 🎉 Paket gratis - aktivasi otomatis dan redirect
+            
+            // Simpan status paket aktif
+            localStorage.setItem('activePackageId', '1');
+            localStorage.setItem('packageActivatedAt', new Date().toISOString());
+            
+            // Clear subscription progress
+            localStorage.removeItem("subscription_progress");
+            
+            showToast("🎉 Selamat! Anda sudah terdaftar dan paket 'Biar Kebiasa' telah aktif!", "success");
+            
+            // Redirect ke dashboard setelah 2 detik
+            setTimeout(() => {
+                router.push("/dashboard-user");
+            }, 2000);
+            
+        } else {
+            // 💳 Paket berbayar - lanjut ke pembayaran
             nextStep();
-        } catch (error) {
-            console.error("Validation error:", error);
-            showToast("Terjadi kesalahan. Silakan coba lagi.");
-        } finally {
-            setLoading(false);
         }
-    };
+
+    } catch (error) {
+        console.error("Validation error:", error);
+        showToast("Terjadi kesalahan. Silakan coba lagi.", "error");
+    } finally {
+        setLoading(false);
+    }
+};
+
 
     // Step 2: Pembayaran
 const handlePayment = async () => {
@@ -284,7 +374,7 @@ const handlePayment = async () => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        Id: packageId,
+        planId: packageId,
         email: Email,
         plan: planName,
         amount: Number(price),
@@ -478,6 +568,27 @@ const handlePay = async () => {
   }
 };
 
+// Ambil langsung dari URL params
+const packageId = searchParams.get("package") || "1";
+const planName = searchParams.get("plan") || "Biar Kebiasa";
+const billingCycle = searchParams.get("billing") || "monthly";
+const price = searchParams.get("price") || "0";
+
+// Update useEffect untuk cek apakah localStorage masih relevan
+useEffect(() => {
+    const saved = localStorage.getItem("subscription_progress");
+    if (saved) {
+        const parsed = JSON.parse(saved);
+        
+        // ✅ Cek apakah packageId sama dengan yang di localStorage
+        if (parsed.packageId === packageId && parsed.step && parsed.step > 0) {
+            // Load progress
+        } else {
+            // Reset jika beda paket
+            localStorage.removeItem("subscription_progress");
+        }
+    }
+}, [packageId]);
     return (
         <div className="min-h-screen flex flex-col bg-gradient-to-b from-blue-50 to-cyan-50">
             <div className="flex flex-col items-center justify-center flex-1 px-6 py-12">
@@ -766,10 +877,17 @@ className="w-full"
 </Button>
 </div>
 
-
 <p className="text-xs text-center text-gray-500">
 Pembayaran diproses oleh Midtrans • Aman & terenkripsi
 </p>
+<p className="text-center">
+<button
+        type="button"
+        onClick={prevStep}
+        className="text-sm text-blue-600 hover:text-blue-700 underline"
+    >
+                                        ← Kembali
+                                    </button></p>
 </motion.div>
   </>
 )}

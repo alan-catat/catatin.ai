@@ -40,13 +40,30 @@ export default function Paket() {
   const [expandedCards, setExpandedCards] = useState<{[key: string]: boolean}>({});
   const [showAllContent, setShowAllContent] = useState(false);
   const [showCustomModal, setShowCustomModal] = useState(false);
-
+  const [userEmail, setUserEmail] = useState<string | null>(null);
 
   const [selectedPlan, setSelectedPlan] = useState<{
-  packageId: string;
-  planName: string;
-  price: number;
-} | null>(null);
+    id: string;
+    name: string;
+    harga: number;
+  } | null>(null);
+
+const activePackageId = "1"; // TODO: ambil dari backend
+
+useEffect(() => {
+  const storedUser = localStorage.getItem("user");
+
+  if (storedUser) {
+    try {
+      const parsed = JSON.parse(storedUser);
+      if (parsed?.email) {
+        setUserEmail(parsed.email);
+      }
+    } catch (err) {
+      console.error("Invalid user in localStorage");
+    }
+  }
+}, []);
 
   useEffect(() => {
     setTimeout(() => {
@@ -61,7 +78,7 @@ export default function Paket() {
           is_paid: false,
           billing_plans: [
             {
-              id: "1m",
+              id: "pk001",
               package_id: "1",
               name: "Biar Kebiasa",
               billing_cycle: "monthly",
@@ -82,7 +99,7 @@ export default function Paket() {
               },
             },
             {
-              id: "1y",
+              id: "pk001",
               package_id: "1",
               name: "Biar Kebiasa",
               billing_cycle: "annually",
@@ -114,7 +131,7 @@ export default function Paket() {
           is_paid: true,
           billing_plans: [
             {
-              id: "2m",
+              id: "pk002",
               package_id: "2",
               name: "Biar Rapi",
               billing_cycle: "monthly",
@@ -135,17 +152,17 @@ export default function Paket() {
               },
             },
             {
-              id: "2y",
+              id: "pk004",
               package_id: "2",
               name: "Biar Rapi",
               billing_cycle: "annually",
-              harga: 198000,
+              harga: 158400,
               chat: 500,
               duration_days: 365,
               is_active: true,
               features: {
                 "Nama Paket": "Pro",
-                "Harga per Tahun": "198000",
+                "Harga per Tahun": "158400",
                 "Kuota Chat": "500",
                 "Channel": "Telegram & Whatsapp",
                 "Kolaborasi Group": "Telegram Group tidak terbatas",
@@ -167,7 +184,7 @@ export default function Paket() {
           is_paid: true,
           billing_plans: [
             {
-              id: "3m",
+              id: "pk003",
               package_id: "3",
               name: "Biar Tetep On Track",
               billing_cycle: "monthly",
@@ -188,17 +205,17 @@ export default function Paket() {
               },
             },
             {
-              id: "3y",
+              id: "pk005",
               package_id: "3",
               name: "Biar Tetep On Track",
               billing_cycle: "annually",
-              harga: 780000,
+              harga: 624000,
               chat: 2000,
               duration_days: 365,
               is_active: true,
               features: {
                 "Nama Paket": "Biar Tetep On Track",
-                "Harga per Tahun": "Rp 780.000",
+                "Harga per Tahun": "Rp 624000",
                 "Kuota Chat": "2000",
                 "Channel": "Semua Channel",
                 "Kolaborasi Group": true,
@@ -242,7 +259,7 @@ export default function Paket() {
               },
             },
             {
-              id: "3y",
+              id: "4y",
               package_id: "3",
               name: "Biar Sesuai Kamu",
               billing_cycle: "annually",
@@ -291,26 +308,38 @@ export default function Paket() {
   ];
 
   const handleSelectPlan = (pkg: Package, plan: BillingPlan) => {
+  // ❌ Belum login
+  if (!userEmail) {
+    alert("Silakan login atau daftar terlebih dahulu");
+    window.location.href = "/login"; // atau /register
+    return;
+  }
+
+  // Paket sudah aktif
+  if (pkg.id === activePackageId) {
+    alert("Paket ini sedang aktif ✅");
+    return;
+  }
+
   // FREE
   if (!pkg.is_paid || plan.harga === 0) {
-    activateFreePlan(pkg.id, plan.id);
+    alert("Paket gratis sudah aktif di akun Anda 🎉");
     return;
   }
 
   // CUSTOM
   if (pkg.is_custom) {
-    setShowCustomModal(true);
+    window.open("https://wa.me/6281118891092", "_blank");
     return;
   }
 
   // PAID
   setSelectedPlan({
-    packageId: pkg.id,
-    planName: plan.name,
-    price: plan.harga,
+    id: plan.id,
+    name: plan.name,
+    harga: plan.harga,
   });
 };
-
 
 const activateFreePlan = async (packageId: string, planId: string) => {
   await fetch(`${N8N_BASE_URL}/payment`, {
@@ -419,7 +448,7 @@ const formatHarga = (harga: number | string | undefined) => {
     ? "Free"
     : billingCycle === "annually" &&
       (pkg.name === "Biar Rapi" || pkg.name === "Biar Tetep On Track")
-    ? formatHarga(Math.round((Number(plan?.harga) / 12) * 0.8))
+    ? formatHarga(Math.round((Number(plan?.harga) / 12)))
     : formatHarga(plan?.harga)}
 </span>
                   </div>
@@ -431,7 +460,7 @@ const formatHarga = (harga: number | string | undefined) => {
                   {billingCycle === "annually" && plan.harga > 0 && pkg.name !== "Biar Sesuai Kamu" && (
   <div className={`text-xs mt-2 ${isPro ? "text-blue-100" : "text-gray-500"}`}>
     <span className="line-through opacity-70">
-      {Math.round(plan.harga / 12).toLocaleString("id-ID")}/bulan
+      {Math.round((plan.harga / 12)/0.8).toLocaleString("id-ID")}/bulan
     </span>
     
   </div>
@@ -519,16 +548,26 @@ const formatHarga = (harga: number | string | undefined) => {
   </a>
 ) : (
   <button
-    onClick={() => handleSelectPlan(pkg, plan)}
-    className={`mt-6 w-full py-3 px-6 rounded-lg font-semibold transition-all
-      ${isPro
+  onClick={() => handleSelectPlan(pkg, plan)}
+  disabled={pkg.id === activePackageId}
+  className={`mt-6 w-full py-3 px-6 rounded-lg font-semibold transition-all
+    ${
+      pkg.id === activePackageId
+        ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+        : isPro
         ? "bg-white text-blue-600 hover:bg-gray-100 shadow-lg"
         : "bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700 shadow-md"
-      }
-    `}
-  >
-    {pkg.is_paid ? "Pilih Paket" : "Mulai Gratis"}
-  </button>
+    }
+  `}
+>
+  {pkg.id === activePackageId
+    ? "Paket Aktif"
+    : pkg.is_custom
+    ? "Hubungi Kami"
+    : pkg.is_paid
+    ? "Pilih Paket"
+    : "Paket Gratis"}
+</button>
 )}
 
                 </>
@@ -538,21 +577,17 @@ const formatHarga = (harga: number | string | undefined) => {
             );
           })}
       </div>
-      <PaymentModal
-  open={selectedPlan !== null}
-  onClose={() => setSelectedPlan(null)}
-  userId="USER_ID_LOGIN"
-  email="user@email.com"
-  planName={selectedPlan?.planName ?? ""}
-  price={selectedPlan?.price ?? 0}
-/>
 
-<CustomPlanModal
-  open={showCustomModal}
-  onClose={() => setShowCustomModal(false)}
-  userId="USER_ID_LOGIN"
-  email="user@email.com"
-/>
+      {selectedPlan && userEmail && (
+        <PaymentModal
+          open={true}
+          onClose={() => setSelectedPlan(null)}
+          planId={selectedPlan.id}
+          planName={selectedPlan.name}
+          harga={selectedPlan.harga}
+          email={userEmail}
+        />
+      )}
 
 <div className="items-center text-center">
 <button

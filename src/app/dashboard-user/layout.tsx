@@ -10,7 +10,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
     const token = cookieStore.get('auth-token')?.value;
 
     if (!token) {
-      redirect('/auth/signin');
+      redirect('/auth/dashboard-user/signin');
     }
 
     const secret = new TextEncoder().encode(
@@ -29,6 +29,6 @@ export default async function Layout({ children }: { children: React.ReactNode }
     
   } catch (error) {
     console.error('Auth error:', error);
-    redirect('/auth/signin');
+    redirect('/auth/dashboard-user/signin');
   }
 }
