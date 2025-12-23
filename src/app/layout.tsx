@@ -21,9 +21,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="id">
       <UserProvider>
       <body className={`${nunito.className} antialiased`}>
-        <AuthProvider>
+        <UserProvider>
         {children}
-        </AuthProvider>
+        </UserProvider>
       </body>
       </UserProvider>
     </html>
