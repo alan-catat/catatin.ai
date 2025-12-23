@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import PaymentModal from "../dashboard-user/subscriptions/payment";
-import CustomPlanModal from "../dashboard-user/subscriptions/CustomPlanModal";
 
 const N8N_BASE_URL = "https://n8n.srv1074739.hstgr.cloud/webhook";
 
@@ -37,237 +36,235 @@ export default function Paket() {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annually">("monthly");
   const [packages, setPackages] = useState<Package[]>([]);
   const [loading, setLoading] = useState(true);
-  const [expandedCards, setExpandedCards] = useState<{[key: string]: boolean}>({});
   const [showAllContent, setShowAllContent] = useState(false);
-  const [showCustomModal, setShowCustomModal] = useState(false);
 
   const [selectedPlan, setSelectedPlan] = useState<{
-  packageId: string;
-  planName: string;
-  price: number;
-} | null>(null);
+    id: string;
+    name: string;
+    price: number;
+  } | null>(null);
 
   useEffect(() => {
-      setTimeout(() => {
-        const sampleData: Package[] = [
-          {
-            id: "1",
-            name: "Biar Kebiasa",
-            harga: 0,
-            channels: ["Telegram", "Whatsapp"],
-            input: ["Foto Struk", "Voice Note", "Transaksi Manual"],
-            chat: 10,
-            is_paid: false,
-            billing_plans: [
-              {
-                id: "1m",
-                package_id: "1",
-                name: "Biar Kebiasa",
-                billing_cycle: "monthly",
-                harga: 0,
-                chat: 10,
-                duration_days: 30,
-                is_active: true,
-                features: {
-                  "Nama Paket": "Biar Kebiasa",
-                  "Harga per bulan": "Gratis",
-                  "Kuota Chat": "10",
-                  "Channel": "Telegram & Whatsapp",
-                  "Kolaborasi Group": "Telegram Group tidak terbatas",
-                  "Ekspor Format": "Excel",
-                  "Insight & Analisis Bulanan": false,
-                  "Input": "Foto Struk, Voice Note & Transaksi Manual",
-                  "Dukungan": "Email"
-                },
+    setTimeout(() => {
+      const sampleData: Package[] = [
+        {
+          id: "1",
+          name: "Biar Kebiasa",
+          harga: 0,
+          channels: ["Telegram", "Whatsapp"],
+          input: ["Foto Struk", "Voice Note", "Transaksi Manual"],
+          chat: 10,
+          is_paid: false,
+          billing_plans: [
+            {
+              id: "1m",
+              package_id: "1",
+              name: "Biar Kebiasa",
+              billing_cycle: "monthly",
+              harga: 0,
+              chat: 10,
+              duration_days: 30,
+              is_active: true,
+              features: {
+                "Nama Paket": "Biar Kebiasa",
+                "Harga per bulan": "Gratis",
+                "Kuota Chat": "10",
+                "Channel": "Telegram & Whatsapp",
+                "Kolaborasi Group": "Telegram Group tidak terbatas",
+                "Ekspor Format": "Excel",
+                "Insight & Analisis Bulanan": false,
+                "Input": "Foto Struk, Voice Note & Transaksi Manual",
+                "Dukungan": "Email"
               },
-              {
-                id: "1y",
-                package_id: "1",
-                name: "Biar Kebiasa",
-                billing_cycle: "annually",
-                harga: 0,
-                chat: 10,
-                duration_days: 360,
-                is_active: true,
-                features: {
-                  "Nama Paket": "Biar Kebiasa",
-                  "Harga per bulan": "Gratis",
-                  "Kuota Chat": "10",
-                  "Channel": "Telegram & Whatsapp",
-                  "Kolaborasi Group": "Telegram Group tidak terbatas",
-                  "Ekspor Format": "Excel",
-                  "Insight & Analisis Bulanan": false,
-                  "Input": "Foto Struk, Voice Note & Transaksi Manual",
-                  "Dukungan": "Email"
-                },
+            },
+            {
+              id: "1y",
+              package_id: "1",
+              name: "Biar Kebiasa",
+              billing_cycle: "annually",
+              harga: 0,
+              chat: 10,
+              duration_days: 360,
+              is_active: true,
+              features: {
+                "Nama Paket": "Biar Kebiasa",
+                "Harga per bulan": "Gratis",
+                "Kuota Chat": "10",
+                "Channel": "Telegram & Whatsapp",
+                "Kolaborasi Group": "Telegram Group tidak terbatas",
+                "Ekspor Format": "Excel",
+                "Insight & Analisis Bulanan": false,
+                "Input": "Foto Struk, Voice Note & Transaksi Manual",
+                "Dukungan": "Email"
               },
-            ],
-          },
-          {
-            id: "2",
-            name: "Biar Rapi",
-            harga: 16500,
-            channels: ["Telegram", "Whatsapp"],
-            input: ["Foto Struk", "Voice Note", "Transaksi Manual"],
-            chat: 500,
-            is_paid: true,
-            billing_plans: [
-              {
-                id: "2m",
-                package_id: "2",
-                name: "Biar Rapi",
-                billing_cycle: "monthly",
-                harga: 16500,
-                chat: 500,
-                duration_days: 30,
-                is_active: true,
-                features: {
-                  "Nama Paket": "Biar Rapi",
-                  "Harga per bulan": "16.5K",
-                  "Kuota Chat": "500",
-                  "Channel": "Telegram & Whatsapp",
-                  "Kolaborasi Group": "Telegram Group tidak terbatas",
-                  "Ekspor Format": "Excel",
-                  "Insight & Analisis Bulanan": true,
-                  "Input": "Foto Struk, Voice Note & Transaksi Manual",
-                  "Dukungan": "Email & Chat"
-                },
+            },
+          ],
+        },
+        {
+          id: "2",
+          name: "Biar Rapi",
+          harga: 16500,
+          channels: ["Telegram", "Whatsapp"],
+          input: ["Foto Struk", "Voice Note", "Transaksi Manual"],
+          chat: 500,
+          is_paid: true,
+          billing_plans: [
+            {
+              id: "2m",
+              package_id: "2",
+              name: "Biar Rapi",
+              billing_cycle: "monthly",
+              harga: 16500,
+              chat: 500,
+              duration_days: 30,
+              is_active: true,
+              features: {
+                "Nama Paket": "Biar Rapi",
+                "Harga per bulan": "16.5K",
+                "Kuota Chat": "500",
+                "Channel": "Telegram & Whatsapp",
+                "Kolaborasi Group": "Telegram Group tidak terbatas",
+                "Ekspor Format": "Excel",
+                "Insight & Analisis Bulanan": true,
+                "Input": "Foto Struk, Voice Note & Transaksi Manual",
+                "Dukungan": "Email & Chat"
               },
-              {
-                id: "2y",
-                package_id: "2",
-                name: "Biar Rapi",
-                billing_cycle: "annually",
-                harga: 198000,
-                chat: 500,
-                duration_days: 360,
-                is_active: true,
-                features: {
-                  "Nama Paket": "Pro",
-                  "Harga per Tahun": "198000",
-                  "Kuota Chat": "500",
-                  "Channel": "Telegram & Whatsapp",
-                  "Kolaborasi Group": "Telegram Group tidak terbatas",
-                  "Ekspor Format": "Excel",
-                  "Insight & Analisis Bulanan": true,
-                  "Input": "Foto Struk, Voice Note & Transaksi Manual",
-                  "Dukungan": "Email & Chat"
-                },
+            },
+            {
+              id: "2y",
+              package_id: "2",
+              name: "Biar Rapi",
+              billing_cycle: "annually",
+              harga: 198000,
+              chat: 500,
+              duration_days: 360,
+              is_active: true,
+              features: {
+                "Nama Paket": "Pro",
+                "Harga per Tahun": "198000",
+                "Kuota Chat": "500",
+                "Channel": "Telegram & Whatsapp",
+                "Kolaborasi Group": "Telegram Group tidak terbatas",
+                "Ekspor Format": "Excel",
+                "Insight & Analisis Bulanan": true,
+                "Input": "Foto Struk, Voice Note & Transaksi Manual",
+                "Dukungan": "Email & Chat"
               },
-            ],
-          },
-          {
-            id: "3",
-            name: "Biar Tetep On Track",
-            harga: 65000,
-            channels: ["Telegram", "Whatsapp", "Priority Support"],
-            input: ["Foto Struk", "Voice Note", "Transaksi Manual"],
-            chat: 2000,
-            is_paid: true,
-            billing_plans: [
-              {
-                id: "3m",
-                package_id: "3",
-                name: "Biar Tetep On Track",
-                billing_cycle: "monthly",
-                harga: 65000,
-                chat: 2000,
-                duration_days: 30,
-                is_active: true,
-                features: {
-                  "Nama Paket": "Biar Tetep On Track",
-                  "Harga per bulan": "Rp 65.000",
-                  "Kuota Chat": "50.000",
-                  "Channel": "Semua Channel",
-                  "Kolaborasi Group": true,
-                  "Ekspor Format": "CSV, Excel, PDF",
-                  "Insight & Analisis Bulanan": true,
-                  "Input": "Foto Struk, Voice Note & Transaksi Manual",
-                  "Dukungan": "Priority 24/7"
-                },
+            },
+          ],
+        },
+        {
+          id: "3",
+          name: "Biar Tetep On Track",
+          harga: 65000,
+          channels: ["Telegram", "Whatsapp", "Priority Support"],
+          input: ["Foto Struk", "Voice Note", "Transaksi Manual"],
+          chat: 2000,
+          is_paid: true,
+          billing_plans: [
+            {
+              id: "3m",
+              package_id: "3",
+              name: "Biar Tetep On Track",
+              billing_cycle: "monthly",
+              harga: 65000,
+              chat: 2000,
+              duration_days: 30,
+              is_active: true,
+              features: {
+                "Nama Paket": "Biar Tetep On Track",
+                "Harga per bulan": "Rp 65.000",
+                "Kuota Chat": "50.000",
+                "Channel": "Semua Channel",
+                "Kolaborasi Group": true,
+                "Ekspor Format": "CSV, Excel, PDF",
+                "Insight & Analisis Bulanan": true,
+                "Input": "Foto Struk, Voice Note & Transaksi Manual",
+                "Dukungan": "Priority 24/7"
               },
-              {
-                id: "3y",
-                package_id: "3",
-                name: "Biar Tetep On Track",
-                billing_cycle: "annually",
-                harga: 780000,
-                chat: 2000,
-                duration_days: 360,
-                is_active: true,
-                features: {
-                  "Nama Paket": "Biar Tetep On Track",
-                  "Harga per Tahun": "Rp 780.000",
-                  "Kuota Chat": "2000",
-                  "Channel": "Semua Channel",
-                  "Kolaborasi Group": true,
-                  "Ekspor Format": "Excel",
-                  "Insight & Analisis Bulanan": true,
-                  "Input": "Foto Struk, Voice Note & Transaksi Manual",
-                  "Dukungan": "Priority 24/7"
-                },
+            },
+            {
+              id: "3y",
+              package_id: "3",
+              name: "Biar Tetep On Track",
+              billing_cycle: "annually",
+              harga: 780000,
+              chat: 2000,
+              duration_days: 360,
+              is_active: true,
+              features: {
+                "Nama Paket": "Biar Tetep On Track",
+                "Harga per Tahun": "Rp 780.000",
+                "Kuota Chat": "2000",
+                "Channel": "Semua Channel",
+                "Kolaborasi Group": true,
+                "Ekspor Format": "Excel",
+                "Insight & Analisis Bulanan": true,
+                "Input": "Foto Struk, Voice Note & Transaksi Manual",
+                "Dukungan": "Priority 24/7"
               },
-            ],
-          },
-          {
-            id: "4",
-            name: "Biar Sesuai Kamu",
-            harga: 0,
-            channels: ["Custom"],
-            input: ["Custom"],
-            chat: 0,
-            is_paid: true,
-            is_custom: true,
-            billing_plans: [
-              {
-                id: "4m",
-                package_id: "4",
-                name: "Biar Sesuai Kamu",
-                billing_cycle: "monthly",
-                harga: 0,
-                chat: 0,
-                duration_days: 30,
-                is_active: true,
-                features: {
-                  "Nama Paket": "Biar Sesuai Kamu",
-                  "Harga per bulan": "Custom",
-                  "Kuota Chat": "Custom",
-                  "Channel": "Custom",
-                  "Kolaborasi Group": true,
-                  "Ekspor Format": "Custom",
-                  "Insight & Analisis Bulanan": true,
-                  "Input": "Foto Struk, Voice Note & Transaksi Manual",
-                  "Dukungan": "Priority 24/7"
-                },
+            },
+          ],
+        },
+        {
+          id: "4",
+          name: "Biar Sesuai Kamu",
+          harga: 0,
+          channels: ["Custom"],
+          input: ["Custom"],
+          chat: 0,
+          is_paid: true,
+          is_custom: true,
+          billing_plans: [
+            {
+              id: "4m",
+              package_id: "4",
+              name: "Biar Sesuai Kamu",
+              billing_cycle: "monthly",
+              harga: 0,
+              chat: 0,
+              duration_days: 30,
+              is_active: true,
+              features: {
+                "Nama Paket": "Biar Sesuai Kamu",
+                "Harga per bulan": "Custom",
+                "Kuota Chat": "Custom",
+                "Channel": "Custom",
+                "Kolaborasi Group": true,
+                "Ekspor Format": "Custom",
+                "Insight & Analisis Bulanan": true,
+                "Input": "Foto Struk, Voice Note & Transaksi Manual",
+                "Dukungan": "Priority 24/7"
               },
-              {
-                id: "4y",
-                package_id: "4",
-                name: "Biar Sesuai Kamu",
-                billing_cycle: "annually",
-                harga: 0,
-                chat: 0,
-                duration_days: 360,
-                is_active: true,
-                features: {
-                  "Nama Paket": "Biar Sesuai Kamu",
-                  "Harga per bulan": "Custom",
-                  "Kuota Chat": "Custom",
-                  "Channel": "Custom",
-                  "Kolaborasi Group": true,
-                  "Ekspor Format": "Custom",
-                  "Insight & Analisis Bulanan": true,
-                  "Input": "Foto Struk, Voice Note & Transaksi Manual",
-                  "Dukungan": "Priority 24/7"
-                },
+            },
+            {
+              id: "4y",
+              package_id: "4",
+              name: "Biar Sesuai Kamu",
+              billing_cycle: "annually",
+              harga: 0,
+              chat: 0,
+              duration_days: 360,
+              is_active: true,
+              features: {
+                "Nama Paket": "Biar Sesuai Kamu",
+                "Harga per bulan": "Custom",
+                "Kuota Chat": "Custom",
+                "Channel": "Custom",
+                "Kolaborasi Group": true,
+                "Ekspor Format": "Custom",
+                "Insight & Analisis Bulanan": true,
+                "Input": "Foto Struk, Voice Note & Transaksi Manual",
+                "Dukungan": "Priority 24/7"
               },
-            ],
-          },
-        ];
-        setPackages(sampleData);
-        setLoading(false);
-      }, 800);
-    }, []);
+            },
+          ],
+        },
+      ];
+      setPackages(sampleData);
+      setLoading(false);
+    }, 800);
+  }, []);
 
   if (loading) {
     return (
@@ -278,65 +275,37 @@ export default function Paket() {
   }
 
   const handleSelectPlan = (pkg: Package, plan: BillingPlan) => {
-  // FREE
-  if (!pkg.is_paid || plan.harga === 0) {
-    activateFreePlan(pkg.id, plan.id);
-    return;
-  }
+    // FREE - tidak perlu action karena sudah termasuk saat registrasi
+    if (!pkg.is_paid || plan.harga === 0) {
+      alert("Paket gratis sudah aktif di akun Anda 🎉");
+      return;
+    }
 
-  // CUSTOM
-  if (pkg.is_custom) {
-    setShowCustomModal(true);
-    return;
-  }
+    // CUSTOM - redirect ke WhatsApp
+    if (pkg.is_custom) {
+      window.open("https://wa.me/6281118891092", "_blank");
+      return;
+    }
 
-  // PAID
-  setSelectedPlan({
-    packageId: pkg.id,
-    planName: plan.name,
-    price: plan.harga,
-  });
-};
-
-const CONTACT_LINK = "https://wa.me/6281118891092"; 
-
-const activateFreePlan = async (packageId: string, planId: string) => {
-  await fetch(`${N8N_BASE_URL}/payment`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      userId: "USER_ID_LOGIN",
-      packageId,
-      planId,
-    }),
-  });
-
-  alert("Paket gratis berhasil diaktifkan 🎉");
-};
-
-  const allFeatures = [
-    "Nama Paket",
-    "Harga per bulan",
-    "Kuota Chat",
-    "Channel",
-    "Kolaborasi Group",
-    "Ekspor Format",
-    "Insight & Analisis Bulanan",
-    "Input",
-    "Dukungan"
-  ];
+    // PAID - buka modal pembayaran (hanya untuk paket 2 dan 3)
+    setSelectedPlan({
+      id: plan.id,
+      name: plan.name,
+      price: plan.harga,
+    });
+  };
 
   const formatHarga = (harga: number | string | undefined) => {
-  const nilai = Number(harga);
-  if (isNaN(nilai)) return "-";
+    const nilai = Number(harga);
+    if (isNaN(nilai)) return "-";
 
-  if (nilai >= 1000) {
-    const k = nilai / 1000;
-    return `${k % 1 === 0 ? k : k.toFixed(1)}K`;
-  }
+    if (nilai >= 1000) {
+      const k = nilai / 1000;
+      return `${k % 1 === 0 ? k : k.toFixed(1)}K`;
+    }
 
-  return nilai.toString();
-};
+    return nilai.toString();
+  };
 
   return (
     <div className="py-12 md:py-16 bg-[#DFF3FF] text-slate-800 antialiased min-h-screen">
@@ -378,7 +347,6 @@ const activateFreePlan = async (packageId: string, planId: string) => {
       </section>
 
       {/* Pricing Cards */}
-      
       <main className="flex-1">
         <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-4 max-w-7xl mx-auto w-full px-6 mb-16">
           {packages.map((pkg, index) => {
@@ -419,158 +387,142 @@ const activateFreePlan = async (packageId: string, planId: string) => {
                 </div>
 
                 <div className="flex flex-col items-center justify-center mb-6 py-4">
-                                  <div className="flex items-baseline">
-                                    <span className="text-4xl font-extrabold">
-                  {pkg.name === "Biar Sesuai Kamu"
-                    ? "Custom"
-                    : plan?.harga === 0 && pkg.name === "Biar Kebiasa"
-                    ? "Free"
-                    : billingCycle === "annually" &&
-                      (pkg.name === "Biar Rapi" || pkg.name === "Biar Tetep On Track")
-                    ? formatHarga(Math.round((Number(plan?.harga) / 12) * 0.8))
-                    : formatHarga(plan?.harga)}
-                </span>
-                                  </div>
-                                  {!["Biar Kebiasa", "Biar Sesuai Kamu"].includes(pkg.name) && (
-                                  <span className={`text-sm mt-1 ${isPro ? "text-blue-100" : "text-gray-500"}`}>
-                                    /{billingCycle === "monthly" ? "bulan" : "bulan"}
-                                  </span>
-                                  )}
-                                  {billingCycle === "annually" && plan.harga > 0 && pkg.name !== "Biar Sesuai Kamu" && (
-                  <div className={`text-xs mt-2 ${isPro ? "text-blue-100" : "text-gray-500"}`}>
-                    <span className="line-through opacity-70">
-                      {Math.round(plan.harga / 12).toLocaleString("id-ID")}/bulan
+                  <div className="flex items-baseline">
+                    <span className="text-4xl font-extrabold">
+                      {pkg.name === "Biar Sesuai Kamu"
+                        ? "Custom"
+                        : plan?.harga === 0 && pkg.name === "Biar Kebiasa"
+                        ? "Free"
+                        : billingCycle === "annually" &&
+                          (pkg.name === "Biar Rapi" || pkg.name === "Biar Tetep On Track")
+                        ? formatHarga(Math.round((Number(plan?.harga) / 12) * 0.8))
+                        : formatHarga(plan?.harga)}
                     </span>
-                    
                   </div>
-                                  )}
-                                </div>
-                
-                                <div className="space-y-4 flex-1">
-                                  <div className={`p-3 rounded-lg ${isPro ? "bg-white/10" : "bg-gray-50"}`}>
-                                    <div className="text-sm font-semibold mb-2">Kuota Chat</div>
-                                    <div className="text-xl font-bold">{pkg.name === "Biar Sesuai Kamu" 
-                      ? "Sesuaikan dengan kebutuhan Bisnismu dan buat Bisnismu jadi lebih mudah" 
-                      : `${plan.chat.toLocaleString("id-ID")} pesan /bulan`}</div>
-                                  </div>
-                
-                                  <div>
-                                    <div className="text-sm font-semibold mb-2">Channel</div>
-                                    <div className="flex flex-wrap gap-2">
-                                      {pkg.channels.map((ch, idx) => (
-                                        <span
-                                          key={idx}
-                                          className={`px-3 py-1 text-xs font-medium rounded-full ${
-                                            isPro
-                                              ? "bg-white/20 text-white"
-                                              : "bg-blue-100 text-blue-700"
-                                          }`}
-                                        >
-                                          {ch}
-                                        </span>
-                                      ))}
-                                    </div>
-                                </div>
-                                <div>
-                                    <div className="text-sm font-semibold mb-2">Input</div>
-                                    <div className="flex flex-wrap gap-2">
-                                      {pkg.input.map((ch, idx) => (
-                                        <span
-                                          key={idx}
-                                          className={`px-3 py-1 text-xs font-medium rounded-full ${
-                                            isPro
-                                              ? "bg-white/20 text-white"
-                                              : "bg-blue-100 text-blue-700"
-                                          }`}
-                                        >
-                                          {ch}
-                                        </span>
-                                      ))}
-                                    </div>
-                                </div>
-                
-                              {showAllContent && (
-                                <>
-                                  <div>
-                                    <div className="text-sm font-semibold mb-3">Fitur Unggulan</div>
-                                    <ul className="space-y-2 text-sm">
-                                      {pkg.name === "Biar Sesuai Kamu"
-                                      ? "Custom"
-                                      : Object.entries(plan.features)
-                                        .filter(([key]) => !["Nama Paket", "Harga per bulan", "Kuota Chat", "Channel", "Dukungan"].includes(key))
-                                        .map(([key, value], i) => {
-                                          const isAvailable = typeof value === 'boolean' ? value : true;
-                                          return (
-                                            <li key={i} className="flex items-start gap-2">
-                                              <span className={isAvailable ? "text-green-500" : isPro ? "text-blue-200" : "text-gray-300"}>
-                                                {isAvailable ? "✓" : "—"}
-                                              </span>
-                                              <span className={isAvailable ? "" : "opacity-50"}>{key}</span>
-                                            </li>
-                                          );
-                                        })}
-                                    </ul>
-                                  </div>
-                {pkg.is_custom ? (
-  <a
-    href="https://wa.me/6281118891092"
-    target="_blank"
-    rel="noopener noreferrer"
-    className={`mt-6 w-full py-3 px-6 rounded-lg font-semibold transition-all text-center block
-      ${isPro
-        ? "bg-white text-blue-600 hover:bg-gray-100 shadow-lg"
-        : "bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700 shadow-md"
-      }
-    `}
-  >
-    Ajukan Paket
-  </a>
-) : (
-  <button
-    onClick={() => handleSelectPlan(pkg, plan)}
-    className={`mt-6 w-full py-3 px-6 rounded-lg font-semibold transition-all
-      ${isPro
-        ? "bg-white text-blue-600 hover:bg-gray-100 shadow-lg"
-        : "bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700 shadow-md"
-      }
-    `}
-  >
-    {pkg.is_paid ? "Pilih Paket" : "Mulai Gratis"}
-  </button>
-)}
-
-                                </>
-                              )}
-                                </div>
-                              </div>
-                            );
-                          })}
-                      </div>
-                      <PaymentModal
-                  open={selectedPlan !== null}
-                  onClose={() => setSelectedPlan(null)}
-                  userId="pkg.id"
-                  email="user@email.com"
-                  planName={selectedPlan?.planName ?? ""}
-                  price={selectedPlan?.price ?? 0}
-                />
-                
-                <CustomPlanModal
-                  open={showCustomModal}
-                  onClose={() => setShowCustomModal(false)}
-                  userId="USER_ID_LOGIN"
-                  email="user@email.com"
-                />
-                
-                <div className="items-center text-center">
-                <button
-                  onClick={() => setShowAllContent(!showAllContent)}
-                  className="mb-8 px-8 py-3 bg-gradient-to-r from-[#0566BD] to-[#A8E063] text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-all"
-                >
-                  {showAllContent ? "Sembunyikan Detail Paket" : "Lihat Paket Lengkap →"}
-                </button>
-                </div>
-                    </main>
+                  {!["Biar Kebiasa", "Biar Sesuai Kamu"].includes(pkg.name) && (
+                    <span className={`text-sm mt-1 ${isPro ? "text-blue-100" : "text-gray-500"}`}>
+                      /{billingCycle === "monthly" ? "bulan" : "bulan"}
+                    </span>
+                  )}
+                  {billingCycle === "annually" && plan.harga > 0 && pkg.name !== "Biar Sesuai Kamu" && (
+                    <div className={`text-xs mt-2 ${isPro ? "text-blue-100" : "text-gray-500"}`}>
+                      <span className="line-through opacity-70">
+                        {Math.round(plan.harga / 12).toLocaleString("id-ID")}/bulan
+                      </span>
                     </div>
-                  );
-                }
+                  )}
+                </div>
+
+                <div className="space-y-4 flex-1">
+                  <div className={`p-3 rounded-lg ${isPro ? "bg-white/10" : "bg-gray-50"}`}>
+                    <div className="text-sm font-semibold mb-2">Kuota Chat</div>
+                    <div className="text-xl font-bold">
+                      {pkg.name === "Biar Sesuai Kamu" 
+                        ? "Sesuaikan dengan kebutuhan Bisnismu dan buat Bisnismu jadi lebih mudah" 
+                        : `${plan.chat.toLocaleString("id-ID")} pesan /bulan`}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="text-sm font-semibold mb-2">Channel</div>
+                    <div className="flex flex-wrap gap-2">
+                      {pkg.channels.map((ch, idx) => (
+                        <span
+                          key={idx}
+                          className={`px-3 py-1 text-xs font-medium rounded-full ${
+                            isPro
+                              ? "bg-white/20 text-white"
+                              : "bg-blue-100 text-blue-700"
+                          }`}
+                        >
+                          {ch}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="text-sm font-semibold mb-2">Input</div>
+                    <div className="flex flex-wrap gap-2">
+                      {pkg.input.map((ch, idx) => (
+                        <span
+                          key={idx}
+                          className={`px-3 py-1 text-xs font-medium rounded-full ${
+                            isPro
+                              ? "bg-white/20 text-white"
+                              : "bg-blue-100 text-blue-700"
+                          }`}
+                        >
+                          {ch}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {showAllContent && (
+                    <>
+                      <div>
+                        <div className="text-sm font-semibold mb-3">Fitur Unggulan</div>
+                        <ul className="space-y-2 text-sm">
+                          {pkg.name === "Biar Sesuai Kamu"
+                            ? "Custom"
+                            : Object.entries(plan.features)
+                              .filter(([key]) => !["Nama Paket", "Harga per bulan", "Kuota Chat", "Channel", "Dukungan"].includes(key))
+                              .map(([key, value], i) => {
+                                const isAvailable = typeof value === 'boolean' ? value : true;
+                                return (
+                                  <li key={i} className="flex items-start gap-2">
+                                    <span className={isAvailable ? "text-green-500" : isPro ? "text-blue-200" : "text-gray-300"}>
+                                      {isAvailable ? "✓" : "—"}
+                                    </span>
+                                    <span className={isAvailable ? "" : "opacity-50"}>{key}</span>
+                                  </li>
+                                );
+                              })}
+                        </ul>
+                      </div>
+
+                      <button
+                        onClick={() => handleSelectPlan(pkg, plan)}
+                        className={`mt-6 w-full py-3 px-6 rounded-lg font-semibold transition-all
+                          ${isPro
+                            ? "bg-white text-blue-600 hover:bg-gray-100 shadow-lg"
+                            : "bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700 shadow-md"
+                          }
+                        `}
+                      >
+                        {pkg.is_custom 
+                          ? "Hubungi Kami" 
+                          : pkg.is_paid 
+                          ? "Pilih Paket" 
+                          : "Paket Aktif"}
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Payment Modal - hanya untuk paket berbayar (2 dan 3) */}
+        <PaymentModal
+          open={selectedPlan !== null}
+          onClose={() => setSelectedPlan(null)}
+          planId={selectedPlan?.id || ""}
+          planName={selectedPlan?.name || ""}
+          price={selectedPlan?.price || 0}
+        />
+
+        <div className="items-center text-center">
+          <button
+            onClick={() => setShowAllContent(!showAllContent)}
+            className="mb-8 px-8 py-3 bg-gradient-to-r from-[#0566BD] to-[#A8E063] text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-all"
+          >
+            {showAllContent ? "Sembunyikan Detail Paket" : "Lihat Paket Lengkap →"}
+          </button>
+        </div>
+      </main>
+    </div>
+  );
+}

@@ -185,12 +185,12 @@ const handleDrop = (e: React.DragEvent) => {
 
   const features = [
   { 
-    icon: Award,  // ← GANTI dari FileText
+    icon: Award,  
     title: 'Best Quality',
     description: 'Perform high-quality PDF conversions by adjusting page size, margins, and orientation. Plus, you can also batch convert PDF files.'
   },
   { 
-    icon: Star,  // ← GANTI dari Cloud
+    icon: Star, 
     title: 'All-In-One Tool',
     description: 'Supports more than 300+ PDF conversions. Convert any file to PDF or convert from PDF to other formats. All using a single web tool!'
   },
@@ -211,7 +211,7 @@ const [toast, setToast] = useState<{
   setToast({ show: true, message, type });
   setTimeout(() => {
     setToast({ show: false, message: '', type: 'success' });
-  }, 3000); // Hilang setelah 3 detik
+  }, 3000);
 };
 
 useEffect(() => {
@@ -226,9 +226,6 @@ useEffect(() => {
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-[#0566BD] to-[#A8E063] rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-sm">C</span>
-            </div>
             <span className="text-xl font-bold bg-gradient-to-r from-[#0566BD] to-[#A8E063] bg-clip-text text-transparent">
           catatin.ai
         </span>
@@ -249,7 +246,7 @@ useEffect(() => {
         <div className="text-center mb-8">
           <h1 className="text-5xl font-bold text-gray-900 mb-4">Convertin</h1>
           <p className="text-xl text-gray-600">
-            Kami akan bantu kamu nyatet transaksi penting tanpa repot.
+            Tidak perlu input manual! PDF bank statement langsung jadi Excel siap dianalisis.
           </p>
         </div>
 
@@ -370,7 +367,7 @@ useEffect(() => {
       className="flex items-center justify-center space-x-2 cursor-pointer"
     >
       <Download className="w-5 h-5" />
-      <span>Konversi Sekarang</span>
+      <span>Convertin Sekarang</span>
     </div>
   )}
 </button>
@@ -380,21 +377,16 @@ useEffect(() => {
 
        {/* Advanced Settings */}
               <div className="mt-6 border border-gray-200 rounded-lg">
-                <button
-                  className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex items-center space-x-2">
-                    <Settings className="w-5 h-5 text-gray-600" />
-                    <span className="font-medium text-gray-900">Pengaturan lanjutan (opsional)</span>
-                  </div>
-                  {showAdvanced ? (
-                    <ChevronUp className="w-5 h-5 text-gray-400" />
-                  ) : (
-                    <ChevronDown className="w-5 h-5 text-gray-400" />
-                  )}
-                </button>
+  <div className="w-full flex items-center justify-between p-4 bg-gray-50">
+    <div className="flex items-center space-x-2">
+      <Settings className="w-5 h-5 text-gray-600" />
+      <span className="font-medium text-gray-900">
+        Pengaturan lanjutan (opsional)
+      </span>
+    </div>
+  </div>
 
-                {showAdvanced && (
+                
                   <div className="border-t border-gray-200 p-4 space-y-6">
                     
 
@@ -433,24 +425,20 @@ useEffect(() => {
         </button>
       </div>
     </div>
-  )}
 </div>
 
 {/* How to Convert Section */}
         <div className="bg-white rounded-xl shadow-lg p-8 mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-6">Cara Konversi ke PDF?</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-6">Cara Konversi</h2>
           <ol className="space-y-4 text-gray-700">
             <li className="flex items-start">
               <span className="font-bold mr-2">1.</span>
-              <span>Klik tombol <span className="font-semibold">"Pilih File"</span> dan pilih file yang ingin Anda konversi.</span>
+              <span><b>Upload file</b> PDF bank statement kamu</span>
             </li>
             <li className="flex items-start">
               <span className="font-bold mr-2">2.</span>
-              <span>Konversi ke PDF dengan mengklik tombol <span className="font-semibold">"Konversi"</span>.</span>
-            </li>
-            <li className="flex items-start">
-              <span className="font-bold mr-2">3.</span>
-              <span>Ketika status berubah menjadi "Selesai" klik tombol <span className="font-semibold">"Unduh PDF"</span>.</span>
+              <span>Klik tombol <b>Convertin Sekarang</b>.</span>
+            
             </li>
           </ol>
         </div>
