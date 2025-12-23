@@ -196,7 +196,7 @@ const handleDrop = (e: React.DragEvent) => {
       link.href = url;
       
       const extension = format === 'excel' ? 'xlsx' : format;
-      link.download = `convertin-${file.name.replace(/\.[^/.]+$/, '')}.${extension}`;
+      link.download = `convertinbycatatinai-${file.name.replace(/\.[^/.]+$/, '')}.${extension}`;
       
       document.body.appendChild(link);
       link.click();
@@ -357,25 +357,6 @@ useEffect(() => {
               </div>
             )}
           </div>
-          {file && previewUrl && (
-  <div className="mt-6">
-    <h3 className="text-sm font-medium text-gray-700 mb-2">
-      Preview Dokumen
-    </h3>
-
-    <div className="border rounded-lg overflow-hidden bg-gray-100 h-[400px]">
-      <iframe
-        src={previewUrl}
-        className="w-full h-full"
-        title="PDF Preview"
-      />
-    </div>
-
-    <p className="text-xs text-gray-500 mt-2">
-      * Ini hanya preview, hasil konversi bisa berbeda tergantung format tujuan.
-    </p>
-  </div>
-)}
 
           {file && (
             <div className="mt-6 space-y-4">
