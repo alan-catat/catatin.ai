@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { FileText, Upload, Download, Shield, Cloud, ArrowRight, Award, Star, Settings, ChevronDown, ChevronUp } from 'lucide-react';
 import Link from 'next/link';
-import { Xlsx } from 'exceljs';
+import ExcelJS from 'exceljs';
 
 const N8N_CONVERTIN_URL = process.env.NEXT_PUBLIC_N8N_CONVERTIN_URL;
 
@@ -81,64 +81,112 @@ const handleDrop = (e: React.DragEvent) => {
     setProgress(95);
     clearInterval(interval);
 
-    const contentType = res.headers.get('content-type');
+    // Coba parse sebagai JSON dulu
+    let data;
+    let isJson = false;
     
-    // Jika response adalah JSON (data items dari N8N)
-    if (contentType && contentType.includes('application/json')) {
-      const data = await res.json();
-      
+    try {
+      const text = await res.text();
+      data = JSON.parse(text);
+      isJson = true;
+      console.log('Response data:', data);
+    } catch (e) {
+      // Bukan JSON, anggap sebagai binary file
+      isJson = false;
+    }
+
+    if (isJson && data) {
       // Cari array items dari berbagai kemungkinan struktur
-      let items = data;
+      let items = [];
       if (Array.isArray(data)) {
         items = data;
       } else if (data.items && Array.isArray(data.items)) {
         items = data.items;
       } else if (data.data && Array.isArray(data.data)) {
         items = data.data;
-      } else {
-        throw new Error('Format data tidak sesuai. Expected array of items.');
+      } else if (typeof data === 'object') {
+        items = [data];
       }
+
+      console.log('Items to convert:', items.length);
 
       if (items.length === 0) {
         throw new Error('Tidak ada data untuk dikonversi.');
       }
 
-      // Convert JSON to CSV (sederhana, tidak perlu library)
+      // Convert JSON to Excel dengan styling menggunakan ExcelJS
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet('Transaksi');
+
+      // Get headers dari item pertama
       const headers = Object.keys(items[0]);
-      const csvRows = [];
-      
-      // Add header row
-      csvRows.push(headers.join(','));
-      
+
+      // Add header row dengan styling
+      const headerRow = worksheet.addRow(headers);
+      headerRow.eachCell((cell) => {
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FF000000' } // Background hitam
+        };
+        cell.font = {
+          color: { argb: 'FFFFFFFF' }, // Font putih
+          bold: true
+        };
+        cell.alignment = { vertical: 'middle', horizontal: 'center' };
+      });
+
       // Add data rows
-      for (const item of items) {
-        const values = headers.map(header => {
-          const value = item[header];
-          // Handle values yang mengandung koma atau newline
-          const escaped = ('' + value).replace(/"/g, '""');
-          return `"${escaped}"`;
+      items.forEach((item: any) => {
+        const row = worksheet.addRow(Object.values(item));
+        
+        // Format kolom jumlah dan saldo
+        row.eachCell((cell, colNumber) => {
+          const header = headers[colNumber - 1].toLowerCase();
+          
+          // Format number untuk kolom jumlah dan saldo
+          if (header === 'jumlah' || header === 'saldo') {
+            const cellValue = cell.value as string;
+            const value = parseFloat(String(cellValue).replace(/,/g, ''));
+            if (!isNaN(value)) {
+              cell.value = value;
+              cell.numFmt = '#,##0'; // Format ribuan tanpa desimal
+            }
+          }
         });
-        csvRows.push(values.join(','));
-      }
-      
-      const csvContent = csvRows.join('\n');
-      
-      // Create blob and download
-      const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+      });
+
+      // Auto-fit kolom width
+      worksheet.columns.forEach((column) => {
+        let maxLength = 0;
+        column.eachCell?.({ includeEmpty: true }, (cell) => {
+          const cellValue = cell.value ? cell.value.toString() : '';
+          maxLength = Math.max(maxLength, cellValue.length);
+        });
+        column.width = maxLength < 10 ? 10 : maxLength + 2;
+      });
+
+      // Generate Excel file
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { 
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+      });
+
+      // Trigger download
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `converted-${file.name.replace(/\.[^/.]+$/, '')}.csv`;
+      link.download = `converted-${file.name.replace(/\.[^/.]+$/, '')}.xlsx`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
 
       setProgress(100);
-      showToast(`✅ Berhasil! ${items.length} items telah dikonversi ke CSV`);
+      alert(`✅ Berhasil! ${items.length} transaksi telah dikonversi ke Excel`);
       
     } else {
-      // Jika N8N mengembalikan file binary langsung (Excel/PDF/dll)
+      // Jika N8N mengembalikan file binary langsung
       const blob = await res.blob();
       
       const url = window.URL.createObjectURL(blob);
@@ -154,13 +202,13 @@ const handleDrop = (e: React.DragEvent) => {
       
       setTimeout(() => window.URL.revokeObjectURL(url), 100);
       setProgress(100);
-      showToast('✅ File berhasil dikonversi dan didownload!');
+      alert('✅ File berhasil dikonversi dan didownload!');
     }
 
   } catch (err) {
     if (interval) clearInterval(interval);
     console.error('Error:', err);
-    showToast(err instanceof Error ? err.message : 'Terjadi kesalahan saat konversi. Silakan coba lagi.');
+    alert(err instanceof Error ? err.message : 'Terjadi kesalahan saat konversi. Silakan coba lagi.');
   } finally {
     setTimeout(() => {
       setLoading(false);
