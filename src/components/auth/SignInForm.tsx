@@ -59,7 +59,7 @@ export default function SignInForm({ redirectTo }: SignInFormProps) {
 
       // ✅ LOGIN BERHASIL
       if (data.success && data.user) {
-        // Tetap simpan di localStorage untuk kompatibilitas dengan code lain
+        login(data.user); 
         localStorage.setItem("user_email", data.user.email);
         if (data.token) localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));

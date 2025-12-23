@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import PaymentModal from "../dashboard-user/subscriptions/payment";
-import CustomPlanModal from "../dashboard-user/subscriptions/CustomPlanModal";
+import PaymentModal from "../(protected)/dashboard-user/subscriptions/payment";
 
 const N8N_BASE_URL = "https://n8n.srv1074739.hstgr.cloud/webhook";
 
