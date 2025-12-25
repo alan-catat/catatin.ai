@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 'use client';
 
 import { useSearchParams } from "next/navigation";
@@ -5,7 +6,6 @@ import { useSearchParams } from "next/navigation";
 export default function PaymentFinishPage() {
   const params = useSearchParams();
   const status = params.get("status");
-  
 
   return (
     <div className="min-h-screen flex items-center justify-center text-center">
