@@ -30,7 +30,7 @@ export default function Header() {
     >
       <div className="container mx-auto px-10 md:px-37 md:pr-77 flex items-center justify-between">
         {/* Logo */}
-         <Link href="/">
+        <Link href="/">
         <div className="flex items-center gap-3">
             <Image
               src={owlMascot}
@@ -39,6 +39,12 @@ export default function Header() {
             />
           </div>
         </Link>
+
+        {/* Nav */}
+        
+
+        {/* CTA */}
+        
       </div>
     </header>
   );

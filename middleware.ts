@@ -27,7 +27,7 @@ export async function middleware(request: NextRequest) {
       
       console.log('✅ Token valid');
 
-      if (pathname === '/' || pathname === '/home' || pathname === '/auth/dashboard-user/signin') {
+      if (pathname === '/' || pathname === '/home' || pathname === '/LogIn') {
   return NextResponse.redirect(new URL('/dashboard-user', request.url));
 }
 
@@ -36,7 +36,7 @@ export async function middleware(request: NextRequest) {
 
     } catch {
   return NextResponse.redirect(
-    new URL('/auth/dashboard-user/signin', request.url)
+    new URL('/LogIn', request.url)
   );
 }
 
@@ -47,7 +47,7 @@ export async function middleware(request: NextRequest) {
   // Redirect ke login jika coba akses protected route
   if (pathname.startsWith('/dashboard-user')) {
     console.log('🔒 Protected route, redirecting to signin');
-    return NextResponse.redirect(new URL('/auth/dashboard-user/signin', request.url));
+    return NextResponse.redirect(new URL('/LogIn', request.url));
   }
 
   // Allow access ke public pages (/, /home, /auth/*)

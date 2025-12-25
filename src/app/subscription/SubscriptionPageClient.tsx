@@ -214,7 +214,7 @@ const switchToRegister = () => {
 };
 
     // Step 0: Registrasi
-const handleSignup = async () => {
+const handleSignUp = async () => {
     const nameParts = fullName.trim().split(/\s+/);
     const firstName = nameParts[0] || "";
     const lastName = nameParts.slice(1).join(" ");
@@ -547,15 +547,15 @@ const handlePay = async () => {
 
     window.snap.pay(data.snapToken, {
       onSuccess: () => {
-        showToast("Pembayaran berhasil 🎉");
-        nextStep();
-      },
+  showToast("Pembayaran diterima. Sedang diproses ⏳", "info");
+  router.push("/payment/finish");
+},
       onPending: () => {
-        showToast("Menunggu pembayaran", "info");
-      },
-      onError: () => {
-        showToast("Pembayaran gagal", "error");
-      },
+  router.push("/payment/finish?status=pending");
+},
+onError: () => {
+  router.push("/payment/finish?status=failed");
+},
       onClose: () => {
         showToast("Popup pembayaran ditutup", "info");
       },
@@ -716,11 +716,11 @@ useEffect(() => {
                                     />
                                     <span className="text-sm text-gray-600">
                                         Saya menyetujui <span className="text-brand-500 hover:text-brand-600 dark:text-brand-400">
-                    <Link href="/T&C"><b> S&K </b></Link>
+                    <Link href="/syarat-ketentuan"><b> S&K </b></Link>
                   </span>{" "}
                                     </span>
                                 </div>
-                                <Button className="w-full mt-4" onClick={handleSignup} disabled={loading}>
+                                <Button className="w-full mt-4" onClick={handleSignUp} disabled={loading}>
                                     {loading ? "Loading..." : "Daftar & Cek Email →"}
                                 </Button>
                                 

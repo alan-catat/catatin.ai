@@ -7,7 +7,7 @@ import FloatingCards from "./FloatingCards";
 const CTASection = () => {
   return (
     <section
-      id="signup"
+      id="SignUp"
       className="relative px-6 lg:px-16 py-16 md:py-10 px-12 text-center text-white overflow-hidden bg-[#2e2e2e] rounded-3xl shadow-2xl max-w-6xl mx-auto my-5 border-2 border-transparent bg-clip-padding before:absolute before:inset-0 before:rounded-3xl before:p-[2px] before:bg-gradient-to-r before:from-blue-500 before:to-cyan-500 before:-z-10"
       >
       {/* Content */}

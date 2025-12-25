@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Checkbox from "@/components/form/input/Checkbox";
 import Input from "@/components/form/input/InputField";
@@ -22,11 +22,25 @@ export default function SignInForm({ redirectTo }: SignInFormProps) {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
-  // URL webhook n8n untuk login
   const N8N_SIGNIN_URL =
     process.env.NEXT_PUBLIC_N8N_SIGNIN_URL ||
     "https://your-n8n-domain.com/webhook/signin";
-  const WEBHOOK_GOOGLE = process.env.NEXT_PUBLIC_N8N_GOOGLE_SIGNIN_URL!;
+
+  // ✅ Load saved credentials saat komponen mount
+  useEffect(() => {
+    const savedEmail = localStorage.getItem("remembered_email");
+    const savedPassword = localStorage.getItem("remembered_password");
+    
+    if (savedEmail) {
+      setEmail(savedEmail);
+      setIsChecked(true);
+      
+      // Opsional: isi password jika disimpan (kurang aman, tapi bisa digunakan)
+      if (savedPassword) {
+        setPassword(atob(savedPassword)); // decode dari base64
+      }
+    }
+  }, []);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,14 +68,22 @@ export default function SignInForm({ redirectTo }: SignInFormProps) {
 
       // ✅ LOGIN BERHASIL (respon object)
       if (typeof data === "object" && data.success && data.user) {
-        // Simpan email + token di localStorage
+        // Simpan session
         localStorage.setItem("user_email", data.user.email);
         if (data.token) localStorage.setItem("token", data.token);
-
-        // Simpan user lengkap (opsional)
         localStorage.setItem("user", JSON.stringify(data.user));
 
-        // Redirect
+        // ✅ REMEMBER ME: Simpan credentials jika checkbox dicentang
+        if (isChecked) {
+          localStorage.setItem("remembered_email", email.toLowerCase());
+          // Simpan password (encode base64 untuk sedikit keamanan)
+          localStorage.setItem("remembered_password", btoa(password));
+        } else {
+          // Hapus jika tidak dicentang
+          localStorage.removeItem("remembered_email");
+          localStorage.removeItem("remembered_password");
+        }
+
         setTimeout(() => router.push(redirectTo || "/dashboard-user/profile"), 200);
         return;
       }
@@ -70,6 +92,16 @@ export default function SignInForm({ redirectTo }: SignInFormProps) {
       if (typeof data === "string" && data.toLowerCase().includes("sukses")) {
         localStorage.setItem("user_email", email.toLowerCase());
         localStorage.setItem("user", JSON.stringify({ email: email.toLowerCase() }));
+
+        // ✅ REMEMBER ME
+        if (isChecked) {
+          localStorage.setItem("remembered_email", email.toLowerCase());
+          localStorage.setItem("remembered_password", btoa(password));
+        } else {
+          localStorage.removeItem("remembered_email");
+          localStorage.removeItem("remembered_password");
+        }
+
         setTimeout(() => router.push(redirectTo || "/dashboard-user/profile"), 200);
         return;
       }
@@ -89,14 +121,9 @@ export default function SignInForm({ redirectTo }: SignInFormProps) {
   };
 
   const handleGoogleSignIn = () => {
-    // Simpan redirect URL ke localStorage untuk digunakan setelah callback
     localStorage.setItem("redirectAfterLogin", redirectTo);
-    
-    // Redirect ke n8n webhook untuk Google OAuth
     const n8nWebhookUrl = process.env.NEXT_PUBLIC_N8N_GOOGLE_SIGNIN_URL;
     const callbackUrl = `${window.location.origin}/auth/callback`;
-    
-    // Redirect ke n8n dengan parameter callback
     window.location.href = `${n8nWebhookUrl}?callback=${encodeURIComponent(callbackUrl)}`;
   };
 
@@ -165,11 +192,11 @@ export default function SignInForm({ redirectTo }: SignInFormProps) {
               <div className="flex items-center gap-3">
                 <Checkbox checked={isChecked} onChange={setIsChecked} />
                 <span className="block font-normal text-gray-700 text-theme-sm dark:text-gray-400">
-                  Tetap Masuk
+                  Ingat aku
                 </span>
               </div>
               <Link
-                href="/auth/reset-password"
+                href="/auth/forgot-password"
                 className="text-sm text-brand-500 hover:text-brand-600 dark:text-brand-400"
               >
                 Lupa password?
@@ -186,23 +213,24 @@ export default function SignInForm({ redirectTo }: SignInFormProps) {
                 {loading ? "Mulai masuk..." : "Masuk"}
               </Button>
             </div>
+
             <div className="flex items-center gap-3">
               <Link
-              href="/auth/dashboard-user/signup"
-              className="px-40.5 py-3 md:px-51 py-3 rounded-lg bg-[#4EC722] text-sm text-white font-medium hover:bg-[#378C18] transition"
-            >
-              Daftar
-            </Link></div>
+                href="/auth/dashboard-user/signup"
+                className="px-40.5 py-3 md:px-51 py-3 rounded-lg bg-[#4EC722] text-sm text-white font-medium hover:bg-[#378C18] transition"
+              >
+                Daftar
+              </Link>
+            </div>
 
-              <p className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
-                <Link
-                  href="/home"
-                  className="text-brand-500 hover:text-brand-600 dark:text-brand-400"
-                >
-                  ← Kembali ke halaman utama
-                </Link>
-              </p>
-            
+            <p className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
+              <Link
+                href="/home"
+                className="text-brand-500 hover:text-brand-600 dark:text-brand-400"
+              >
+                ← Kembali ke halaman utama
+              </Link>
+            </p>
           </div>
         </form>
       </div>

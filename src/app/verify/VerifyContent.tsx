@@ -30,7 +30,7 @@ export default function VerifyContent() {
 
     if (!token) {
       setStatus("failed");
-      setTimeout(() => router.replace("/auth/dashboard-user/signup"), 4000);
+      setTimeout(() => router.replace("SignUp"), 4000);
       return;
     }
 
@@ -47,8 +47,8 @@ export default function VerifyContent() {
         const data = await res.json();
 
         if (data.status === "success") { setStatus("success"); setTimeout(() => router.replace("/dashboard-user/add-channel"), 3000); 
-        } else { setStatus("failed"); setTimeout(() => router.replace("/auth/dashboard-user/signup"), 4000); }       
-      } catch (err) { console.error("Error verifikasi:", err); setStatus("failed"); setTimeout(() => router.replace("/auth/dashboard-user/signup"), 4000); 
+        } else { setStatus("failed"); setTimeout(() => router.replace("SignUp"), 4000); }       
+      } catch (err) { console.error("Error verifikasi:", err); setStatus("failed"); setTimeout(() => router.replace("SignUp"), 4000); 
         } 
       };
 
@@ -83,7 +83,7 @@ export default function VerifyContent() {
             <p className="text-lg font-semibold text-red-600">
               ❌ Token tidak valid atau sudah kadaluarsa.
             </p>
-            <div className="mt-2 text-sm text-gray-500">Mengalihkan ke halaman signup...</div>
+            <div className="mt-2 text-sm text-gray-500">Mengalihkan ke halaman SignUp...</div>
           </>
         )}
       </div>

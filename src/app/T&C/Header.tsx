@@ -30,6 +30,7 @@ export default function Header() {
     >
       <div className="container mx-auto px-10 md:px-37 md:pr-77 flex items-center justify-between">
         {/* Logo */}
+        <Link href="/">
         <div className="flex items-center gap-3">
             <Image
               src={owlMascot}
@@ -37,21 +38,13 @@ export default function Header() {
               className="w-35 h-7 animate-float drop-shadow-xl"
             />
           </div>
-
+        </Link>
 
         {/* Nav */}
-        <nav className="hidden md:flex items-center gap-6">
-          <Link href="/#features" className="hover:text-primary transition-colors">Fitur</Link>
-          <Link href="/#how" className="hover:text-primary transition-colors">Cara Kerja</Link>
-        </nav>
+        
 
         {/* CTA */}
-        <Link
-          href="?#signup"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#05668D] text-white font-medium shadow-sm hover:bg-black-100 hover:scale-105 active:scale-95 cursor-pointer transition"
-        >
-          Coba Gratis
-        </Link>
+       
       </div>
     </header>
   );

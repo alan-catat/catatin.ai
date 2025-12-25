@@ -120,7 +120,7 @@ export default function ResetPasswordPage() {
 
               <div className="text-center">
                 <Link
-                  href="/auth/dashboard-user/signin"
+                  href="/LogIn"
                   className="text-sm text-brand-500 hover:text-brand-600 dark:text-brand-400"
                 >
                   ← Kembali ke halaman masuk

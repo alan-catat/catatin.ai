@@ -127,7 +127,7 @@ export default function CallbackClient() {
             Silakan coba login kembali atau cek link aktivasi Anda.
           </p>
           <Link
-            href="/auth/dashboard-user/signin"
+            href="/LogIn"
             className="px-6 py-3 rounded-lg bg-gray-600 text-white hover:bg-gray-700 transition"
           >
             Kembali ke Login

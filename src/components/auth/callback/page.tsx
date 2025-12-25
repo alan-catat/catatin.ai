@@ -27,10 +27,10 @@ export default function AuthCallback() {
         router.push(redirectTo);
       } catch (error) {
         console.error("Error parsing auth data:", error);
-        router.push("/auth/dashboard-user/signin?error=invalid_callback");
+        router.push("/LogIn?error=invalid_callback");
       }
     } else {
-      router.push("/auth/dashboard-user/signin?error=missing_credentials");
+      router.push("/LogIn?error=missing_credentials");
     }
   }, [searchParams, router]);
 

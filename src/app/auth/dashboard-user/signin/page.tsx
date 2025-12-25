@@ -1,5 +1,5 @@
-import SignInForm from "@/components/auth/SignInForm";
+import { redirect } from "next/navigation";
 
-export default function SignInPage() {
-  return <SignInForm redirectTo="/dashboard-user" />;
+export default function SignInRedirect() {
+  redirect("/LogIn");
 }

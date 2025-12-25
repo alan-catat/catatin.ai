@@ -55,13 +55,13 @@ export default function Header() {
         </nav>
         <div className="flex items-center gap-3">
             <Link
-              href="/auth/dashboard-user/signin"
+              href="/LogIn"
               className="px-4 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition"
             >
               Masuk
             </Link>
             <Link
-              href="/auth/dashboard-user/signup"
+              href="/SignUp"
               className="px-4 py-2 rounded-lg bg-[#4EC722] text-white font-medium hover:bg-[#378C18] transition"
             >
               Daftar

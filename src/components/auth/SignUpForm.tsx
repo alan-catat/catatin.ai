@@ -24,7 +24,7 @@ export default function SignUpForm() {
   const [errorMsg, setErrorMsg] = useState("");
   const [passwordError, setPasswordError] = useState("");
 
-  const WEBHOOK_URL = process.env.NEXT_PUBLIC_N8N_SIGNUP_URL!;
+  const WEBHOOK_URL = process.env.NEXT_PUBLIC_N8N_SignUp_URL!;
 
   // ✅ Validasi sebelum submit
   const handleSignUp = async (e: React.FormEvent) => {
@@ -221,11 +221,11 @@ export default function SignUpForm() {
                 <p className="text-gray-500 dark:text-gray-400 text-sm">
                   Dengan ini kamu setuju dengan {" "}
                   <span className="text-brand-500 hover:text-brand-600 dark:text-brand-400">
-                    <Link href="/T&C"><b> S&K </b></Link>
+                    <Link href="/syarat-ketentuan"><b> S&K </b></Link>
                   </span>{" "}
                   dan{" "}
                   <span className="text-brand-500 hover:text-brand-600 dark:text-brand-400">
-                    <Link href="/PrivacyPolicy"><b> Kebijakan Privasi </b></Link>
+                    <Link href="/kebijakanprivasi"><b> Kebijakan Privasi </b></Link>
                   </span>
                 </p>
               </div>

@@ -550,9 +550,9 @@ const fetchGroups = async () => {
                     onClick={() => {
                       const message = encodeURIComponent(`/aktivasi ${activationCode}`);
                       if (ModalChannel === "telegram") {
-                        window.open(`https://t.me/share/url?text=${message}`, '_blank');
+                        window.open(`https://t.me/catatinaibot/share/url?text=${message}`, '_blank');
                       } else if (ModalChannel === "whatsapp") {
-                        window.open(`https://wa.me/?text=${message}`, '_blank');
+                        window.open(`https://wa.me/6281118891092?text=${message}`, '_blank');
                       }
                     }}
                     className={`w-full flex items-center justify-center gap-2 px-4 py-2 text-white rounded-lg transition-colors ${

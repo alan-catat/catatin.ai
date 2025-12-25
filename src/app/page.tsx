@@ -1,48 +1,42 @@
+import { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { cookies } from "next/headers";
 import { jwtVerify } from "jose";
+import HomePage from "@/components/HomePage";
 
-export default async function RootRedirect() {
+export const metadata: Metadata = {
+  title: "catatin.ai",
+};
+
+export default async function RootPage() {
   const headersList = await headers();
   const host = headersList.get("host");
 
-  // ✅ Check authentication DULU
   const cookieStore = await cookies();
-  const token = cookieStore.get('auth-token')?.value;
+  const token = cookieStore.get("auth-token")?.value;
 
   let isAuthenticated = false;
 
   if (token) {
     try {
       const secret = new TextEncoder().encode(
-        process.env.JWT_SECRET || 'your-secret-key-minimum-32-characters-long'
+        process.env.JWT_SECRET || "your-secret-key-minimum-32-characters-long"
       );
       await jwtVerify(token, secret);
       isAuthenticated = true;
-      console.log('✅ User authenticated in page.tsx');
-    } catch (error) {
-      console.log('❌ Token invalid in page.tsx');
+    } catch {
       isAuthenticated = false;
     }
   }
 
-  // Domain-based routing
-  if (host === "admin.catatin.ai") {
-    redirect("/dashboard-admin");
-  }
+  // 🌐 Subdomain routing
+  if (host === "admin.catatin.ai") redirect("/dashboard-admin");
+  if (host === "app.catatin.ai") redirect("/dashboard-user");
 
-  if (host === "app.catatin.ai") {
-    redirect("/dashboard-user");
-  }
+  // 🔐 Auth routing
+  if (isAuthenticated) redirect("/dashboard-user");
 
-  // ✅ Localhost routing - check auth first!
-  if (isAuthenticated) {
-    console.log('🔄 Redirecting authenticated user to dashboard');
-    redirect("/dashboard-user");
-  }
-
-  // User belum login, ke home
-  console.log('👤 Guest user, redirecting to home');
-  redirect("/home");
+  // 👤 Guest → render HOME di root "/"
+  return <HomePage />;
 }

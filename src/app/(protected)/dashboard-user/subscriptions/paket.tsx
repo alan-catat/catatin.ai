@@ -475,6 +475,8 @@ const formatHarga = (harga: number | string | undefined) => {
       : `${plan.chat.toLocaleString("id-ID")} pesan /bulan`}</div>
                   </div>
 
+                      {showAllContent && (
+                <>
                   <div>
                     <div className="text-sm font-semibold mb-2">Channel</div>
                     <div className="flex flex-wrap gap-2">
@@ -510,8 +512,7 @@ const formatHarga = (harga: number | string | undefined) => {
                     </div>
                 </div>
 
-              {showAllContent && (
-                <>
+              
                   <div>
                     <div className="text-sm font-semibold mb-3">Fitur Unggulan</div>
                     <ul className="space-y-2 text-sm">
@@ -532,6 +533,8 @@ const formatHarga = (harga: number | string | undefined) => {
                         })}
                     </ul>
                   </div>
+                  </>
+              )}
 {pkg.is_custom ? (
   <a
     href="https://wa.me/6281118891092"
@@ -570,8 +573,7 @@ const formatHarga = (harga: number | string | undefined) => {
 </button>
 )}
 
-                </>
-              )}
+                
                 </div>
               </div>
             );

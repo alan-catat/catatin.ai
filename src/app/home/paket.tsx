@@ -441,6 +441,8 @@ const activePackageId = "1"; // TODO: ambil dari backend
                     </div>
                   </div>
 
+                        {showAllContent && (
+                          <>
                   <div>
                     <div className="text-sm font-semibold mb-2">Channel</div>
                     <div className="flex flex-wrap gap-2">
@@ -477,8 +479,6 @@ const activePackageId = "1"; // TODO: ambil dari backend
                     </div>
                   </div>
 
-                  {showAllContent && (
-                    <>
                       <div>
                         <div className="text-sm font-semibold mb-3">Fitur Unggulan</div>
                         <ul className="space-y-2 text-sm">
@@ -499,6 +499,8 @@ const activePackageId = "1"; // TODO: ambil dari backend
                               })}
                         </ul>
                       </div>
+                      </>
+                  )}
 
                       <Link href={`/subscription`}
                     className={`mt-6 w-full py-3 px-6 rounded-lg font-semibold transition-all text-center block ${
@@ -509,9 +511,6 @@ const activePackageId = "1"; // TODO: ambil dari backend
                   >
                     {pkg.is_paid ? "Pilih Paket" : "Mulai Gratis"}
                   </Link>
-
-                    </>
-                  )}
                 </div>
               </div>
             );

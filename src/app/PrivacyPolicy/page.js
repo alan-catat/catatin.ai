@@ -3,7 +3,7 @@
 import Header from "./Header";
 import Footer from "./Footer";
 
-export default function PrivacyPolicy() {
+export default function kebijakanprivasi() {
   return (
     <main className="min-h-screen bg-white text-slate-800 antialiased py-20">
       <Header />

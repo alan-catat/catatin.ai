@@ -39,7 +39,7 @@ export default function UpdatePasswordPage() {
       setIsFromDashboard(true);
       const userEmail = localStorage.getItem("user_email");
       if (!userEmail) {
-        router.push("/auth/dashboard-user/signin");
+        router.push("/LogIn");
       }
     } else if (tokenFromUrl) {
       setToken(tokenFromUrl);
@@ -146,7 +146,7 @@ export default function UpdatePasswordPage() {
         } else {
           // Redirect ke login setelah 3 detik
           setTimeout(() => {
-            router.push("/auth/dashboard-user/signin");
+            router.push("/LogIn");
           }, 3000);
         }
       } else {
@@ -213,7 +213,7 @@ export default function UpdatePasswordPage() {
                   </Button>
                 </Link>
                 <Link
-                  href="/auth/dashboard-user/signin"
+                  href="/LogIn"
                   className="text-center text-sm text-brand-500 hover:text-brand-600 dark:text-brand-400"
                 >
                   ← Kembali ke halaman masuk
@@ -316,7 +316,7 @@ export default function UpdatePasswordPage() {
                 </div>
             <div className="text-center">
                   <Link
-                    href="/auth/dashboard-user/signin"
+                    href="/LogIn"
                     className="text-sm text-brand-500 hover:text-brand-600 dark:text-brand-400"
                   >
                     ← Kembali ke halaman masuk
