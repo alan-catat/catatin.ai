@@ -214,12 +214,17 @@ export default function SignInForm({ redirectTo }: SignInFormProps) {
               </Button>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div>
               <Link
-                href="/auth/dashboard-user/signup"
-                className="px-40.5 py-3 md:px-51 py-3 rounded-lg bg-[#4EC722] text-sm text-white font-medium hover:bg-[#378C18] transition"
-              >
-                Daftar
+                href="/SignUp"
+                ><Button
+  className="w-full bg-green-600 hover:bg-green-700 text-white"
+  size="sm"
+  type="button"
+>
+  Daftar
+</Button>
+
               </Link>
             </div>
 
