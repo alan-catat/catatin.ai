@@ -13,6 +13,8 @@ const steps = ["Registrasi Akun","Verifikasi Akun", "Pembayaran", "Selesai"];
 
 const N8N_BASE_URL = "https://n8n.srv1074739.hstgr.cloud/webhook";
 
+export const dynamic = 'force-dynamic';
+
 export default function SubscriptionPageClient() {
     const searchParams = useSearchParams();
     const router = useRouter();

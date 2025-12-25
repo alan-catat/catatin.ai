@@ -502,15 +502,17 @@ const activePackageId = "1"; // TODO: ambil dari backend
                       </>
                   )}
 
-                      <Link href={`/subscription`}
-                    className={`mt-6 w-full py-3 px-6 rounded-lg font-semibold transition-all text-center block ${
-                      isPro
-                        ? "bg-white text-blue-600 hover:bg-gray-100 shadow-lg"
-                        : "bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700 shadow-md"
-                    }`}
-                  >
-                    {pkg.is_paid ? "Pilih Paket" : "Mulai Gratis"}
-                  </Link>
+                      <Link
+  href={`/subscription?package=${plan.id}&plan=${encodeURIComponent(pkg.name)}&price=${plan.harga}&billing=${billingCycle}`}
+  className={`mt-6 w-full py-3 px-6 rounded-lg font-semibold transition-all text-center block ${
+    isPro
+      ? "bg-white text-blue-600 hover:bg-gray-100 shadow-lg"
+      : "bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700 shadow-md"
+  }`}
+>
+  {pkg.is_paid ? "Pilih Paket" : "Mulai Gratis"}
+</Link>
+
                 </div>
               </div>
             );
