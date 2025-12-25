@@ -1,8 +1,11 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useSearchParams } from "next/navigation";
+
 export const dynamic = 'force-dynamic';
-export default function PaymentFinishPage() {
+
+function PaymentFinishContent() {
   const params = useSearchParams();
   const status = params.get("status");
 
@@ -20,5 +23,20 @@ export default function PaymentFinishPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function PaymentFinishPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Memuat...</p>
+        </div>
+      </div>
+    }>
+      <PaymentFinishContent />
+    </Suspense>
   );
 }
